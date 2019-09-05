@@ -24,3 +24,6 @@ hs_err_pid*
 
 # remove ds store
 .DS_Store
+
+# IntelliJ Settings
+.idea/
