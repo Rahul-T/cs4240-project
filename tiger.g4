@@ -33,7 +33,7 @@ DO : 'do';
 ELSE : 'else';
 END : 'end';
 FOR : 'for';
-FUNC : 'func';
+FUNC : 'function';
 IF : 'if';
 IN : 'in';
 LET : 'let';
