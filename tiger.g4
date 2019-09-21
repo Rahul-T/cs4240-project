@@ -49,7 +49,7 @@ END : 'end';
 ENDDO : 'enddo';
 ID : [a-zA-Z_][a-zA-Z0-9_]*;
 INTLIT : [+-]?[0-9]+;
-FLOATLIT: [+-]?[0-9]+(.[0-9]+)?([eE][+-]?[0-9]+)?;
+FLOATLIT: [+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?;
 COMMENT : /\*.*?\*/;
 NULL : '';
 RETURN : 'RETURN';
