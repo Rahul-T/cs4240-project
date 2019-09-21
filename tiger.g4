@@ -1,4 +1,4 @@
-grammar Tiger;
+grammar tiger;
 
 
 MAIN : 'main';
@@ -45,13 +45,12 @@ VAR : 'var';
 WHILE : 'while';
 ENDIF : 'endif';
 BEGIN : 'begin';
-END : 'end';
 ENDDO : 'enddo';
 ID : [a-zA-Z_][a-zA-Z0-9_]*;
 INTLIT : [+-]?[0-9]+;
-FLOATLIT: [+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?;
-COMMENT : /\*.*?\*/;
-NULL : '';
+FLOATLIT: [+-]?[0-9]+('.'[0-9]+)?([eE][+-]?[0-9]+)?;
+COMMENT : '/*'*'*/';
+NULL : ;
 RETURN : 'RETURN';
 
 tiger_program : MAIN LET declaration_segment IN BEGIN stat_seq END;
@@ -83,7 +82,6 @@ param : ID COLON type;
 stat_seq : stat stat_seq_tail;
 stat_seq_tail : stat stat_seq_tail | NULL;
 
-
 stat : lvalue l_tail ASSIGN expr SEMI | IF expr THEN stat_seq else_stat ENDIF SEMI | WHILE expr DO stat_seq ENDDO SEMI | FOR ID ASSIGN expr TO expr DO stat_seq ENDDO SEMI |
     opt_prefix ID LPAREN expr_list RPAREN SEMI | BREAK | RETURN expr | LET declaration_segment IN stat_seq END SEMI;
 l_tail : ASSIGN lvalue l_tail | NULL;
@@ -114,10 +112,8 @@ less_tail : LESSER not_eq_term less_tail | NULL;
 not_eq_term : eq_term not_eq_tail;
 not_eq_tail : NEQ eq_term not_eq_tail | NULL;
 
-
 eq_term : div_term eq_tail;
 eq_tail : EQ div_term eq_tail | NULL;
-
 
 div_term : mult_term div_tail;
 div_tail : DIV mult_term div_tail | NULL;
@@ -130,7 +126,6 @@ sub_tail : MINUS add_term sub_tail | NULL;
 
 add_term : pow_term add_tail;
 add_tail : PLUS pow_term add_tail | NULL;
-
 
 pow_term : factor pow_tail;
 pow_tail : EXP factor pow_tail | NULL;
