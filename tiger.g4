@@ -70,7 +70,7 @@ type_id : INTLIT | FLOATLIT;
 var_declaration : VAR id_list COLON type optional_init SEMI; 
 id_list : ID id_list_tail;
 id_list_tail : COMMA ID id_list_tail | NULL;
-optional_init : ASSIGN const | NULL;
+optional_init : ASSIGN constant | NULL;
 
 function_declaration : FUNC ID LPAREN param_list RPAREN ret_type BEGIN stat_seq END SEMI; 
 param_list : param param_list_tail | NULL;
@@ -130,9 +130,9 @@ add_tail : PLUS pow_term add_tail | NULL;
 pow_term : factor pow_tail;
 pow_tail : EXP factor pow_tail | NULL;
 
-factor : LPAREN expr RPAREN | const |  lvalue;
+factor : LPAREN expr RPAREN | constant |  lvalue;
 
-const : INTLIT | FLOATLIT;
+constant : INTLIT | FLOATLIT;
 
 expr_list : expr expr_list_tail | NULL;
 expr_list_tail : COMMA expr expr_list_tail | NULL;

@@ -27,3 +27,14 @@ hs_err_pid*
 
 # IntelliJ Settings
 .idea/
+
+# Ignore Antler Outputs
+.antlr/
+tiger.interp
+tiger.tokens
+tigerBaseListener.java
+tigerLexer.interp
+tigerLexer.java
+tigerLexer.tokens
+tigerListener.java
+tigerParser.java
