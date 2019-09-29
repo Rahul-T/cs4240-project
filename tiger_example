@@ -2,6 +2,7 @@ main let
 	var A,B : float;
 	function printf (n : float) :B begin
 		B := n + 5.0;
+		return B;
 	end; 
 in begin
 	A := 1.5;

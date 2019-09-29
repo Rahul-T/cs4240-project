@@ -47,11 +47,11 @@ WHILE : 'while';
 ENDIF : 'endif';
 BEGIN : 'begin';
 ENDDO : 'enddo';
+RETURN : 'return';
 ID : [a-zA-Z_][a-zA-Z0-9_]*;
 INTLIT : [+-]?[0-9]+;
 FLOATLIT: [+-]?[0-9]+('.'[0-9]+)?([eE][+-]?[0-9]+)?;
 COMMENT : '/*'*'*/';
-RETURN : 'RETURN';
 WS : [ \t\r\n]+ -> skip;
 
 tiger_program : MAIN LET declaration_segment IN BEGIN stat_seq END;
