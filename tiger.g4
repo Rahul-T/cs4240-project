@@ -93,7 +93,8 @@ stat :  IF expr THEN stat_seq else_stat ENDIF SEMI |
 
 id_tail :   ASSIGN expr SEMI |
             LBRACK expr RBRACK ASSIGN expr SEMI |
-            EQUALS ID LPAREN expr_list RPAREN SEMI;
+            EQUALS ID LPAREN expr_list RPAREN SEMI |
+            LPAREN expr_list RPAREN SEMI;
 
 lvalue : ID lvalue_tail;
 lvalue_tail : LBRACK expr RBRACK | /* NULL */;
