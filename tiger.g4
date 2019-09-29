@@ -12,6 +12,7 @@ RBRACK : ']';
 LBRACE : '{';
 RBRACE : '}';
 PERIOD : '.';
+EQUALS : '=';
 PLUS : '+';
 MINUS : '-';
 MULT : '*';
@@ -46,11 +47,11 @@ WHILE : 'while';
 ENDIF : 'endif';
 BEGIN : 'begin';
 ENDDO : 'enddo';
+RETURN : 'return';
 ID : [a-zA-Z_][a-zA-Z0-9_]*;
 INTLIT : [+-]?[0-9]+;
 FLOATLIT: [+-]?[0-9]+('.'[0-9]+)?([eE][+-]?[0-9]+)?;
 COMMENT : '/*'*'*/';
-RETURN : 'RETURN';
 WS : [ \t\r\n]+ -> skip;
 
 tiger_program : MAIN LET declaration_segment IN BEGIN stat_seq END;
@@ -63,7 +64,7 @@ var_declaration_list : var_declaration var_declaration_list | /* NULL */;
 
 function_declaration_list : function_declaration function_declaration_list | /* NULL */;
 
-type_declaration : TYPE ID ASSIGN type SEMI;
+type_declaration : TYPE ID EQUALS type SEMI;
 type : ARRAY LBRACK INTLIT RBRACK OF type_id | ID | type_id;
 type_id : INTLIT | FLOATLIT;
 
@@ -76,19 +77,28 @@ function_declaration : FUNC ID LPAREN param_list RPAREN ret_type BEGIN stat_seq 
 param_list : param param_list_tail | /* NULL */;
 param_list_tail : COMMA param param_list_tail | /* NULL */;
  
-ret_type : COLON type | /* NULL */;
+ret_type : COLON type;
 param : ID COLON type;
 
 stat_seq : stat stat_seq_tail;
 stat_seq_tail : stat stat_seq_tail | /* NULL */;
 
-stat : lvalue l_tail ASSIGN expr SEMI | IF expr THEN stat_seq else_stat ENDIF SEMI | WHILE expr DO stat_seq ENDDO SEMI | FOR ID ASSIGN expr TO expr DO stat_seq ENDDO SEMI |
-    opt_prefix ID LPAREN expr_list RPAREN SEMI | BREAK | RETURN expr | LET declaration_segment IN stat_seq END SEMI;
-l_tail : ASSIGN lvalue l_tail | /* NULL */;
+stat :  IF expr THEN stat_seq else_stat ENDIF SEMI |
+        WHILE expr DO stat_seq ENDDO SEMI |
+        FOR ID ASSIGN expr TO expr DO stat_seq ENDDO SEMI |
+        BREAK SEMI |
+        RETURN expr SEMI |
+        LET declaration_segment IN stat_seq END SEMI |
+        ID id_tail;
+
+id_tail :   ASSIGN expr SEMI |
+            LBRACK expr RBRACK ASSIGN expr SEMI |
+            EQUALS ID LPAREN expr_list RPAREN SEMI;
+
+lvalue : ID lvalue_tail;
+lvalue_tail : LBRACK expr RBRACK | /* NULL */;
 
 else_stat : ELSE stat_seq | /* NULL */;
-
-opt_prefix : lvalue ASSIGN | /* NULL */;
 
 // <expr> is our “<or-term>”
 expr : and_term e_tail;
@@ -136,5 +146,3 @@ constant : INTLIT | FLOATLIT;
 
 expr_list : expr expr_list_tail | /* NULL */;
 expr_list_tail : COMMA expr expr_list_tail | /* NULL */;
-lvalue : ID lvalue_tail;
-lvalue_tail : RBRACK expr LBRACK | /* NULL */;
