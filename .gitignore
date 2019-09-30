@@ -28,7 +28,7 @@ hs_err_pid*
 # IntelliJ Settings
 .idea/
 
-# Ignore Antler Outputs
+# Ignore Antlr Outputs
 .antlr/
 tiger.interp
 tiger.tokens
@@ -38,3 +38,6 @@ tigerLexer.java
 tigerLexer.tokens
 tigerListener.java
 tigerParser.java
+
+# Allow Antlr Jar
+!antlr-4.7.2-complete.jar
