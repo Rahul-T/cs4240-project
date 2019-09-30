@@ -91,10 +91,11 @@ stat :  IF expr THEN stat_seq else_stat ENDIF SEMI |
         LET declaration_segment IN stat_seq END SEMI |
         ID id_tail;
 
-id_tail :   ASSIGN expr SEMI |
+id_tail :   ASSIGN assign_tail |
             LBRACK expr RBRACK ASSIGN expr SEMI |
-            EQUALS ID LPAREN expr_list RPAREN SEMI |
             LPAREN expr_list RPAREN SEMI;
+
+assign_tail: expr SEMI | ID LPAREN expr_list RPAREN SEMI;
 
 lvalue : ID lvalue_tail;
 lvalue_tail : LBRACK expr RBRACK | /* NULL */;
