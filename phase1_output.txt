@@ -1,3 +1,6 @@
+$ java TigerCompiler phase1-part1-checkin.tiger 
 Compiling file "phase1-part1-checkin.tiger"
 
-MAIN LET VAR ID COMMA ID COLON ID SEMI FUNC ID LPAREN ID COLON ID RPAREN BEGIN ID ASSIGN ID PLUS FLOATLIT SEMI END SEMI IN BEGIN ID ASSIGN FLOATLIT SEMI ID LPAREN ID RPAREN SEMI END
+Unsuccessful Parse
+
+line 3:29 mismatched input 'begin' expecting {',', ')'}

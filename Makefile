@@ -1,4 +1,6 @@
-JFLAGS = -cp '.:antlr-4.7.2-complete.jar' -Xlint
+ANTLR_JAR = antlr-4.7.2-complete.jar
+
+JFLAGS = -cp '.:$(ANTLR_JAR)' -Xlint
 JC = @javac
 
 .SUFFIXES: .java .class
@@ -12,11 +14,14 @@ CLASSES = \
 	tigerListener.java \
 	tigerParser.java \
 	TigerParserWrapper.java \
-	TerminalPrinter.java
+	TerminalPrinter.java \
 
-default: classes
+default: parser compiler
 
-classes: $(CLASSES:.java=.class)
+compiler: $(CLASSES:.java=.class)
 
 clean: 
 	@$(RM) *.class
+
+parser:
+	@java -jar $(ANTLR_JAR) tiger.g4

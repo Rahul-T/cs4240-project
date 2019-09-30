@@ -18,17 +18,22 @@ public class TigerCompiler {
             return;
         }
 
-        System.out.println(String.format("Compiling file \"%s\"", fileName));
+        System.out.println(String.format("Compiling file \"%s\"\n", fileName));
         TigerParserWrapper wrapper = new TigerParserWrapper();
 
         wrapper.parse(fileName);
 
-        System.out.println();
-
         ParseTreeWalker walker = new ParseTreeWalker();
         TerminalPrinter printer = new TerminalPrinter(wrapper);
-
         walker.walk(printer, wrapper.getParseTree());
-        System.out.println();
+    
+        if (wrapper.getErrorNumber() == 0) {
+            System.out.println("Successful Parse\n\n" 
+                + printer.getTokenTupleString() + "\n" 
+                + printer.getTokenTypeList());
+        } else {
+            System.out.println("Unsuccessful Parse\n" 
+                + wrapper.getErrorStrings() + "\n");
+        }
     }   
 }

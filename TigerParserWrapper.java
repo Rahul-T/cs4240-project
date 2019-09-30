@@ -15,10 +15,12 @@ import org.antlr.v4.runtime.Vocabulary;
 public class TigerParserWrapper {
     private tigerParser parser;
     private tigerLexer lexer;
+    private TigerErrorHandler errorHandler;
 
     public TigerParserWrapper() {
         this.parser = null; // set parser to null on construction, will be set on parse
         this.lexer = null;
+        this.errorHandler = new TigerErrorHandler();
     }
 
     /**
@@ -37,7 +39,8 @@ public class TigerParserWrapper {
         // parse code
         this.parser = new tigerParser(tokenStream);
         this.parser.setBuildParseTree(true);
-        
+        this.parser.removeErrorListeners();
+        this.parser.addErrorListener(this.errorHandler);
     }
 
     public ParseTree getParseTree() {
@@ -66,6 +69,14 @@ public class TigerParserWrapper {
         }
         ParseTree tree = this.parser.tiger_program();
         System.out.print(tree.toStringTree(this.parser));
+    }
+
+    public int getErrorNumber() {
+        return this.errorHandler.getErrorNo();
+    }
+
+    public String getErrorStrings() {
+        return this.errorHandler.getErrorStrings();
     }
 
 }
