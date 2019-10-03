@@ -1,4 +1,4 @@
-ANTLR_JAR = antlr-4.7.2-complete.jar
+ANTLR_JAR = antlr-4.7.1-complete.jar
 
 JFLAGS = -cp '.:$(ANTLR_JAR)' -Xlint
 JC = @javac
