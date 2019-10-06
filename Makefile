@@ -24,4 +24,4 @@ clean:
 	@$(RM) *.class
 
 parser:
-	@java -jar $(ANTLR_JAR) tiger.g4
+	@java -jar $(ANTLR_JAR) -visitor -no-listener tiger.g4
