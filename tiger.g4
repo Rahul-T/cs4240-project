@@ -48,6 +48,8 @@ ENDIF : 'endif';
 BEGIN : 'begin';
 ENDDO : 'enddo';
 RETURN : 'return';
+INT : 'int';
+FLOAT : 'float';
 ID : [a-zA-Z_][a-zA-Z0-9_]*;
 INTLIT : [+-]?[0-9]+;
 FLOATLIT: [+-]?[0-9]+('.'[0-9]+)?([eE][+-]?[0-9]+)?;
@@ -66,7 +68,7 @@ function_declaration_list : function_declaration function_declaration_list | /* 
 
 type_declaration : TYPE ID EQUALS type SEMI;
 type : ARRAY LBRACK INTLIT RBRACK OF type_id | ID | type_id;
-type_id : INTLIT | FLOATLIT;
+type_id : INT | FLOAT;
 
 var_declaration : VAR id_list COLON type optional_init SEMI; 
 id_list : ID id_list_tail;

@@ -1,4 +1,6 @@
 ANTLR_JAR = antlr-4.7.1-complete.jar
+ANTLR_FLAGS = -visitor -no-listener
+GRAMMAR_FILE = tiger.g4
 
 JFLAGS = -cp '.:$(ANTLR_JAR)' -Xlint
 JC = @javac
@@ -10,11 +12,6 @@ JC = @javac
 
 CLASSES = \
 	TigerCompiler.java \
-	tigerLexer.java \
-	tigerListener.java \
-	tigerParser.java \
-	TigerParserWrapper.java \
-	TerminalPrinter.java \
 
 default: parser compiler
 
@@ -24,4 +21,4 @@ clean:
 	@$(RM) *.class
 
 parser:
-	@java -jar $(ANTLR_JAR) -visitor -no-listener tiger.g4
+	@java -jar $(ANTLR_JAR) $(ANTLR_FLAGS) $(GRAMMAR_FILE)
