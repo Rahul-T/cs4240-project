@@ -1,7 +1,6 @@
 import java.io.File;
 import java.io.IOException;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 public class TigerCompiler {
