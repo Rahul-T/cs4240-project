@@ -43,6 +43,10 @@ public class TigerParserWrapper {
         this.parser.addErrorListener(this.errorHandler);
     }
 
+    /**
+     * Gets the parse tree of the parsed program.
+     * @return ParseTree of the program starting at tiger_program.
+     */
     public ParseTree getParseTree() {
         if (this.parser != null) {
             return this.parser.tiger_program();
@@ -51,6 +55,10 @@ public class TigerParserWrapper {
         }
     }
 
+    /**
+     * Gets the vocabulary of the program.
+     * @return Vocabulary of tokens for the parsed program.
+     */
     public Vocabulary getTigerVocabulary() {
         if (this.lexer != null) {
             return this.lexer.getVocabulary();
@@ -71,10 +79,18 @@ public class TigerParserWrapper {
         System.out.print(tree.toStringTree(this.parser));
     }
 
+    /**
+     * Gets the number of errors found in the progam by the syntax checker.
+     * @return Number of syntax errors found. 0 if no errors.
+     */
     public int getErrorNumber() {
         return this.errorHandler.getErrorNo();
     }
 
+    /**
+     * Gets string messages for syntax errors found.
+     * @return String of error messages. "" if no errors found.
+     */
     public String getErrorStrings() {
         return this.errorHandler.getErrorStrings();
     }

@@ -3,6 +3,10 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
+/**
+ * Handler for Tiger syntax errors. Tracks the number of errors and gives string
+ * messages for each error.
+ */
 public class TigerErrorHandler extends BaseErrorListener {
 
     private int errorNo;
@@ -22,15 +26,28 @@ public class TigerErrorHandler extends BaseErrorListener {
             + charPositionInLine + " " + msg;
     }
 
+    /**
+     * Reset the number of errors and the error string for this syntax error
+     * handler.
+     */
     public void reset() {
         this.errorNo = 0;
         this.errorStrings = "";
     }
 
+    /**
+     * Gets the number of syntax errors found.
+     * @return Number of syntax errors. 0 if no errors found.
+     */
     public int getErrorNo() {
         return this.errorNo;
     }
 
+    /**
+     * Gets all string messages for errors found.
+     * @return A string of all error messages, one per line. Returns "" if no
+     *         errors.
+     */
     public String getErrorStrings() {
         return this.errorStrings;
     }

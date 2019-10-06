@@ -23,13 +23,13 @@ public class TigerCompiler {
         wrapper.parse(fileName);
 
         ParseTreeWalker walker = new ParseTreeWalker();
-        TerminalPrinter printer = new TerminalPrinter(wrapper);
-        walker.walk(printer, wrapper.getParseTree());
+        SyntaxChecker synChecker = new SyntaxChecker(wrapper);
+        walker.walk(synChecker, wrapper.getParseTree());
     
         if (wrapper.getErrorNumber() == 0) {
             System.out.println("Successful Parse\n\n" 
-                + printer.getTokenTupleString() + "\n" 
-                + printer.getTokenTypeList());
+                + synChecker.getTokenTupleString() + "\n" 
+                + synChecker.getTokenTypeList());
         } else {
             System.out.println("Unsuccessful Parse\n" 
                 + wrapper.getErrorStrings() + "\n");

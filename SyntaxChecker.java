@@ -2,12 +2,16 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.Vocabulary;
 import org.antlr.v4.runtime.tree.ErrorNode;
 
-public class TerminalPrinter extends tigerBaseListener {
+/**
+ * Class that will check the syntax of our Tiger program. Creates a string with
+ * tuples of form <type, name> and a string of all token types.
+ */
+public class SyntaxChecker extends tigerBaseListener {
     private Vocabulary vocab;
     private String tokenTupleString;
     private String tokenTypeList;
 
-    public TerminalPrinter(TigerParserWrapper wrapper) {
+    public SyntaxChecker(TigerParserWrapper wrapper) {
         this.vocab = wrapper.getTigerVocabulary();
         this.tokenTupleString = "";
         this.tokenTypeList = "";
