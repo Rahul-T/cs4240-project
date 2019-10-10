@@ -74,7 +74,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitType(tigerParser.TypeContext ctx) {
-        return visitChildren(ctx);
+        visitChildren(ctx);
+        return "TYPE";
     }
     
     /**
@@ -140,9 +141,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitFunction_declaration(tigerParser.Function_declarationContext ctx) {
+        // function_declaration : FUNC ID LPAREN param_list RPAREN ret_type BEGIN stat_seq END SEMI;
         symTable.openScope();
-        String paramTypeString = "a,b,c";
-        visitChildren(ctx);
+        String paramTypeString = visit(ctx.getChild(3));
         symTable.closeScope();
         String[] paramTypeArr = paramTypeString.split(",");
         // First one: Func Name
@@ -162,7 +163,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitParam_list(tigerParser.Param_listContext ctx) {
-        return visitChildren(ctx);
+        //param_list : param param_list_tail | /* NULL */;
+        if (ctx.getChildCount() == 0) {
+            return "";
+        }
+
+        return visit(ctx.getChild(0)) + visit(ctx.getChild(1));
     }
     
     /**
@@ -173,7 +179,11 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitParam_list_tail(tigerParser.Param_list_tailContext ctx) {
-        return visitChildren(ctx);
+        // //param_list_tail : COMMA param param_list_tail | /* NULL */;
+        if (ctx.getChildCount() == 0) {
+            return "";
+        }
+        return  "," + visit(ctx.getChild(1)) + visit(ctx.getChild(2));
     }
     
     /**
@@ -195,7 +205,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitParam(tigerParser.ParamContext ctx) {
-        return visitChildren(ctx);
+        // param : ID COLON type;
+        this.symTable.addVariable(ctx.getChild(0).getText(), visit(ctx.getChild(2)));
+        return ctx.getChild(2).getText();
     }
     
     /**

@@ -75,12 +75,16 @@ public class SymbolData {
 
     @Override
     public String toString() {
-        if (isArray) {
-            return String.format("<classification: %s, type: %s, size: %d>",
-                classification, type, arraySize);
-        } else {
-            return String.format("<classification: %s, type: %s", classification, 
-                type);
-        }
+        String params = String.join(", ", this.paramList);
+
+        return String.format("<classification: %s | type: %s | size: %d | param_list: %s | isArray = %s>",
+              classification, type, arraySize, params, this.isArray);
+//        if (isArray) {
+//            return String.format("<classification: %s, type: %s, size: %d>",
+//                classification, type, arraySize);
+//        } else {
+//            return String.format("<classification: %s, type: %s", classification,
+//                type);
+//        }
     }
 }
