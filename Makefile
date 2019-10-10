@@ -11,7 +11,7 @@ JC = @javac
 	$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-	TigerCompiler.java \
+	*.java \
 
 default: parser compiler
 
