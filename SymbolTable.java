@@ -29,8 +29,8 @@ public class SymbolTable {
         current.addEntry(name, newDataNode);
     }
 
-    void addArray(String name, String type, int size) {
-        SymbolData newDataNode = new SymbolData("var", type, size);
+    void addArray(String name, String classification, String type, int size) {
+        SymbolData newDataNode = new SymbolData(classification, type, size);
         current.addEntry(name, newDataNode);
     }
 
@@ -41,6 +41,11 @@ public class SymbolTable {
 
     void addFunction(String name, String retType, String[] paramList) {
         SymbolData newDataNode = new SymbolData("func", retType, paramList);
+        current.addEntry(name, newDataNode);
+    }
+
+    void addType(String name, String type) {
+        SymbolData newDataNode = new SymbolData("type", type);
         current.addEntry(name, newDataNode);
     }
 

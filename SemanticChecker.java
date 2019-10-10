@@ -1,4 +1,3 @@
-
 public class SemanticChecker extends tigerBaseVisitor<String> {
     private SymbolTable symTable;
 
@@ -63,7 +62,18 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitType_declaration(tigerParser.Type_declarationContext ctx) {
-        return visitChildren(ctx);
+        // type_declaration : TYPE ID EQUALS type SEMI;
+
+        String type = visit(ctx.getChild(3));
+        String id = ctx.getChild(1).getText();
+        String[] typeArr = type.split(" ");
+
+        if (typeArr.length == 1)
+            this.symTable.addType(id, type);
+        else {
+            this.symTable.addArray(id, "type", typeArr[2], Integer.parseInt(typeArr[1]));
+        }
+        return "";
     }
     
     /**
@@ -74,8 +84,21 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitType(tigerParser.TypeContext ctx) {
-        visitChildren(ctx);
-        return "TYPE";
+        // type : ARRAY LBRACK INTLIT RBRACK OF type_id | ID | type_id;
+
+        int childCount = ctx.getChildCount();
+        switch(childCount) {
+            case 0:
+                // check for nulll
+                return "";
+            case 1:
+                // if it's just an int, float, or ID
+                return ctx.getChild(0).getText();
+            default:
+                // if it's an array, we need the type
+                return ctx.getChild(0).getText() + " " + ctx.getChild(2).getText()
+                    + " " + ctx.getChild(5).getText();
+        }
     }
     
     /**
