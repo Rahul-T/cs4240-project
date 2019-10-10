@@ -1,5 +1,6 @@
 main let
 	var A,B : float;
+	var C: array[10] of int;
 	function printf (n : float, f : int) :float begin
 		B := n + 5.0;
 	end;

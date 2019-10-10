@@ -122,11 +122,19 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     public String visitVar_declaration(tigerParser.Var_declarationContext ctx) {
         // var_declaration : VAR id_list COLON type optional_init SEMI; 
         String ids = visit(ctx.getChild(1));
-        String type = visit(ctx.getChild(3));
         String[] idList = ids.split(" ");
-        for(String id: idList) {
-            symTable.addVariable(id, type);
+        String[] typeInfo = visit(ctx.getChild(3)).split(" ");
+        if(typeInfo.length > 1) {
+            // type is array
+            for(String id: idList) {
+                symTable.addArray(id, "var" ,typeInfo[2], Integer.parseInt(typeInfo[1]));
+            }
+        } else {
+            for(String id: idList) {
+                symTable.addVariable(id, typeInfo[0]);
+            }
         }
+
         // System.out.println(idList);
         // System.out.println(type);
         return visitChildren(ctx);
