@@ -97,6 +97,15 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitVar_declaration(tigerParser.Var_declarationContext ctx) {
+        // var_declaration : VAR id_list COLON type optional_init SEMI; 
+        String ids = visit(ctx.getChild(1));
+        String type = visit(ctx.getChild(3));
+        String[] idList = ids.split(" ");
+        for(String id: idList) {
+            symTable.addVariable(id, type);
+        }
+        // System.out.println(idList);
+        // System.out.println(type);
         return visitChildren(ctx);
     }
     
@@ -108,7 +117,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitId_list(tigerParser.Id_listContext ctx) {
-        return visitChildren(ctx);
+        // id_list : ID id_list_tail;
+        String id = ctx.getChild(0).getText();
+        String idListTail = visit(ctx.getChild(1));
+        return id + " " + idListTail;
     }
     
     /**
@@ -119,7 +131,13 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitId_list_tail(tigerParser.Id_list_tailContext ctx) {
-        return visitChildren(ctx);
+        // id_list_tail : COMMA ID id_list_tail | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return "";
+        }
+        String id = ctx.getChild(1).getText();
+        String idListTail = visit(ctx.getChild(2));
+        return id + " " + idListTail;
     }
     
     /**
