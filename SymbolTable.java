@@ -50,8 +50,8 @@ public class SymbolTable {
         ScopeNode curr = current;
         while (curr != null) {
             retString = curr.toString() + "\n" + retString;
+            curr = curr.getParent();
         }
-        curr = curr.getParent();
         return retString;
     }
 }

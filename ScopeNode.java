@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ScopeNode {
@@ -14,6 +15,7 @@ public class ScopeNode {
         this.scopeName = scopeName;
         this.parent = parent;
         this.children = new ArrayList<ScopeNode>();
+        this.scopeEntries = new HashMap<String, SymbolData>();
     }
 
     public String getScopeName() {

@@ -141,10 +141,15 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitFunction_declaration(tigerParser.Function_declarationContext ctx) {
         symTable.openScope();
-        String paramTypeString = visitChildren(ctx);
+        String paramTypeString = "a,b,c";
+        visitChildren(ctx);
         symTable.closeScope();
         String[] paramTypeArr = paramTypeString.split(",");
-        symTable.addFunction(ctx.getChild(1).getText(), ctx.getChild(5).getText(), paramTypeArr);
+        // First one: Func Name
+        // Second one: Ret Type
+        symTable.addFunction(ctx.getChild(1).getText(),
+                ctx.getChild(5).getChild(1).getText(),
+                paramTypeArr);
         System.out.print(symTable);
         return ctx.getChild(1).getText();
     }
