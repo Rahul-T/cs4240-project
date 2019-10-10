@@ -26,4 +26,15 @@ public class SymbolTable {
         SymbolData newDataNode = new SymbolData(classification, type, isArray, size);
         current.addEntry(name, newDataNode);
     }
+
+    @Override
+    public String toString() {
+        String retString = "";
+        ScopeNode curr = current;
+        while (curr != null) {
+            retString = curr.toString() + "\n" + retString;
+        }
+        curr = curr.getParent();
+        return retString;
+    }
 }

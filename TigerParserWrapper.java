@@ -95,4 +95,11 @@ public class TigerParserWrapper {
         return this.errorHandler.getErrorStrings();
     }
 
+    /**
+     * Reset the parser.
+     */
+    public void reset() {
+        this.parser.reset();
+    }
+
 }

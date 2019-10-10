@@ -35,4 +35,28 @@ public class ScopeNode {
         scopeEntries.put(entryName, entryData);
     }
 
+    /**
+     * Lookup a value in the tree of ScopeNodes, starting with the current scope
+     * and looking up scopes until the desired item is found.
+     * @param entryName String name of the desired entry in the Symbol Table.
+     * @return SymbolData corresponding to the desired entry if found, null
+     *         otherwise.
+     */
+    public SymbolData lookupEntry(String entryName) {
+        ScopeNode current = this;
+        SymbolData ret;
+        while (current != null) {
+            if ((ret = scopeEntries.get(entryName)) != null) {
+                return ret;
+            } 
+            current = current.parent;
+        }
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return scopeName + "\n" + scopeEntries.toString();
+    }
+
 }
