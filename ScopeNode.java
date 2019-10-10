@@ -38,8 +38,13 @@ public class ScopeNode {
         children.add(newNode);
     }
 
-    public void addEntry(String entryName, SymbolData entryData) {
-        scopeEntries.put(entryName, entryData);
+    public boolean addEntry(String entryName, SymbolData entryData) {
+        if (containsDuplicateSymbol(entryName)) {
+            return false;
+        } else {
+            scopeEntries.put(entryName, entryData);
+            return true;
+        }
     }
 
     /**
@@ -59,6 +64,16 @@ public class ScopeNode {
             current = current.parent;
         }
         return null;
+    }
+
+    /**
+     * Checks the current scope to see if it contains the symbol.
+     * @param entryName Name to check for in symbol table
+     * @return True if there's already an entry in the current scope for 
+     *         entryName, false otherwise.
+     */
+    public boolean containsDuplicateSymbol(String entryName) {
+        return this.scopeEntries.containsKey(entryName);
     }
 
     @Override

@@ -1,5 +1,14 @@
+import org.antlr.v4.runtime.ParserRuleContext;
+
 public class SemanticChecker extends tigerBaseVisitor<String> {
     private SymbolTable symTable;
+
+    private void symbolTableError(ParserRuleContext ctx, String id) {
+        System.out.println("\nCOMPLIATION ERROR! Error while building symbol table at line " 
+            + String.valueOf(ctx.getStart().getLine()) + ": " + id 
+            + " previously declared.");
+        System.exit(1);
+    }
 
     public SemanticChecker() {
         this.symTable = new SymbolTable();
@@ -67,11 +76,16 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         String type = visit(ctx.getChild(3));
         String id = ctx.getChild(1).getText();
         String[] typeArr = type.split(" ");
+        boolean success;
 
         if (typeArr.length == 1)
-            this.symTable.addType(id, type);
+            success = this.symTable.addType(id, type);
         else {
-            this.symTable.addArray(id, "type", typeArr[2], Integer.parseInt(typeArr[1]));
+            success = this.symTable.addArray(id, "type", typeArr[2], Integer.parseInt(typeArr[1]));
+        }
+
+        if (!success) {
+            symbolTableError(ctx, id);
         }
         return "";
     }

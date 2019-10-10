@@ -22,31 +22,46 @@ public class SymbolTable {
         current = current.getParent();
     }
 
-    void addSymbol(String name, String classification, String type, 
+    /**
+     * @return True on successful add, false if symbol already declared in scope.
+     */
+    boolean addSymbol(String name, String classification, String type, 
         boolean isArray, int size, String[] paramList) {
         SymbolData newDataNode = new SymbolData(classification, type, isArray, 
             size, paramList);
-        current.addEntry(name, newDataNode);
+        return current.addEntry(name, newDataNode);
     }
 
-    void addArray(String name, String classification, String type, int size) {
+    /**
+     * @return True on successful add, false if symbol already declared in scope.
+     */
+    boolean addArray(String name, String classification, String type, int size) {
         SymbolData newDataNode = new SymbolData(classification, type, size);
-        current.addEntry(name, newDataNode);
+        return current.addEntry(name, newDataNode);
     }
 
-    void addVariable(String name, String type) {
+    /**
+     * @return True on successful add, false if symbol already declared in scope.
+     */
+    boolean addVariable(String name, String type) {
         SymbolData newDataNode = new SymbolData("var", type);
-        current.addEntry(name, newDataNode);
+        return current.addEntry(name, newDataNode);
     }
 
-    void addFunction(String name, String retType, String[] paramList) {
+    /**
+     * @return True on successful add, false if symbol already declared in scope.
+     */
+    boolean addFunction(String name, String retType, String[] paramList) {
         SymbolData newDataNode = new SymbolData("func", retType, paramList);
-        current.addEntry(name, newDataNode);
+        return current.addEntry(name, newDataNode);
     }
 
-    void addType(String name, String type) {
+    /**
+     * @return True on successful add, false if symbol already declared in scope.
+     */
+    boolean addType(String name, String type) {
         SymbolData newDataNode = new SymbolData("type", type);
-        current.addEntry(name, newDataNode);
+        return current.addEntry(name, newDataNode);
     }
 
     @Override
