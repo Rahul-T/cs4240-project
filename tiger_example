@@ -1,4 +1,5 @@
 main let
+	type TEST = int;
 	var A,B : float;
 	var C: array[10] of int;
 	function printf (n : float, f : int) :float begin

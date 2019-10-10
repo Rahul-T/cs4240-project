@@ -4,11 +4,14 @@ import java.io.IOException;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 public class TigerCompiler {
+    private static boolean verbosePrint = true;
     public static void main(String[] args) throws IOException {
         // Validate args
-        if (args.length != 1) {
-            System.out.println("Tiger Compiler Usage: java TigerCompiler <filename>");
-            return;
+        if ((args.length == 2) && (args[1].equals("-no-print"))) {
+            verbosePrint = false;
+        } else if (args.length != 1) {
+            System.out.println("Tiger Compiler Usage: java TigerCompiler <filename> [-no-print]");
+            System.exit(1);
         }
 
         // Check for file
@@ -16,11 +19,12 @@ public class TigerCompiler {
         File file = new File(fileName);
         if (!file.exists()) {
             System.out.println(String.format("File \"%s\" not found.", fileName));
-            return;
+            System.exit(1);
         }
 
         // Parse file, check for errors, and print tokens
-        System.out.println(String.format("Compiling file \"%s\"\n", fileName));
+        if (verbosePrint)
+            System.out.println(String.format("Compiling file \"%s\"\n", fileName));
         TigerParserWrapper wrapper = new TigerParserWrapper();
 
         wrapper.parse(fileName);
@@ -31,12 +35,14 @@ public class TigerCompiler {
         walker.walk(synChecker, wrapper.getParseTree());
     
         if (wrapper.getErrorNumber() == 0) {
-            System.out.println("Successful Parse\n\n" 
-                + synChecker.getTokenTupleString() + "\n" 
-                + synChecker.getTokenTypeList());
+            if (verbosePrint)
+                System.out.println("Successful Parse\n\n" 
+                    + synChecker.getTokenTupleString() + "\n" 
+                    + synChecker.getTokenTypeList());
         } else {
-            System.out.println("Unsuccessful Parse\n" 
-                + wrapper.getErrorStrings() + "\n");
+            if (verbosePrint)
+            System.out.println("Unsuccessful Parse\n"); 
+            System.out.println(wrapper.getErrorStrings() + "\n");
             return;
         }
 
@@ -44,7 +50,7 @@ public class TigerCompiler {
         
         SemanticChecker semChecker = new SemanticChecker();
         String result = semChecker.visit(wrapper.getParseTree());
-        System.out.print(result);
+        semChecker.printSymbolTable();
 
     }   
 }

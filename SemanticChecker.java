@@ -3,6 +3,10 @@ import org.antlr.v4.runtime.ParserRuleContext;
 public class SemanticChecker extends tigerBaseVisitor<String> {
     private SymbolTable symTable;
 
+    public void printSymbolTable() {
+        System.out.println(symTable);
+    }
+
     private void symbolTableError(ParserRuleContext ctx, String id) {
         System.out.println("\nCOMPLIATION ERROR! Error while building symbol table at line " 
             + String.valueOf(ctx.getStart().getLine()) + ": " + id 
@@ -138,16 +142,22 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         String ids = visit(ctx.getChild(1));
         String[] idList = ids.split(" ");
         String[] typeInfo = visit(ctx.getChild(3)).split(" ");
+        boolean success;
         if(typeInfo.length > 1) {
             // type is array
             for(String id: idList) {
-                symTable.addArray(id, "var" ,typeInfo[2], Integer.parseInt(typeInfo[1]));
+                success = symTable.addArray(id, "var" ,typeInfo[2], Integer.parseInt(typeInfo[1]));
+                if (!success)
+                    symbolTableError(ctx, id);
             }
         } else {
             for(String id: idList) {
-                symTable.addVariable(id, typeInfo[0]);
+                success = symTable.addVariable(id, typeInfo[0]);
+                if (!success)
+                    symbolTableError(ctx, id);
             }
         }
+
 
         // System.out.println(idList);
         // System.out.println(type);
@@ -209,13 +219,17 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         String paramTypeString = visit(ctx.getChild(3));
         symTable.closeScope();
         String[] paramTypeArr = paramTypeString.split(",");
+        
         // First one: Func Name
         // Second one: Ret Type
-        symTable.addFunction(ctx.getChild(1).getText(),
-                ctx.getChild(5).getChild(1).getText(),
-                paramTypeArr);
-        System.out.print(symTable);
-        return ctx.getChild(1).getText();
+        boolean success = symTable.addFunction(ctx.getChild(1).getText(),
+            ctx.getChild(5).getChild(1).getText(),
+            paramTypeArr);
+            
+        if (!success)
+            symbolTableError(ctx, ctx.getChild(1).getText());
+
+        return "";
     }
     
     /**
@@ -269,7 +283,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitParam(tigerParser.ParamContext ctx) {
         // param : ID COLON type;
-        this.symTable.addVariable(ctx.getChild(0).getText(), visit(ctx.getChild(2)));
+        if (!this.symTable.addVariable(ctx.getChild(0).getText(), visit(ctx.getChild(2))))
+            symbolTableError(ctx, ctx.getChild(0).getText());
         return ctx.getChild(2).getText();
     }
     

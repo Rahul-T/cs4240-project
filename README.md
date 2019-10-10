@@ -23,3 +23,5 @@ To compile a Tiger program with the built compiler, run
 ```
 java TigerCompiler <file-name>
 ```
+
+To supress unnecessary output and only print errors, use the `-no-print` flag.
