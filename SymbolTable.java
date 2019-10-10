@@ -22,8 +22,25 @@ public class SymbolTable {
         current = current.getParent();
     }
 
-    void addSymbol(String name, String classification, String type, boolean isArray, int size) {
-        SymbolData newDataNode = new SymbolData(classification, type, isArray, size);
+    void addSymbol(String name, String classification, String type, 
+        boolean isArray, int size, String[] paramList) {
+        SymbolData newDataNode = new SymbolData(classification, type, isArray, 
+            size, paramList);
+        current.addEntry(name, newDataNode);
+    }
+
+    void addArray(String name, String type, int size) {
+        SymbolData newDataNode = new SymbolData("var", type, size);
+        current.addEntry(name, newDataNode);
+    }
+
+    void addVariable(String name, String type) {
+        SymbolData newDataNode = new SymbolData("var", type);
+        current.addEntry(name, newDataNode);
+    }
+
+    void addFunction(String name, String retType, String[] paramList) {
+        SymbolData newDataNode = new SymbolData("func", retType, paramList);
         current.addEntry(name, newDataNode);
     }
 

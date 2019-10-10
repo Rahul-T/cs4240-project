@@ -1,5 +1,11 @@
 
 public class SemanticChecker extends tigerBaseVisitor<String> {
+    private SymbolTable symTable;
+
+    public SemanticChecker() {
+        this.symTable = new SymbolTable();
+    }
+
     @Override
     public String visitTiger_program(tigerParser.Tiger_programContext ctx) {
         return visitChildren(ctx);
@@ -134,7 +140,13 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitFunction_declaration(tigerParser.Function_declarationContext ctx) {
-        return visitChildren(ctx);
+        symTable.openScope();
+        String paramTypeString = visitChildren(ctx);
+        symTable.closeScope();
+        String[] paramTypeArr = paramTypeString.split(",");
+        symTable.addFunction(ctx.getChild(1).getText(), ctx.getChild(5).getText(), paramTypeArr);
+        System.out.print(symTable);
+        return ctx.getChild(1).getText();
     }
     
     /**

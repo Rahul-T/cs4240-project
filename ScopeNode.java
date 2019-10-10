@@ -13,6 +13,7 @@ public class ScopeNode {
     ScopeNode(String scopeName, ScopeNode parent) {
         this.scopeName = scopeName;
         this.parent = parent;
+        this.children = new ArrayList<ScopeNode>();
     }
 
     public String getScopeName() {
