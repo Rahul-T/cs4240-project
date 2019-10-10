@@ -26,6 +26,10 @@ public class ScopeNode {
         return parent;
     }
 
+    public ArrayList<ScopeNode> getChildren() {
+        return children;
+    }
+
     public Map<String, SymbolData> getScopeEntries() {
         return scopeEntries;
     }

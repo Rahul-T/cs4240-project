@@ -75,7 +75,13 @@ public class SymbolData {
 
     @Override
     public String toString() {
-        String params = String.join(", ", this.paramList);
+        String params;
+        if (this.paramList == null || this.paramList.length == 0) {
+            params = "";
+        } else {
+            params = String.join(", ", this.paramList);
+        }
+
 
         return String.format("<classification: %s | type: %s | size: %d | param_list: %s | isArray = %s>",
               classification, type, arraySize, params, this.isArray);

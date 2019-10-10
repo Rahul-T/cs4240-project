@@ -46,11 +46,17 @@ public class SymbolTable {
 
     @Override
     public String toString() {
-        String retString = "";
-        ScopeNode curr = current;
-        while (curr != null) {
-            retString = curr.toString() + "\n" + retString;
-            curr = curr.getParent();
+        String retString = head.toString() + "\n";
+        for (ScopeNode curr : head.getChildren()) {
+            retString = toStringHelper(curr, retString);
+        }
+        return retString;
+    }
+
+    private String toStringHelper(ScopeNode parent, String retString) {
+        retString = retString + "\n" + parent.toString();
+        for (ScopeNode curr : parent.getChildren()) {
+            retString = retString + "\n" + curr.toString() + "\n";
         }
         return retString;
     }
