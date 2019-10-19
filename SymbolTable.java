@@ -8,8 +8,24 @@ public class SymbolTable {
     private int scopeAmount = 1;
 
     public SymbolTable() {
-        this.head = new ScopeNode("scope" + scopeAmount++, null);
+        this.head = new ScopeNode("scope " + scopeAmount++, null);
         this.current = this.head;
+
+        // add prints function
+        String[] s = new String[1];
+        s[0] = "string";
+        this.addFunction("prints", "string", s);
+
+        // add printi function
+        String[] i = new String[1];
+        i[0] = "int";
+        this.addFunction("prints", "int", i);
+
+        // add flush
+        this.addFunction("flush", "int", null);
+
+        // add getChar
+        this.addFunction("getchar", "string", null);
     }
 
     void openScope() {
