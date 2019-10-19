@@ -47,6 +47,10 @@ public class ScopeNode {
         }
     }
 
+    public void updateEntry(String entryName, SymbolData entryData) {
+        scopeEntries.put(entryName, entryData);
+    }
+
     /**
      * Lookup a value in the tree of ScopeNodes, starting with the current scope
      * and looking up scopes until the desired item is found.

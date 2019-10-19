@@ -24,6 +24,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 
     private void symbolTableError(ParserRuleContext ctx, int index, String err) {
         // ParserRuleContext prc = (ParserRuleContext) ctx;
+
         Token errToken = ctx.getToken(50, index).getSymbol(); //token 50 is the id
         System.out.println("\nCOMPLIATION ERROR! Error while building symbol table at line " 
             + String.valueOf(errToken.getLine()) + " character " + String.valueOf(errToken.getCharPositionInLine()));
@@ -32,6 +33,13 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             default:
                 System.out.println("- " + errToken.getText() + " " + err);
         }
+        System.exit(1);
+    }
+
+    private void semanticError(Token errToken, String err) {
+        System.out.println("\nSEMANTIC ERROR! Error at " + errToken.getText() + " in line " 
+            + String.valueOf(errToken.getLine()) + " character "
+            + String.valueOf(errToken.getCharPositionInLine()) + " " + err);
         System.exit(1);
     }
 
@@ -354,6 +362,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             case "for":
                 if(!symTable.containsSymbol(ctx.getChild(1).getText())) {
                     symbolTableError(ctx, 1, "undeclared");
+                } else {
+                    return symTable.getType(ctx.getChild(1).getText());
                 }
                 break;
             case "break":
@@ -362,9 +372,11 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 break;
             case "let":
                 break;
-            default:
+            default: // the ID id_tail
                 if(!symTable.containsSymbol(ctx.getChild(0).getText())) {
                     symbolTableError(ctx, 0, "undeclared");
+                } else {
+                    return symTable.getType(ctx.getChild(0).getText());
                 }
                 
         }
@@ -380,6 +392,18 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitId_tail(tigerParser.Id_tailContext ctx) {
+        /*
+            id_tail :   ASSIGN assign_tail |
+                        LBRACK expr RBRACK ASSIGN expr SEMI |
+                        LPAREN expr_list RPAREN SEMI;
+        */
+        switch (ctx.getStart().getType()) {
+            case 26: // assign
+            case 5: // lparen
+                return visit(ctx.getChild(1));
+            case 7: // lbrack
+                return visit(ctx.getChild(4));
+        }
         return visitChildren(ctx);
     }
     
@@ -400,8 +424,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             } else if (!sd.getClassification().equals("func")) {
                 symbolTableError(ctx, 0, "is not a function");
             }
+            return symTable.getType(ctx.getStart().getText());
         }
-        return visitChildren(ctx);
+
+        return visit(ctx.getChild(0));
     }
     
     /**
@@ -416,7 +442,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         if(!symTable.containsSymbol(ctx.getChild(0).getText())) {
             symbolTableError(ctx, 0, "undeclared");
         }
-        return visitChildren(ctx);
+        visitChildren(ctx);
+        return symTable.getType(ctx.getChild(0).getText());
     }
     
     /**
@@ -713,7 +740,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitPow_term(tigerParser.Pow_termContext ctx) {
-        return visitChildren(ctx);
+        // pow_term : factor pow_tail;
+        return visit(ctx.getChild(1));
     }
     
     /**
@@ -724,7 +752,15 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitPow_tail(tigerParser.Pow_tailContext ctx) {
-        return visitChildren(ctx);
+        // pow_tail : EXP factor pow_tail | /* NULL */;
+
+        if (ctx.getChildCount() == 0)
+            return null;
+        String childType = visit(ctx.getChild(1));
+        if (!childType.equals("int") || symTable.isArray(ctx.getChild(1).getText())) {
+            semanticError(ctx.getStart(), "Exponent must be int");
+        }
+        return "int";
     }
     
     /**
@@ -735,7 +771,20 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitFactor(tigerParser.FactorContext ctx) {
-        return visitChildren(ctx);
+        // factor : LPAREN expr RPAREN | constant |  lvalue;
+        // System.out.println(String.valueOf(ctx.getStart().getType()));
+        switch(ctx.getStart().getType()) {
+            case 5: // LPAREN
+                return visit(ctx.getChild(1));
+            case 50: // lvalue / ID
+                return visit(ctx.getChild(0));
+            case 51: // constant / INTLIT
+                return "int";
+            case 52: // constant / FLOATLIT
+                return "float";
+        }
+        
+        return null;
     }
     
     /**

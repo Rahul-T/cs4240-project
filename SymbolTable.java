@@ -14,7 +14,7 @@ public class SymbolTable {
         // add prints function
         String[] s = new String[1];
         s[0] = "string";
-        this.addFunction("prints", "string", s);
+        this.addFunction("prints", "int", s);
 
         // add printi function
         String[] i = new String[1];
@@ -109,5 +109,13 @@ public class SymbolTable {
      */
     public SymbolData lookupSymbol(String entryName) {
         return current.lookupEntry(entryName);
+    }
+
+    public String getType(String entryName) {
+        return current.lookupEntry(entryName).getType();
+    }
+
+    public boolean isArray(String entryName) {
+        return current.lookupEntry(entryName).isArray();
     }
 }

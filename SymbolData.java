@@ -60,7 +60,7 @@ public class SymbolData {
     public String getType() {
         return this.type;
     }
-
+ 
     public boolean isArray() {
         return this.isArray;
     }
