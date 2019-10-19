@@ -84,4 +84,14 @@ public class SymbolTable {
     public boolean containsSymbol(String entryName) {
         return current.containsDuplicateSymbol(entryName);
     }
+
+    /**
+     * Looks up an entry in the symbol table
+     * @param entryName Name of symbol to lookup
+     * @return Associated SymbolData for the lookup symbol. Null if symbol is 
+     *         not found.
+     */
+    public SymbolData lookupSymbol(String entryName) {
+        return current.lookupEntry(entryName);
+    }
 }
