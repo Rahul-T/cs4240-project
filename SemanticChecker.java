@@ -383,6 +383,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitAssign_tail(tigerParser.Assign_tailContext ctx) {
+        // assign_tail: expr SEMI | ID LPAREN expr_list RPAREN SEMI;
+        if(ctx.getChild(1).getText().equals("(")) {
+            
+        }
         return visitChildren(ctx);
     }
     
