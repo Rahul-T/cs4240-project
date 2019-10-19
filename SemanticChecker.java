@@ -16,10 +16,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             + String.valueOf(errToken.getLine()) + " character " + String.valueOf(errToken.getCharPositionInLine()));
 
         switch(err) {
-            case "previously declared":
-            case "undeclared":
+            default:
                 System.out.println("- " + id + " " + err);
-                break;
         }
         System.exit(1);
     }
@@ -356,7 +354,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 break;
             default:
                 if(!symTable.containsSymbol(ctx.getChild(0).getText())) {
-                    symbolTableError(ctx.getChild(1), ctx.getChild(0).getText(), "undeclared");
+                    symbolTableError(ctx.getChild(0), ctx.getChild(0).getText(), "undeclared");
                 }
                 
         }
@@ -385,7 +383,14 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     public String visitAssign_tail(tigerParser.Assign_tailContext ctx) {
         // assign_tail: expr SEMI | ID LPAREN expr_list RPAREN SEMI;
         if(ctx.getChild(1).getText().equals("(")) {
-            
+            String id = ctx.getChild(0).getText();
+            SymbolData sd = symTable.lookupSymbol(id);
+            System.out.println("symbol: " + id + "sd: " + sd);
+            if(sd == null) {
+                symbolTableError(ctx, id, "undeclared");
+            } else if (!sd.getClassification().equals("func")) {
+                symbolTableError(ctx, id, "is not a function");
+            }
         }
         return visitChildren(ctx);
     }
@@ -398,6 +403,11 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitLvalue(tigerParser.LvalueContext ctx) {
+        // <lvalue> → id <lvalue-tail>
+        if(!symTable.containsSymbol(ctx.getChild(0).getText())) {
+            // System.out.println(ctx.getChild(0).getText());
+            symbolTableError(ctx.getChild(0), ctx.getChild(0).getText(), "undeclared");
+        }
         return visitChildren(ctx);
     }
     
