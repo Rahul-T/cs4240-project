@@ -80,4 +80,8 @@ public class SymbolTable {
         }
         return retString;
     }
+
+    public boolean containsSymbol(String entryName) {
+        return current.containsDuplicateSymbol(entryName);
+    }
 }
