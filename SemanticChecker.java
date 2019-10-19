@@ -9,15 +9,28 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         System.out.println(symTable);
     }
 
-    private void symbolTableError(ParseTree ctx, String id, String err) {
-        ParserRuleContext prc = (ParserRuleContext) ctx;
-        Token errToken = prc.getStart();
+    private void symbolTableError(ParserRuleContext ctx, int index, String id, String err) {
+        // ParserRuleContext prc = (ParserRuleContext) ctx;
+        Token errToken = ctx.getToken(50, index).getSymbol(); //token 50 is the id
         System.out.println("\nCOMPLIATION ERROR! Error while building symbol table at line " 
             + String.valueOf(errToken.getLine()) + " character " + String.valueOf(errToken.getCharPositionInLine()));
 
         switch(err) {
             default:
                 System.out.println("- " + id + " " + err);
+        }
+        System.exit(1);
+    }
+
+    private void symbolTableError(ParserRuleContext ctx, int index, String err) {
+        // ParserRuleContext prc = (ParserRuleContext) ctx;
+        Token errToken = ctx.getToken(50, index).getSymbol(); //token 50 is the id
+        System.out.println("\nCOMPLIATION ERROR! Error while building symbol table at line " 
+            + String.valueOf(errToken.getLine()) + " character " + String.valueOf(errToken.getCharPositionInLine()));
+
+        switch(err) {
+            default:
+                System.out.println("- " + errToken.getText() + " " + err);
         }
         System.exit(1);
     }
@@ -97,7 +110,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         }
 
         if (!success) {
-            symbolTableError(ctx.getChild(1), id, "previously declared");
+            symbolTableError(ctx, 1, "previously declared");
         }
         return "";
     }
@@ -156,19 +169,16 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             for(String id: idList) {
                 success = symTable.addArray(id, "var" ,typeInfo[2], Integer.parseInt(typeInfo[1]));
                 if (!success)
-                    symbolTableError(ctx.getChild(1), id, "previously declared");
+                    symbolTableError(ctx, 1, id, "previously declared");
             }
         } else {
             for(String id: idList) {
                 success = symTable.addVariable(id, typeInfo[0]);
                 if (!success)
-                    symbolTableError(ctx.getChild(1), id, "previously declared");
+                    symbolTableError(ctx, 1, id, "previously declared");
             }
         }
 
-
-        // System.out.println(idList);
-        // System.out.println(type);
         return visitChildren(ctx);
     }
     
@@ -235,7 +245,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             paramTypeArr);
             
         if (!success)
-            symbolTableError(ctx.getChild(1), ctx.getChild(1).getText(), "previously declared");
+            symbolTableError(ctx, 1, "previously declared");
 
         return "";
     }
@@ -292,7 +302,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     public String visitParam(tigerParser.ParamContext ctx) {
         // param : ID COLON type;
         if (!this.symTable.addVariable(ctx.getChild(0).getText(), visit(ctx.getChild(2))))
-            symbolTableError(ctx.getChild(0), ctx.getChild(0).getText(), "previously declared");
+            symbolTableError(ctx, 0, "previously declared");
         return ctx.getChild(2).getText();
     }
     
@@ -343,7 +353,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 break;
             case "for":
                 if(!symTable.containsSymbol(ctx.getChild(1).getText())) {
-                    symbolTableError(ctx.getChild(1), ctx.getChild(1).getText(), "undeclared");
+                    symbolTableError(ctx, 1, "undeclared");
                 }
                 break;
             case "break":
@@ -354,7 +364,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 break;
             default:
                 if(!symTable.containsSymbol(ctx.getChild(0).getText())) {
-                    symbolTableError(ctx.getChild(0), ctx.getChild(0).getText(), "undeclared");
+                    symbolTableError(ctx, 0, "undeclared");
                 }
                 
         }
@@ -385,11 +395,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         if(ctx.getChild(1).getText().equals("(")) {
             String id = ctx.getChild(0).getText();
             SymbolData sd = symTable.lookupSymbol(id);
-            System.out.println("symbol: " + id + "sd: " + sd);
             if(sd == null) {
-                symbolTableError(ctx, id, "undeclared");
+                symbolTableError(ctx, 0, "undeclared");
             } else if (!sd.getClassification().equals("func")) {
-                symbolTableError(ctx, id, "is not a function");
+                symbolTableError(ctx, 0, "is not a function");
             }
         }
         return visitChildren(ctx);
@@ -405,8 +414,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     public String visitLvalue(tigerParser.LvalueContext ctx) {
         // <lvalue> → id <lvalue-tail>
         if(!symTable.containsSymbol(ctx.getChild(0).getText())) {
-            // System.out.println(ctx.getChild(0).getText());
-            symbolTableError(ctx.getChild(0), ctx.getChild(0).getText(), "undeclared");
+            symbolTableError(ctx, 0, "undeclared");
         }
         return visitChildren(ctx);
     }
