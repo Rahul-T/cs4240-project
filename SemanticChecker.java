@@ -502,7 +502,16 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitExpr(tigerParser.ExprContext ctx) {
-        return visitChildren(ctx);
+        // expr : and_term e_tail;
+
+        String andType = visit(ctx.getChild(0));
+        String eTailType = visit(ctx.getChild(1));
+
+        if (eTailType == null)
+            return andType;
+        else if (!andType.equals("int") || !eTailType.equals("int"))
+            semanticError(ctx.getStart(), "Logical operands must be of type int!");
+        return "int";
     }
     
     /**
@@ -513,7 +522,18 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitE_tail(tigerParser.E_tailContext ctx) {
-        return visitChildren(ctx);
+        // e_tail : OR and_term e_tail | /* NULL */;
+        if (ctx.getChildCount() == 0) {
+            return null;
+        } else {
+            String andType = visit(ctx.getChild(1));
+            if (!andType.equals("int"))
+                semanticError(ctx.getStart(), "Logical operand must be of type int!");
+            String eTailType = visit(ctx.getChild(2));
+            if (eTailType != null && !eTailType.equals("int"))
+                semanticError(ctx.getStart(), "Logical operand must be of type int!");
+            return "int";
+        }
     }
     
     /**
