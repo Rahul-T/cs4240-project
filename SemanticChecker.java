@@ -464,11 +464,17 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         if(!symTable.containsSymbol(ctx.getChild(0).getText())) {
             symbolTableError(ctx, 0, "undeclared");
         }
-        visitChildren(ctx);
         String symbol = ctx.getChild(0).getText();
         String type = symTable.getType(symbol);
-        if (symTable.isArray(symbol))
-            type += " array";
+
+        if(ctx.getChildCount() > 1) {
+            if (symTable.isArray(symbol)) {
+                type += " array";
+                visit(ctx.getChild(1));
+            } else {
+                semanticError(ctx.getStart(), "Can't index into non-array type");
+            }
+        }
         return type;
     }
     
@@ -480,7 +486,15 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitLvalue_tail(tigerParser.Lvalue_tailContext ctx) {
-        return visitChildren(ctx);
+        // lvalue_tail : LBRACK expr RBRACK | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return null;
+        }
+        String exprType = visit(ctx.getChild(1));
+        if(exprType == null || !exprType.equals("int")) {
+            semanticError(ctx.getStart(), "Array must be indexed with int");
+        }
+        return exprType;
     }
     
     /**
