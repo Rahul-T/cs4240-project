@@ -354,6 +354,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         ID id_tail;
         */
 
+        visitChildren(ctx);
+        
         switch(ctx.getChild(0).getText()) {
             case "if":
                 break;
@@ -381,7 +383,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 
         }
 
-        return visitChildren(ctx);
+        return null;
     }
     
     /**
@@ -397,6 +399,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                         LBRACK expr RBRACK ASSIGN expr SEMI |
                         LPAREN expr_list RPAREN SEMI;
         */
+        visitChildren(ctx);
+        
         switch (ctx.getStart().getType()) {
             case 26: // assign
             case 5: // lparen
@@ -404,7 +408,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             case 7: // lbrack
                 return visit(ctx.getChild(4));
         }
-        return visitChildren(ctx);
+        return null;
     }
     
     /**
@@ -757,6 +761,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
         String childType = visit(ctx.getChild(1));
+        System.out.println("Child: " + ctx.getChild(1).getText() + " Type: " + childType);
         if (!childType.equals("int") || symTable.isArray(ctx.getChild(1).getText())) {
             semanticError(ctx.getStart(), "Exponent must be int");
         }
