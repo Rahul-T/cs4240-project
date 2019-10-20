@@ -546,7 +546,17 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitGreater_eq_term(tigerParser.Greater_eq_termContext ctx) {
-        return visitChildren(ctx);
+        String type1 = visit(ctx.getChild(0));
+        String type2 = visit(ctx.getChild(1));
+
+        if (type2 == null)
+            return type1;
+        else if (type1.equals(type2))
+            return "int";
+        else 
+            semanticError(ctx.getStart(), "Comparison operands must have same type!");
+
+        return null;
     }
     
     /**
@@ -557,7 +567,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitGreater_eq_tail(tigerParser.Greater_eq_tailContext ctx) {
-        return visitChildren(ctx);
+        if (ctx.getChildCount() == 0)
+            return null;
+        return visit(ctx.getChild(1));
     }
     
     /**
@@ -568,7 +580,17 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitLess_eq_term(tigerParser.Less_eq_termContext ctx) {
-        return visitChildren(ctx);
+        String type1 = visit(ctx.getChild(0));
+        String type2 = visit(ctx.getChild(1));
+
+        if (type2 == null)
+            return type1;
+        else if (type1.equals(type2))
+            return "int";
+        else 
+            semanticError(ctx.getStart(), "Comparison operands must have same type!");
+
+        return null;
     }
     
     /**
@@ -579,7 +601,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitLess_eq_tail(tigerParser.Less_eq_tailContext ctx) {
-        return visitChildren(ctx);
+        if (ctx.getChildCount() == 0)
+            return null;
+        return visit(ctx.getChild(1));
     }
     
     /**
@@ -590,7 +614,17 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitGreater_term(tigerParser.Greater_termContext ctx) {
-        return visitChildren(ctx);
+        String type1 = visit(ctx.getChild(0));
+        String type2 = visit(ctx.getChild(1));
+
+        if (type2 == null)
+            return type1;
+        else if (type1.equals(type2))
+            return "int";
+        else 
+            semanticError(ctx.getStart(), "Comparison operands must have same type!");
+
+        return null;
     }
     
     /**
@@ -601,7 +635,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitGreater_tail(tigerParser.Greater_tailContext ctx) {
-        return visitChildren(ctx);
+        if (ctx.getChildCount() == 0)
+            return null;
+        return visit(ctx.getChild(1));
     }
     
     /**
@@ -612,7 +648,17 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitLess_term(tigerParser.Less_termContext ctx) {
-        return visitChildren(ctx);
+        String type1 = visit(ctx.getChild(0));
+        String type2 = visit(ctx.getChild(1));
+
+        if (type2 == null)
+            return type1;
+        else if (type1.equals(type2))
+            return "int";
+        else 
+            semanticError(ctx.getStart(), "Comparison operands must have same type!");
+
+        return null;
     }
     
     /**
@@ -623,7 +669,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitLess_tail(tigerParser.Less_tailContext ctx) {
-        return visitChildren(ctx);
+        if (ctx.getChildCount() == 0)
+            return null;
+        return visit(ctx.getChild(1));
     }
     
     /**
@@ -634,7 +682,17 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitNot_eq_term(tigerParser.Not_eq_termContext ctx) {
-        return visitChildren(ctx);
+        String type1 = visit(ctx.getChild(0));
+        String type2 = visit(ctx.getChild(1));
+
+        if (type2 == null)
+            return type1;
+        else if (type1.equals(type2))
+            return "int";
+        else 
+            semanticError(ctx.getStart(), "Comparison operands must have same type!");
+
+        return null;
     }
     
     /**
@@ -645,7 +703,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitNot_eq_tail(tigerParser.Not_eq_tailContext ctx) {
-        return visitChildren(ctx);
+        if (ctx.getChildCount() == 0)
+            return null;
+        return visit(ctx.getChild(1));
     }
     
     /**
