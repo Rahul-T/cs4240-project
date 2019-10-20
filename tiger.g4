@@ -108,26 +108,11 @@ else_stat : ELSE stat_seq | /* NULL */;
 expr : and_term e_tail;
 e_tail : OR and_term e_tail | /* NULL */;
 
-and_term : greater_eq_term and_tail;
-and_tail : AND greater_eq_term and_tail | /* NULL */;
+and_term : comparison_term and_tail;
+and_tail : AND comparison_term and_tail | /* NULL */;
 
-greater_eq_term : less_eq_term greater_eq_tail;
-greater_eq_tail : GREATEREQ less_eq_term | /* NULL */;
-
-less_eq_term : greater_term less_eq_tail;
-less_eq_tail : LESSEREQ greater_term | /* NULL */;
-
-greater_term : less_term greater_tail;
-greater_tail : GREATER less_term  | /* NULL */;
-
-less_term : not_eq_term less_tail;
-less_tail : LESSER not_eq_term | /* NULL */;
-
-not_eq_term : eq_term not_eq_tail;
-not_eq_tail : NEQ eq_term | /* NULL */;
-
-eq_term : div_term eq_tail;
-eq_tail : EQ div_term | /* NULL */;
+comparison_term: div_term comparison_tail;
+comparison_tail : (EQ | NEQ | LESSER | LESSEREQ | GREATER | GREATEREQ) div_term | /* NULL */;
 
 div_term : mult_term div_tail;
 div_tail : DIV mult_term div_tail | /* NULL */;

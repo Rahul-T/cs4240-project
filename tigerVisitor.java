@@ -184,77 +184,17 @@ public interface tigerVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAnd_tail(tigerParser.And_tailContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link tigerParser#greater_eq_term}.
+	 * Visit a parse tree produced by {@link tigerParser#comparison_term}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitGreater_eq_term(tigerParser.Greater_eq_termContext ctx);
+	T visitComparison_term(tigerParser.Comparison_termContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link tigerParser#greater_eq_tail}.
+	 * Visit a parse tree produced by {@link tigerParser#comparison_tail}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitGreater_eq_tail(tigerParser.Greater_eq_tailContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#less_eq_term}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLess_eq_term(tigerParser.Less_eq_termContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#less_eq_tail}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLess_eq_tail(tigerParser.Less_eq_tailContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#greater_term}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitGreater_term(tigerParser.Greater_termContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#greater_tail}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitGreater_tail(tigerParser.Greater_tailContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#less_term}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLess_term(tigerParser.Less_termContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#less_tail}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLess_tail(tigerParser.Less_tailContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#not_eq_term}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNot_eq_term(tigerParser.Not_eq_termContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#not_eq_tail}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNot_eq_tail(tigerParser.Not_eq_tailContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#eq_term}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitEq_term(tigerParser.Eq_termContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link tigerParser#eq_tail}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitEq_tail(tigerParser.Eq_tailContext ctx);
+	T visitComparison_tail(tigerParser.Comparison_tailContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link tigerParser#div_term}.
 	 * @param ctx the parse tree
