@@ -749,7 +749,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitPow_term(tigerParser.Pow_termContext ctx) {
         // pow_term : factor pow_tail;
-        return visit(ctx.getChild(1));
+        visit(ctx.getChild(1));
+        return visit(ctx.getChild(0));
     }
     
     /**
@@ -761,10 +762,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitPow_tail(tigerParser.Pow_tailContext ctx) {
         // pow_tail : EXP factor pow_tail | /* NULL */;
-        visitChildren(ctx);
 
         if (ctx.getChildCount() == 0)
             return null;
+
+        visit(ctx.getChild(2));
+
         String childType = visit(ctx.getChild(1));
         String symbolName = ctx.getChild(1).getText();
         // System.out.println("Child: " + ctx.getChild(1).getText() + " Type: " + childType);
