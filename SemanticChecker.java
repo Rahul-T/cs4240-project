@@ -745,8 +745,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitAdd_term(tigerParser.Add_termContext ctx) {
         // add_term : pow_term add_tail;
-        String powType = visit(ctx.getChild(1));
-        String tailType = visit(ctx.getChild(2));
+        String powType = visit(ctx.getChild(0));
+        String tailType = visit(ctx.getChild(1));
         return validateTypes(powType, tailType, ctx, "+");
     }
     
@@ -775,8 +775,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitPow_term(tigerParser.Pow_termContext ctx) {
         // pow_term : factor pow_tail;
-        visit(ctx.getChild(1));
+        String tailType = visit(ctx.getChild(1));
         String type = visit(ctx.getChild(0));
+        if(tailType == null) {
+            return type;
+        }
+        
         if(!(type.equals("int") || type.equals("float"))) {
             System.out.println(type);
             semanticError(ctx.getStart(), "Power operator must be int or float");

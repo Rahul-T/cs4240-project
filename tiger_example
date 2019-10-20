@@ -3,7 +3,7 @@ main let
 	type TESTARR = array[10] of float;
 	var A,B,D : float;
 	var C: array[10] of int;
-	var E: TEST;
+	var E, G: TEST;
 	var F: int;
 
 	function printf (n : float, f : int) :float begin
@@ -13,5 +13,5 @@ in begin
 	for B := 1.0 to 2.0 do 
 		A := 1.5;
 	enddo;
-	D := E ** 7 ** 7;
+	D := 7 ** 7 + D ** 7 + 9.9;
 end
