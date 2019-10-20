@@ -43,6 +43,24 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         System.exit(1);
     }
 
+    private String validateTypes(String type1, String type2, ParserRuleContext ctx, String operator) {
+        if (type1 == null && type2 == null) {
+            return null;
+        } else if (type1 == null) {
+            return type2;
+        } else if (type2 == null) {
+            return type1;
+        } else if(type1.equals(type2)) {
+            return type1;
+        }
+        else if((type1.equals("float") && type2.equals("int")) 
+                || (type2.equals("float") && type1.equals("int"))) {
+            return "float";
+        }
+        semanticError(ctx.getStart(), "invalid types for " + operator +" operator");
+        return null;
+    }
+
     public SemanticChecker() {
         this.symTable = new SymbolTable();
     }
@@ -727,7 +745,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitAdd_term(tigerParser.Add_termContext ctx) {
         // add_term : pow_term add_tail;
-        return visitChildren(ctx);
+        String powType = visit(ctx.getChild(1));
+        String tailType = visit(ctx.getChild(2));
+        return validateTypes(powType, tailType, ctx, "+");
     }
     
     /**
@@ -743,20 +763,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             return null;
         String powType = visit(ctx.getChild(1));
         String tailType = visit(ctx.getChild(2));
-        if(tailType == null) {
-            return powType;
-        } else {
-            if(powType.equals(tailType)) {
-                return powType;
-            }
-            else if((powType.equals("float") && tailType.equals("int")) 
-                    || (tailType.equals("float") && powType.equals("int"))) {
-                return "float";
-            }
-            semanticError(ctx.getStart(), "invalid types for + operator");
-        }
-
-        return null;
+        return validateTypes(powType, tailType, ctx, "+");
     }
     
     /**
