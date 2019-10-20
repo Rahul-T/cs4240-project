@@ -750,7 +750,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     public String visitPow_term(tigerParser.Pow_termContext ctx) {
         // pow_term : factor pow_tail;
         visit(ctx.getChild(1));
-        return visit(ctx.getChild(0));
+        String type = visit(ctx.getChild(0));
+        if(!(type.equals("int") || type.equals("float"))) {
+            System.out.println(type);
+            semanticError(ctx.getStart(), "Power operator must be int or float");
+        }
+        return type;
     }
     
     /**

@@ -1,8 +1,11 @@
 main let
-	type TEST = int;
+	type TEST = float;
+	type TESTARR = array[10] of float;
 	var A,B,D : float;
 	var C: array[10] of int;
-	var E: int;
+	var E: TEST;
+	var F: int;
+
 	function printf (n : float, f : int) :float begin
 		B := n + 5.0;
 	end;
@@ -10,5 +13,5 @@ in begin
 	for B := 1.0 to 2.0 do 
 		A := 1.5;
 	enddo;
-	D := 8.0 ** 7 ** 7;
+	D := E ** 7 ** 7;
 end
