@@ -656,7 +656,18 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitEq_term(tigerParser.Eq_termContext ctx) {
-        return visitChildren(ctx);
+        // eq_term : div_term eq_tail;
+        String type1 = visit(ctx.getChild(0));
+        String type2 = visit(ctx.getChild(1));
+
+        if (type2 == null)
+            return type1;
+        else if (type1.equals(type2))
+            return "int";
+        else 
+            semanticError(ctx.getStart(), "Comparison operands must have same type!");
+
+        return null;
     }
     
     /**
@@ -667,7 +678,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitEq_tail(tigerParser.Eq_tailContext ctx) {
-        return visitChildren(ctx);
+        // eq_tail : EQ div_term | /* NULL */
+        if (ctx.getChildCount() == 0)
+            return null;
+        return visit(ctx.getChild(1));
     }
     
     /**
@@ -678,7 +692,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitDiv_term(tigerParser.Div_termContext ctx) {
-        return visitChildren(ctx);
+        // div_term : mult_term div_tail;
+        String divType = visit(ctx.getChild(0));
+        String tailType = visit(ctx.getChild(1));
+        return validateTypes(divType, tailType, ctx, "/");
     }
     
     /**
@@ -689,7 +706,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitDiv_tail(tigerParser.Div_tailContext ctx) {
-        return visitChildren(ctx);
+        // div_tail : PLUS mult_term div_tail | /* NULL */;
+        if (ctx.getChildCount() == 0)
+            return null;
+        String divType = visit(ctx.getChild(1));
+        String tailType = visit(ctx.getChild(2));
+        return validateTypes(divType, tailType, ctx, "/");
     }
     
     /**
@@ -700,7 +722,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitMult_term(tigerParser.Mult_termContext ctx) {
-        return visitChildren(ctx);
+        // mult_term : sub_term mult_tail;
+        String multType = visit(ctx.getChild(0));
+        String tailType = visit(ctx.getChild(1));
+        return validateTypes(multType, tailType, ctx, "*");
     }
     
     /**
@@ -711,7 +736,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitMult_tail(tigerParser.Mult_tailContext ctx) {
-        return visitChildren(ctx);
+        // mult_tail : PLUS sub_term mult_tail | /* NULL */;
+        if (ctx.getChildCount() == 0)
+            return null;
+        String multType = visit(ctx.getChild(1));
+        String tailType = visit(ctx.getChild(2));
+        return validateTypes(multType, tailType, ctx, "*");
     }
     
     /**
@@ -722,7 +752,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitSub_term(tigerParser.Sub_termContext ctx) {
-        return visitChildren(ctx);
+        // sub_term : add_term sub_tail;
+        String subType = visit(ctx.getChild(0));
+        String tailType = visit(ctx.getChild(1));
+        return validateTypes(subType, tailType, ctx, "-");
     }
     
     /**
@@ -733,7 +766,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitSub_tail(tigerParser.Sub_tailContext ctx) {
-        return visitChildren(ctx);
+        // sub_tail : PLUS add_term sub_tail | /* NULL */;
+        if (ctx.getChildCount() == 0)
+            return null;
+        String subType = visit(ctx.getChild(1));
+        String tailType = visit(ctx.getChild(2));
+        return validateTypes(subType, tailType, ctx, "-");
     }
     
     /**
@@ -761,9 +799,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         // add_tail : PLUS pow_term add_tail | /* NULL */;
         if (ctx.getChildCount() == 0)
             return null;
-        String powType = visit(ctx.getChild(1));
-        String tailType = visit(ctx.getChild(2));
-        return validateTypes(powType, tailType, ctx, "+");
+        String addType = visit(ctx.getChild(0));
+        String tailType = visit(ctx.getChild(1));
+        return validateTypes(addType, tailType, ctx, "+");
     }
     
     /**
