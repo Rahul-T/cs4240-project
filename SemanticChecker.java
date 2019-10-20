@@ -726,6 +726,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitAdd_term(tigerParser.Add_termContext ctx) {
+        // add_term : pow_term add_tail;
         return visitChildren(ctx);
     }
     
@@ -737,7 +738,25 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitAdd_tail(tigerParser.Add_tailContext ctx) {
-        return visitChildren(ctx);
+        // add_tail : PLUS pow_term add_tail | /* NULL */;
+        if (ctx.getChildCount() == 0)
+            return null;
+        String powType = visit(ctx.getChild(1));
+        String tailType = visit(ctx.getChild(2));
+        if(tailType == null) {
+            return powType;
+        } else {
+            if(powType.equals(tailType)) {
+                return powType;
+            }
+            else if((powType.equals("float") && tailType.equals("int")) 
+                    || (tailType.equals("float") && powType.equals("int"))) {
+                return "float";
+            }
+            semanticError(ctx.getStart(), "invalid types for + operator");
+        }
+
+        return null;
     }
     
     /**
