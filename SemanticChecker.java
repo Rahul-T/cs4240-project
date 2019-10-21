@@ -418,10 +418,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 
                     if(isArray) {
                         idTailType = idTailType.substring(0, idTailType.length() - 5);
-                        return idTailType.substring(0, idTailType.length() - 5);
                     }
-                    else if(isAssign && !idType.equals(idTailType)) {
-                        semanticError(ctx.getStart(), "Type mismatch");
+                     if(isAssign && !idType.equals(idTailType)) {
+                        semanticError(ctx.getStart(), "Type mismatch! Expected " + idType + ". Got " + idTailType);
                     }
                     
                     return idType;

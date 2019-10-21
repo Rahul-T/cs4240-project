@@ -14,5 +14,5 @@ in begin
 		A := 1.5;
 	enddo;
 
-	A := C[1];
+	F := C[1];
 end
