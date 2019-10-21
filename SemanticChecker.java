@@ -51,7 +51,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             return type2;
         } else if (type2 == null) {
             return type1;
-        } else if(type1.equals(type2)) {
+        } 
+        
+        if (type1.contains("array") || type2.contains("array"))
+            semanticError(ctx.getStart(), "Cannot perform operations on arrays.");
+
+        if(type1.equals(type2)) {
             return type1;
         }
         else if((type1.equals("float") && type2.equals("int")) 

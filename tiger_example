@@ -17,7 +17,7 @@ in begin
 	enddo;
 
 	
-	C[0] := C[0];
+	C := C + C;
 
 	A := 10.0;
 end
