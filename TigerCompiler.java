@@ -50,6 +50,8 @@ public class TigerCompiler {
         
         SemanticChecker semChecker = new SemanticChecker();
         String result = semChecker.visit(wrapper.getParseTree());
+
+        IRCodeGenerator irCodeGenerator = new IRCodeGenerator();
         // semChecker.printSymbolTable();
 
     }   
