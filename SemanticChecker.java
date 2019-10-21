@@ -435,6 +435,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             case "return":
                 return visit(ctx.getChild(1));
             case "let":
+                symTable.openScope();
+                visit(ctx.getChild(1));
+                visit(ctx.getChild(3));
+                symTable.closeScope();
                 break;
             default: // the ID id_tail
                 String id = ctx.getChild(0).getText();

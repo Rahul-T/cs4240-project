@@ -19,5 +19,12 @@ in begin
 	F := C[10] - F ** C[10];
 	F := printi(F);
 
+	let
+		var X: int;
+	in
+		X := 2;
+	end;
+
+	X := 3;
 	A := 10.0;
 end
