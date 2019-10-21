@@ -372,17 +372,31 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         LET declaration_segment IN stat_seq END SEMI |
         ID id_tail;
         */
-        
+        String exprType;
         switch(ctx.getChild(0).getText()) {
             case "if":
+                exprType = visit(ctx.getChild(1));
+                if (!exprType.equals("int"))
+                    semanticError(ctx.getStart(), "Conditional must evaluate to integer!");
+                visit(ctx.getChild(3));
+                visit(ctx.getChild(4));
                 break;
             case "while":
+                exprType = visit(ctx.getChild(1));
+                if (!exprType.equals("int"))
+                    semanticError(ctx.getStart(), "Conditional must evaluate to integer!");
+                visit(ctx.getChild(3));
                 break;
             case "for":
                 if(!symTable.containsSymbol(ctx.getChild(1).getText())) {
                     symbolTableError(ctx, 1, "undeclared");
                 } else {
-                    return symTable.getType(ctx.getChild(1).getText());
+                    String idType = symTable.lookupSymbol(ctx.getChild(1).getText()).getType();
+                    String expr1Type = visit(ctx.getChild(3));
+                    String expr2Type = visit(ctx.getChild(5));
+                    if (!idType.equals("int") || !expr1Type.equals("int") || !expr2Type.equals("int"))
+                        semanticError(ctx.getStart(), "For loop variables must be integers!");
+                    visit(ctx.getChild(7));
                 }
                 break;
             case "break":
@@ -398,7 +412,6 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 } else {
                     String idTailType = visit(ctx.getChild(1));
                     String[] paramTypes = idTailType.split(" ");
-                    System.out.println("paramTypes: " + Arrays.toString(paramTypes));
                     if(paramTypes.length > 1) {
                         String[] idParams = symTable.lookupSymbol(id).getParamList();
                         if(idParams.length != paramTypes.length) {
@@ -420,10 +433,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                         idTailType = idTailType.substring(0, idTailType.length() - 5);
                     }
                      if(isAssign && !idType.equals(idTailType)) {
-                        semanticError(ctx.getStart(), "Type mismatch! Expected " + idType + ". Got " + idTailType);
+                        semanticError(ctx.getStart(), "Type mismatch! Expected " + idType + ". Got " + idTailType + ".");
                     }
                     
-                    return idType;
+                    // return idType;
                 }
                 
         }
