@@ -21,5 +21,10 @@ compiler: $(CLASSES:.java=.class)
 clean: 
 	@$(RM) *.class $(ANTLR_FILES)
 
+cleanjava:
+	@$(RM) *.class
+
 parser:
 	@java -jar $(ANTLR_JAR) $(ANTLR_FLAGS) $(GRAMMAR_FILE)
+
+rebuild: clean parser compiler
