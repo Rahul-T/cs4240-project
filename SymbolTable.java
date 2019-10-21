@@ -19,7 +19,7 @@ public class SymbolTable {
         // add printi function
         String[] i = new String[1];
         i[0] = "int";
-        this.addFunction("prints", "int", i);
+        this.addFunction("printi", "int", i);
 
         // add flush
         this.addFunction("flush", "int", null);

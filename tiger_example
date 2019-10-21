@@ -16,8 +16,8 @@ in begin
 		A := 1.5;
 	enddo;
 
-	
-	C := C + C;
+	F := C[10] - F ** C[10];
+	F := printi(F);
 
 	A := 10.0;
 end
