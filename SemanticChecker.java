@@ -1,6 +1,7 @@
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.Token;
+import java.util.Arrays;
 
 public class SemanticChecker extends tigerBaseVisitor<String> {
     private SymbolTable symTable;
@@ -446,6 +447,21 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             } else if (!sd.getClassification().equals("func")) {
                 symbolTableError(ctx, 0, "is not a function");
             }
+            String[] idParams = symTable.lookupSymbol(id).getParamList();
+            String[] paramTypes = visit(ctx.getChild(2)).split(" ");
+            if(idParams.length != paramTypes.length) {
+                semanticError(ctx.getStart(), "Incorrect number of params for function " + id);
+            }
+            for(int i=0; i<idParams.length; i++) {
+                if(!idParams[i].equals(paramTypes[i])) {
+                    semanticError(ctx.getStart(), "Type mismatch in params for function " + id
+                                    + ". Expected " + idParams[i] + " got " + paramTypes[i]);
+                }
+            }
+
+            // System.out.println("IdTypes: " + Arrays.toString(idParams));
+            // System.out.println("Types: " + Arrays.toString(paramTypes));
+
             return symTable.getType(ctx.getStart().getText());
         }
 
@@ -467,7 +483,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         String symbol = ctx.getChild(0).getText();
         String type = symTable.getType(symbol);
 
-        if(ctx.getChildCount() > 1) {
+        // Hacky fix
+        if(ctx.getChildCount() > 1 && !ctx.getChild(1).getText().equals("")) {
             if (symTable.isArray(symbol)) {
                 type += " array";
                 visit(ctx.getChild(1));
@@ -836,7 +853,13 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitExpr_list(tigerParser.Expr_listContext ctx) {
-        return visitChildren(ctx);
+        // expr_list : expr expr_list_tail | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return "";
+        }
+        String exprType = visit(ctx.getChild(0));
+        String exprListType = visit(ctx.getChild(1));
+        return exprType + " " + exprListType;
     }
     
     /**
@@ -847,6 +870,12 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitExpr_list_tail(tigerParser.Expr_list_tailContext ctx) {
-        return visitChildren(ctx);
+        // expr_list_tail : COMMA expr expr_list_tail | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return "";
+        }
+        String exprType = visit(ctx.getChild(1));
+        String exprListType = visit(ctx.getChild(2));
+        return exprType + " " + exprListType;
     }
 }
