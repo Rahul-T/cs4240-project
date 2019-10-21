@@ -8,11 +8,12 @@ main let
 
 	function printf (n : float, f : int) :float begin
 		B := n + 5.0;
+		return B;
 	end;
 in begin
 	for F := 1 to 2 do 
 		A := 1.5;
 	enddo;
 
-	A := printf(A, F);
+	A := 10.0;
 end

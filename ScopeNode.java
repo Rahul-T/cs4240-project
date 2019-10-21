@@ -62,7 +62,7 @@ public class ScopeNode {
         ScopeNode current = this;
         SymbolData ret;
         while (current != null) {
-            if ((ret = scopeEntries.get(entryName)) != null) {
+            if ((ret = current.scopeEntries.get(entryName)) != null) {
                 return ret;
             } 
             current = current.parent;

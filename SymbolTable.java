@@ -98,7 +98,9 @@ public class SymbolTable {
     }
 
     public boolean containsSymbol(String entryName) {
-        return current.containsDuplicateSymbol(entryName);
+        // if lookup symbol returns null, it's not in the symbol table.
+        SymbolData sd = current.lookupEntry(entryName);
+        return (sd != null);
     }
 
     /**

@@ -262,19 +262,26 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         // function_declaration : FUNC ID LPAREN param_list RPAREN ret_type BEGIN stat_seq END SEMI;
         symTable.openScope();
         String paramTypeString = visit(ctx.getChild(3));
+        String actualRetType = visit(ctx.getChild(7));
         symTable.closeScope();
         String[] paramTypeArr = paramTypeString.split(",");
         
         // First one: Func Name
         // Second one: Ret Type
-        boolean success = symTable.addFunction(ctx.getChild(1).getText(),
-            ctx.getChild(5).getChild(1).getText(),
-            paramTypeArr);
+        String id = ctx.getChild(1).getText();
+        String declaredRetType = visit(ctx.getChild(5));
+
+        boolean success = symTable.addFunction(id, declaredRetType, paramTypeArr);
             
         if (!success)
             symbolTableError(ctx, 1, "previously declared");
 
-        return "";
+        if (!declaredRetType.equals(actualRetType)) 
+            semanticError(ctx.getStart(), 
+                String.format("Return type mismatch! Expected %s. Got %s.", 
+                declaredRetType, actualRetType));
+
+        return null;
     }
     
     /**
@@ -341,7 +348,14 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitStat_seq(tigerParser.Stat_seqContext ctx) {
-        return visitChildren(ctx);
+        // stat_seq : stat stat_seq_tail;
+        String statType = visit(ctx.getChild(0));
+        String tailType = visit(ctx.getChild(1));
+        if (statType == null && tailType == null) {
+            return null;
+        } else if (statType != null && tailType != null)
+            semanticError(ctx.getStart(), "Multiple return statements!");
+        return (statType == null) ? tailType : statType;
     }
     
     /**
@@ -352,7 +366,18 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitStat_seq_tail(tigerParser.Stat_seq_tailContext ctx) {
-        return visitChildren(ctx);
+        // stat_seq_tail : stat stat_seq_tail | /* NULL */;
+
+        if (ctx.getChildCount() == 0)
+            return null;
+        
+        String statType = visit(ctx.getChild(0));
+        String tailType = visit(ctx.getChild(1));
+        if (statType == null && tailType == null) {
+            return null;
+        } else if (statType != null && tailType != null)
+            semanticError(ctx.getStart(), "Multiple return statements!");
+        return (statType == null) ? tailType : statType;
     }
     
     /**
@@ -402,7 +427,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             case "break":
                 break;
             case "return":
-                break;
+                return visit(ctx.getChild(1));
             case "let":
                 break;
             default: // the ID id_tail
@@ -424,7 +449,6 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                             }
                         }
                     }
-
                     String idType = symTable.getType(ctx.getChild(0).getText());
                     boolean isAssign = ctx.getChild(1).getText().substring(0,2).equals(":=");
                     boolean isArray = idTailType.contains("array");
@@ -820,7 +844,6 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         }
         
         if(!(type.equals("int") || type.equals("float"))) {
-            System.out.println(type);
             semanticError(ctx.getStart(), "Power operator must be int or float");
         }
         return type;
@@ -843,7 +866,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 
         String childType = visit(ctx.getChild(1));
         String symbolName = ctx.getChild(1).getText();
-        // System.out.println("Child: " + ctx.getChild(1).getText() + " Type: " + childType);
+
         if (!childType.equals("int")) {
             semanticError(ctx.getStart(), "Exponent must be int");
         }
@@ -859,7 +882,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitFactor(tigerParser.FactorContext ctx) {
         // factor : LPAREN expr RPAREN | constant |  lvalue;
-        // System.out.println(String.valueOf(ctx.getStart().getType()));
+
         switch(ctx.getStart().getType()) {
             case 5: // LPAREN
                 return visit(ctx.getChild(1));
