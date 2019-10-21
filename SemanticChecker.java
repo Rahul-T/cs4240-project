@@ -58,7 +58,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 || (type2.equals("float") && type1.equals("int"))) {
             return "float";
         }
-        semanticError(ctx.getStart(), "invalid types for " + operator +" operator");
+        semanticError(ctx.getStart(), 
+            String.format("invalid types for %s operator: Expected %s. Got %s.", operator, type1, type2));
         return null;
     }
 
@@ -451,16 +452,17 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                     }
                     String idType = symTable.getType(ctx.getChild(0).getText());
                     boolean isAssign = ctx.getChild(1).getText().substring(0,2).equals(":=");
-                    boolean isArray = idTailType.contains("array");
+                    boolean isArray = symTable.lookupSymbol(id).isArray();
 
-                    if(isArray) {
-                        idTailType = idTailType.substring(0, idTailType.length() - 5);
+                    if (isAssign) {
+                        if (isArray) idType += "array"; // Array := Array
+                        if (!idType.equals(idTailType))
+                            semanticError(ctx.getStart(), "Type mismatch! Expected " + idType + ". Got " + idTailType + ".");
+                    } else if(isArray) { // C[0] := int;
+                        String arrayType = symTable.lookupSymbol(id).getType();
+                        if (!arrayType.equals(idTailType))
+                            semanticError(ctx.getStart(), "Type mismatch! Expected " + arrayType + ". Got " + idTailType + ".");
                     }
-                     if(isAssign && !idType.equals(idTailType)) {
-                        semanticError(ctx.getStart(), "Type mismatch! Expected " + idType + ". Got " + idTailType + ".");
-                    }
-                    
-                    // return idType;
                 }
                 
         }
@@ -548,13 +550,15 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         String type = symTable.getType(symbol);
 
         // Hacky fix
-        if(ctx.getChildCount() > 1 && !ctx.getChild(1).getText().equals("")) {
+        if((visit(ctx.getChild(1)) != null) && !ctx.getChild(1).getText().equals("")) {
             if (symTable.isArray(symbol)) {
-                type += "array";
                 visit(ctx.getChild(1));
             } else {
                 semanticError(ctx.getStart(), "Can't index into non-array type");
             }
+        } 
+        else if(symTable.isArray(symbol)) {
+            type += "array";
         }
         return type;
     }

@@ -10,10 +10,14 @@ main let
 		B := n + 5.0;
 		return B;
 	end;
+
 in begin
 	for F := 1 to 2 do 
 		A := 1.5;
 	enddo;
+
+	
+	C[0] := C[0];
 
 	A := 10.0;
 end
