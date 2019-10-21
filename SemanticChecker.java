@@ -372,8 +372,6 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         LET declaration_segment IN stat_seq END SEMI |
         ID id_tail;
         */
-
-        visitChildren(ctx);
         
         switch(ctx.getChild(0).getText()) {
             case "if":
@@ -394,10 +392,39 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             case "let":
                 break;
             default: // the ID id_tail
-                if(!symTable.containsSymbol(ctx.getChild(0).getText())) {
+                String id = ctx.getChild(0).getText();
+                if(!symTable.containsSymbol(id)) {
                     symbolTableError(ctx, 0, "undeclared");
                 } else {
-                    return symTable.getType(ctx.getChild(0).getText());
+                    String idTailType = visit(ctx.getChild(1));
+                    String[] paramTypes = idTailType.split(" ");
+                    System.out.println("paramTypes: " + Arrays.toString(paramTypes));
+                    if(paramTypes.length > 1) {
+                        String[] idParams = symTable.lookupSymbol(id).getParamList();
+                        if(idParams.length != paramTypes.length) {
+                            semanticError(ctx.getStart(), "Incorrect number of params for function " + id);
+                        }
+                        for(int i=0; i<idParams.length; i++) {
+                            if(!idParams[i].equals(paramTypes[i])) {
+                                semanticError(ctx.getStart(), "Type mismatch in params for function " + id
+                                                + ". Expected " + idParams[i] + " got " + paramTypes[i]);
+                            }
+                        }
+                    }
+
+                    String idType = symTable.getType(ctx.getChild(0).getText());
+                    boolean isAssign = ctx.getChild(1).getText().substring(0,2).equals(":=");
+                    boolean isArray = idTailType.contains("array");
+
+                    if(isArray) {
+                        idTailType = idTailType.substring(0, idTailType.length() - 5);
+                        return idTailType.substring(0, idTailType.length() - 5);
+                    }
+                    else if(isAssign && !idType.equals(idTailType)) {
+                        semanticError(ctx.getStart(), "Type mismatch");
+                    }
+                    
+                    return idType;
                 }
                 
         }
@@ -418,14 +445,18 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                         LBRACK expr RBRACK ASSIGN expr SEMI |
                         LPAREN expr_list RPAREN SEMI;
         */
-        visitChildren(ctx);
 
         switch (ctx.getStart().getType()) {
             case 26: // assign
-            case 5: // lparen
                 return visit(ctx.getChild(1));
             case 7: // lbrack
+                String expr1type = visit(ctx.getChild(1));
+                if(!expr1type.equals("int")) {
+                    semanticError(ctx.getStart(), "Array must be indexed with int");
+                }
                 return visit(ctx.getChild(4));
+            case 5: // lparen
+                return visit(ctx.getChild(1));
         }
         return null;
     }
@@ -459,9 +490,6 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 }
             }
 
-            // System.out.println("IdTypes: " + Arrays.toString(idParams));
-            // System.out.println("Types: " + Arrays.toString(paramTypes));
-
             return symTable.getType(ctx.getStart().getText());
         }
 
@@ -486,7 +514,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         // Hacky fix
         if(ctx.getChildCount() > 1 && !ctx.getChild(1).getText().equals("")) {
             if (symTable.isArray(symbol)) {
-                type += " array";
+                type += "array";
                 visit(ctx.getChild(1));
             } else {
                 semanticError(ctx.getStart(), "Can't index into non-array type");

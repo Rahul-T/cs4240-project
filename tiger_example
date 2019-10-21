@@ -14,5 +14,5 @@ in begin
 		A := 1.5;
 	enddo;
 
-	F := printf(A, B);
+	A := C[1];
 end
