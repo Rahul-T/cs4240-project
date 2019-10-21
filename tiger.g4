@@ -53,7 +53,7 @@ FLOAT : 'float';
 ID : [a-zA-Z_][a-zA-Z0-9_]*;
 INTLIT : [+-]?[0-9]+;
 FLOATLIT: [+-]?[0-9]+('.'[0-9]+)?([eE][+-]?[0-9]+)?;
-COMMENT : '/*'.*'*/' -> skip;
+COMMENT : '/*'(.|'\n')*'*/' -> skip;
 WS : [ \t\r\n]+ -> skip;
 
 tiger_program : MAIN LET declaration_segment IN BEGIN stat_seq END;

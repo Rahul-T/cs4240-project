@@ -27,6 +27,8 @@ in begin
 		X := 2;
 	end;
 	/* X := 3; asdfsdf _+@#$!@#)*$#@!$DSAF~@!#*/
+	/* wow look
+	a multline comment */
 
 	A := 10.0;
 end
