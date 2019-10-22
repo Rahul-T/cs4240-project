@@ -13,10 +13,10 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     private void symbolTableError(ParserRuleContext ctx, int index, String id, String err) {
         // ParserRuleContext prc = (ParserRuleContext) ctx;
         Token errToken;
-        if (ctx.getToken(50, index) == null)
+        if (ctx.getToken(52, index) == null)
             errToken = ctx.getStart();
         else
-            errToken = ctx.getToken(50, index).getSymbol(); //token 50 is the id
+            errToken = ctx.getToken(52, index).getSymbol(); //token 50 is the id
         System.out.println("\nCOMPLIATION ERROR! Error while building symbol table at line " 
             + String.valueOf(errToken.getLine()) + " character " + String.valueOf(errToken.getCharPositionInLine()));
 
@@ -30,7 +30,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     private void symbolTableError(ParserRuleContext ctx, int index, String err) {
         // ParserRuleContext prc = (ParserRuleContext) ctx;
 
-        Token errToken = ctx.getToken(50, index).getSymbol(); //token 50 is the id
+        Token errToken = ctx.getToken(52, index).getSymbol(); //token 50 is the id
         System.out.println("\nCOMPLIATION ERROR! Error while building symbol table at line " 
             + String.valueOf(errToken.getLine()) + " character " + String.valueOf(errToken.getCharPositionInLine()));
 
@@ -140,8 +140,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         String[] typeArr = type.split(" ");
         boolean success;
 
-        if (typeArr.length == 1)
+        if (typeArr.length == 1) {
             success = this.symTable.addType(id, type);
+        }
         else {
             success = this.symTable.addArray(id, "type", typeArr[2], Integer.parseInt(typeArr[1]));
         }
@@ -200,19 +201,28 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         String ids = visit(ctx.getChild(1));
         String[] idList = ids.split(" ");
         String[] typeInfo = visit(ctx.getChild(3)).split(" ");
-        
         boolean success;
         if(typeInfo.length > 1) {
             // type is array
             int count = 1;
             for(String id: idList) {
-                // System.out.println(id);
                 success = symTable.addArray(id, "var" ,typeInfo[2], Integer.parseInt(typeInfo[1]));
                 if (!success)
                     symbolTableError(ctx, 1, id, "previously declared");
                 count++;
             }
-        } else {
+        } 
+        else if(this.symTable.isArray(typeInfo[0])) {
+            for(String id: idList) {
+                SymbolData sd = this.symTable.lookupSymbol(typeInfo[0]);
+                int arrSize = sd.getArraySize();
+                String arrType = sd.getType();
+                success = symTable.addArray(id, "var" , arrType, arrSize);
+                if (!success)
+                    symbolTableError(ctx, 1, id, "previously declared");
+            }
+        }
+        else {
             for(String id: idList) {
                 success = symTable.addVariable(id, typeInfo[0]);
                 if (!success)
@@ -221,7 +231,15 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         }
         String optionalInitType = visit(ctx.getChild(4));
         if(optionalInitType != null) {
-            if(typeInfo.length == 1 && !typeInfo[0].equals(optionalInitType)) {
+            String actualType = "";
+            String definedType = this.symTable.getType(typeInfo[0]);
+            if(definedType != "") {
+                actualType = definedType;
+            } else {
+                actualType = typeInfo[0];
+            }
+            this.symTable.getType(typeInfo[0]);
+            if(typeInfo.length == 1 && !actualType.equals(optionalInitType)) {
                 semanticError(ctx.getStart(), "Type mismatch!");
             } else if(typeInfo.length > 1 && !typeInfo[2].equals(optionalInitType)) {
                 semanticError(ctx.getStart(), "Type mismatch!");
@@ -274,7 +292,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
             return null;
         }
         int constType = ctx.getStop().getType();
-        if(constType == 51) {
+        if(constType == 53) {
             return "int";
         } else {
             return "float";
@@ -471,6 +489,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 } else {
                     String idTailType = visit(ctx.getChild(1));
                     String[] paramTypes = idTailType.split(" ");
+                    
                     if(paramTypes.length > 1) {
                         String[] idParams = symTable.lookupSymbol(id).getParamList();
                         if(idParams.length != paramTypes.length) {
@@ -516,17 +535,16 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                         LBRACK expr RBRACK ASSIGN expr SEMI |
                         LPAREN expr_list RPAREN SEMI;
         */
-
         switch (ctx.getStart().getType()) {
-            case 26: // assign
+            case 28: // assign
                 return visit(ctx.getChild(1));
-            case 7: // lbrack
+            case 9: // lbrack
                 String expr1type = visit(ctx.getChild(1));
                 if(!expr1type.equals("int")) {
                     semanticError(ctx.getStart(), "Array must be indexed with int");
                 }
                 return visit(ctx.getChild(4));
-            case 5: // lparen
+            case 7: // lparen
                 return visit(ctx.getChild(1));
         }
         return null;
@@ -921,13 +939,13 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         // factor : LPAREN expr RPAREN | constant |  lvalue;
 
         switch(ctx.getStart().getType()) {
-            case 5: // LPAREN
+            case 7: // LPAREN
                 return visit(ctx.getChild(1));
-            case 50: // lvalue / ID
+            case 52: // lvalue / ID
                 return visit(ctx.getChild(0));
-            case 51: // constant / INTLIT
+            case 53: // constant / INTLIT
                 return "int";
-            case 52: // constant / FLOATLIT
+            case 55: // constant / FLOATLIT
                 return "float";
         }
         

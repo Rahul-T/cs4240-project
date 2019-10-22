@@ -1,5 +1,7 @@
 grammar tiger;
 
+COMMENT : '/*'(.|'\n')*?'*/' -> skip;
+WS : [ \t\r\n]+ -> skip;
 
 MAIN : 'main';
 COMMA : ',';
@@ -51,10 +53,8 @@ RETURN : 'return';
 INT : 'int';
 FLOAT : 'float';
 ID : [a-zA-Z_][a-zA-Z0-9_]*;
-INTLIT : [+-]?[0-9]+;
-FLOATLIT: [+-]?[0-9]+('.'[0-9]+)?([eE][+-]?[0-9]+)?;
-COMMENT : '/*'(.|'\n')*'*/' -> skip;
-WS : [ \t\r\n]+ -> skip;
+INTLIT : [0-9]+;
+FLOATLIT: [0-9]+('.'[0-9]+)?([eE][+-]?[0-9]+)?;
 
 tiger_program : MAIN LET declaration_segment IN BEGIN stat_seq END;
 
@@ -131,7 +131,9 @@ pow_tail : EXP factor pow_tail | /* NULL */;
 
 factor : LPAREN expr RPAREN | constant |  lvalue;
 
-constant : INTLIT | FLOATLIT;
+constant : sign INTLIT | sign FLOATLIT;
+
+sign : PLUS | MINUS | /*NULL */;
 
 expr_list : expr expr_list_tail | /* NULL */;
 expr_list_tail : COMMA expr expr_list_tail | /* NULL */;

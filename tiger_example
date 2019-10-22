@@ -15,6 +15,7 @@ main let
 
 in begin
 	
+	F := 2 -2;
 	D := 1.0;
 	F := C[2] + C[2];
 	C := C;

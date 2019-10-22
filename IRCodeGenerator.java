@@ -460,15 +460,15 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         */
 
         switch (ctx.getStart().getType()) {
-            case 26: // assign
+            case 28: // assign
                 return visit(ctx.getChild(1));
-            case 7: // lbrack
+            case 9: // lbrack
                 //String tmp = newTemp();
                 //System.out.println(visit(ctx.getChild(1)))
                 //emit("load, " + tmp + ", " + visit(ctx.getChild(1)) + ", " + visit(ctx.getChild(4)));
                 return visit(ctx.getChild(1)) + ";" + visit(ctx.getChild(4));
                 //return tmp;
-            case 5: // lparen
+            case 7: // lparen
                 return visit(ctx.getChild(1));
         }
         return null;
@@ -1077,13 +1077,13 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         // factor : LPAREN expr RPAREN | constant |  lvalue;
 
         switch(ctx.getStart().getType()) {
-            case 5: // LPAREN
+            case 7: // LPAREN
                 return visit(ctx.getChild(1));
-            case 50: // lvalue / ID
+            case 52: // lvalue / ID
                 return visit(ctx.getChild(0));
-            case 51: // constant / INTLIT
+            case 53: // constant / INTLIT
                 return ctx.getChild(0).getText() + " int";
-            case 52: // constant / FLOATLIT
+            case 54: // constant / FLOATLIT
                 return ctx.getChild(0).getText() + " float";
         }
         return null;

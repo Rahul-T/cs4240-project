@@ -114,10 +114,18 @@ public class SymbolTable {
     }
 
     public String getType(String entryName) {
-        return current.lookupEntry(entryName).getType();
+        SymbolData lookupEntry = current.lookupEntry(entryName);
+        if(lookupEntry == null) {
+            return "";
+        }
+        return lookupEntry.getType();
     }
 
     public boolean isArray(String entryName) {
+        SymbolData sd = current.lookupEntry(entryName);
+        if(sd == null) {
+            return false;
+        }
         return current.lookupEntry(entryName).isArray();
     }
 }

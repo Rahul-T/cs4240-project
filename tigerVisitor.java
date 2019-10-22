@@ -268,6 +268,12 @@ public interface tigerVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConstant(tigerParser.ConstantContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link tigerParser#sign}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSign(tigerParser.SignContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link tigerParser#expr_list}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
