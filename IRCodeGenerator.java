@@ -412,8 +412,16 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitExpr(tigerParser.ExprContext ctx) {
         // expr : and_term e_tail;
-        visitChildren(ctx);
-        return "";
+        String andTermVal = visit(ctx.getChild(0));
+        String eTailVal = visit(ctx.getChild(1));
+
+        if(eTailVal == null) {
+            return andTermVal;
+        }
+        String tmp = newTemp();
+        emit("and " + andTermVal + ", " + eTailVal + ", " + tmp);
+
+        return tmp;
     }
 	/**
 	 * {@inheritDoc}
@@ -424,7 +432,20 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitE_tail(tigerParser.E_tailContext ctx) {
         // e_tail : OR and_term e_tail | /* NULL */;
-        return visitChildren(ctx);
+
+        if (ctx.getChildCount() == 0)
+            return null;
+
+        String andTermVal = visit(ctx.getChild(1));
+        String eTailVal = visit(ctx.getChild(2));
+
+        if(eTailVal == null) {
+            return andTermVal;
+        }
+        String tmp = newTemp();
+        emit("or " + andTermVal + ", " + eTailVal + ", " + tmp);
+
+        return tmp;
     }
 	/**
 	 * {@inheritDoc}
@@ -434,7 +455,18 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitAnd_term(tigerParser.And_termContext ctx) {
-        return visitChildren(ctx);
+        // and_term : comparison_term and_tail;
+
+        String compTermVal = visit(ctx.getChild(0));
+        String andTailVal = visit(ctx.getChild(1));
+
+        if(andTailVal == null) {
+            return compTermVal;
+        }
+        String tmp = newTemp();
+        emit("and " + compTermVal + ", " + andTailVal + ", " + tmp);
+
+        return tmp;
     }
 	/**
 	 * {@inheritDoc}
@@ -444,7 +476,20 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitAnd_tail(tigerParser.And_tailContext ctx) {
-        return visitChildren(ctx);
+        // and_tail : AND comparison_term and_tail | /* NULL */;
+        if (ctx.getChildCount() == 0)
+            return null;
+
+        String compTermVal = visit(ctx.getChild(1));
+        String andTailVal = visit(ctx.getChild(2));
+
+        if(andTailVal == null) {
+            return compTermVal;
+        }
+        String tmp = newTemp();
+        emit("and " + compTermVal + ", " + andTailVal + ", " + tmp);
+
+        return tmp;
     }
 	/**
 	 * {@inheritDoc}
