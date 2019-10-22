@@ -515,7 +515,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             return andTermVal;
         }
         String tmp = newTemp();
-        emit("and " + andTermVal + ", " + eTailVal + ", " + tmp);
+        emit("or " + andTermVal + ", " + eTailVal + ", " + tmp);
 
         return tmp;
     }
