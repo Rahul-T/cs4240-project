@@ -341,14 +341,37 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             case "return":
                 String retVal = visit(ctx.getChild(1));
                 emit("return " + retVal);
+                break;
             case "let":
-                // symTable.openScope();
-                // visit(ctx.getChild(1));
-                // visit(ctx.getChild(3));
-                // symTable.closeScope();
+                symTable.openScope();
+                visit(ctx.getChild(1));
+                visit(ctx.getChild(3));
+                symTable.closeScope();
                 break;
             default:
-                visitChildren(ctx);
+                String currId = ctx.getChild(0).getText();
+                // System.out.println(currId);
+                String idTail = visit(ctx.getChild(1));
+                String[] params = idTail.split(" ");
+                boolean isAssign = ctx.getChild(1).getText().substring(0,2).equals(":=");
+                // System.out.println(isAssign);
+                // System.out.println(Arrays.toString(params));
+                if(params.length > 1) {
+                    if(isAssign) {
+                        String allParams = "";
+                        for(int i=1; i<params.length; i++) {
+                            allParams += ", " + params[i];
+                        }
+                        emit("callr, " + currId + ", " + params[0] + allParams);
+                    } else {
+                        String allParams = "";
+                        for(int i=1; i<params.length; i++) {
+                            allParams += ", " + params[i];
+                        }
+                        emit("call, " + currId + ", " + params[0] + allParams);
+                    }
+                }
+                
 
         }
         return "";
@@ -361,7 +384,22 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitId_tail(tigerParser.Id_tailContext ctx) {
-        return visitChildren(ctx);
+        /*
+            id_tail :   ASSIGN assign_tail |
+                        LBRACK expr RBRACK ASSIGN expr SEMI |
+                        LPAREN expr_list RPAREN SEMI;
+        */
+
+        switch (ctx.getStart().getType()) {
+            case 26: // assign
+                return visit(ctx.getChild(1));
+            case 7: // lbrack
+                visit(ctx.getChild(1));
+                return visit(ctx.getChild(4));
+            case 5: // lparen
+                return visit(ctx.getChild(1));
+        }
+        return null;
     }
 	/**
 	 * {@inheritDoc}
@@ -371,7 +409,14 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitAssign_tail(tigerParser.Assign_tailContext ctx) {
-        return visitChildren(ctx);
+        // assign_tail: expr SEMI | ID LPAREN expr_list RPAREN SEMI;
+        if(ctx.getChild(1).getText().equals("(")) {
+            String params = visit(ctx.getChild(2));
+            //symTable.getType(ctx.getStart().getText());
+            return ctx.getStart().getText() + " " + params;
+        }
+
+        return visit(ctx.getChild(0));
     }
 	/**
 	 * {@inheritDoc}
@@ -381,7 +426,11 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitLvalue(tigerParser.LvalueContext ctx) {
-        return visitChildren(ctx);
+        // <lvalue> → id <lvalue-tail>
+        String id = ctx.getChild(0).getText();
+        String lvalueTail = visit(ctx.getChild(1));
+        
+        return id;
     }
 	/**
 	 * {@inheritDoc}
@@ -391,7 +440,11 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitLvalue_tail(tigerParser.Lvalue_tailContext ctx) {
-        return visitChildren(ctx);
+        // lvalue_tail : LBRACK expr RBRACK | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return null;
+        }
+        return visit(ctx.getChild(1));
     }
 	/**
 	 * {@inheritDoc}
@@ -414,7 +467,6 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         // expr : and_term e_tail;
         String andTermVal = visit(ctx.getChild(0));
         String eTailVal = visit(ctx.getChild(1));
-
         if(eTailVal == null) {
             return andTermVal;
         }
@@ -768,7 +820,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             case 51: // constant / INTLIT
             case 52: // constant / FLOATLIT
                 return ctx.getChild(0).getText();
-        }      
+        }
         return null;
     }
 	/**
@@ -789,7 +841,13 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitExpr_list(tigerParser.Expr_listContext ctx) {
-        return visitChildren(ctx); 
+        // expr_list : expr expr_list_tail | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return "";
+        }
+        String expr = visit(ctx.getChild(0));
+        String exprList = visit(ctx.getChild(1));
+        return expr + " " + exprList;
     }
 	/**
 	 * {@inheritDoc}
@@ -799,6 +857,12 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitExpr_list_tail(tigerParser.Expr_list_tailContext ctx) {
-        return visitChildren(ctx); 
+        // expr_list_tail : COMMA expr expr_list_tail | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return "";
+        }
+        String expr = visit(ctx.getChild(1));
+        String exprList = visit(ctx.getChild(2));
+        return expr + " " + exprList;
     }
 }

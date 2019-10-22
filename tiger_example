@@ -14,12 +14,15 @@ main let
 
 in begin
 
-	F := 1 ** 2 ** 3 ** 4;
-	F := 1 + 2 + 3;
-	F := 2 == 2;
+	B := printf(B, F);
+	printf(D, P);
 
-	/*F := C[10] - F ** C[10];
-	F := printi(F);*/
+	/*F := 1 ** 2 ** 3 ** 4;
+	F := 1 + 2 + 3;
+	F := 2 == 2;*/
+
+	/*F := C[10] - F ** C[10];*/
+	
 
 	/* hasdfasdfi */
 
