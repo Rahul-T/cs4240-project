@@ -604,9 +604,36 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             return divTermVal;
         }
 
+        String comparatorOp = ctx.getChild(1).getChild(0).getText();
+        String lbl1 = newLabel();
+        String lbl2 = newLabel();
         String tmp = newTemp();
 
-        emit("comp " + divTermVal + ", " + compTailVal + ", " + tmp);
+        switch(comparatorOp) {
+            case "!=":
+                emit("breq, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                break;
+            case "==":
+                emit("brneq, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                break;
+            case ">=":
+                emit("brlt, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                break;
+            case "<=":
+                emit("brlt, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                break;
+            case "<":
+                emit("brgeq, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                break;
+            case ">":
+                emit("brleq, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                break;
+        }
+        emit("add, 1, 0, " + tmp);
+        emit("goto " + lbl2);
+        emit(lbl1);
+        emit("add, 0, 0, " + tmp);
+        emit(lbl2);
 
         return tmp;
     }

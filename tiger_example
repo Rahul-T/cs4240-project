@@ -2,7 +2,7 @@ main let
 	type TEST = float;
 	type TESTARR = array[10] of float;
 	var A,B,D : float;
-	var D: array[10] of int := 3;
+	var C: array[10] of int := 3;
 	var ZZ: array[10] of int := 3;
 	var E, G: TEST;
 	var F: int;
@@ -14,13 +14,17 @@ main let
 	end;
 
 in begin
+	F := 2 >= 3;
 
+
+
+	/*
 	F := C[2] + C[2];
 	F := 2;
 	C := C;
 	C[1] := 2;
 	C[1] := ZZ[2] + ZZ[3] ** 7;
-
+	
 
 	B := printf(B, F);
 	printf(D, P);
@@ -28,7 +32,7 @@ in begin
 	F := 1 ** 2 ** 3 ** 4;
 	F := 1 + 2 + 3;
 	F := 2 == 2;
-
+	*/
 	/*F := C[10] - F ** C[10];*/
 	
 
