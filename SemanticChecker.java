@@ -331,7 +331,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitParam_list_tail(tigerParser.Param_list_tailContext ctx) {
-        // //param_list_tail : COMMA param param_list_tail | /* NULL */;
+        // param_list_tail : COMMA param param_list_tail | /* NULL */;
         if (ctx.getChildCount() == 0) {
             return "";
         }

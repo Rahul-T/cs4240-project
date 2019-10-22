@@ -2,7 +2,7 @@ main let
 	type TEST = float;
 	type TESTARR = array[10] of float;
 	var A,B,D : float;
-	var C: array[10] of int := 2.0;
+	var C: array[10] of int := 3;
 	var E, G: TEST;
 	var F: int;
 	var P: int := 2;
@@ -31,5 +31,10 @@ in begin
 	/* wow look
 	a multline comment */
 
+	if 1==1 then
+		P := 3;
+	endif;
+
+	F := 2 ** 2 ** 2 ** 2;
 	A := 10.0;
 end
