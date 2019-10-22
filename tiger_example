@@ -15,11 +15,11 @@ main let
 
 in begin
 
+	F := C[2] + C[2];
 	F := 2;
 	C := C;
 	C[1] := 2;
-	F := C[2];
-	C[1] := ZZ[2];
+	C[1] := ZZ[2] + ZZ[3] ** 7;
 
 
 	/*B := printf(B, F);

@@ -350,14 +350,11 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 break;
             default:
                 String currId = ctx.getChild(0).getText();
-                // System.out.println(currId);
                 String idTail = visit(ctx.getChild(1));
                 String[] params = idTail.split(" ");
                 boolean isAssign = ctx.getChild(1).getText().substring(0,2).equals(":=");
                 boolean isArray = symTable.lookupSymbol(currId).isArray();
-                // System.out.println(isArray);
-                // System.out.println(isAssign);
-                // System.out.println(Arrays.toString(params));
+
                 if(params.length > 1) {
                     if(isAssign) {
                         String allParams = "";
@@ -373,7 +370,6 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                         emit("call, " + currId + ", " + params[0] + allParams);
                     }
                 } else {
-                    //Unreachable;
                     if(!isAssign && !isArray) {
                         System.out.println("Should be unreachable");
                     }
@@ -392,17 +388,21 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                         emit("assign, " + currId + ", " + params[0]);
                     }
                     else {
+                        // System.out.println("1");
                         String[] moreArrayInfo = params[0].split(";");
                         // Assigning val to indexed array "C[1] := 2"
                         if(!isAssign && moreArrayInfo.length == 2) {
+                            // System.out.println("2");
                             emit("store, " + currId + ", " + moreArrayInfo[0] + ", " + moreArrayInfo[1]);
                         }
                         // Assigning indexed array val to indexed array "C[1] := ZZ[2]"
-                        else if(!isAssign && moreArrayInfo.length == 3) {
-                            String tmp = newTemp();
-                            emit("load, " + tmp + ", " + moreArrayInfo[1] + ", " + moreArrayInfo[2]);
-                            emit("store, " + currId + ", " + moreArrayInfo[0] + ", " + tmp);
-                        } else {
+                        // else if(!isAssign && moreArrayInfo.length == 3) {
+                        //     System.out.println("3");
+                        //     String tmp = newTemp();
+                        //     emit("load, " + tmp + ", " + moreArrayInfo[1] + ", " + moreArrayInfo[2]);
+                        //     emit("store, " + currId + ", " + moreArrayInfo[0] + ", " + tmp);
+                        // } 
+                        else {
                             System.out.println("Should be unreachable");
                         }
                     }
@@ -430,7 +430,11 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             case 26: // assign
                 return visit(ctx.getChild(1));
             case 7: // lbrack
+                //String tmp = newTemp();
+                //System.out.println(visit(ctx.getChild(1)))
+                //emit("load, " + tmp + ", " + visit(ctx.getChild(1)) + ", " + visit(ctx.getChild(4)));
                 return visit(ctx.getChild(1)) + ";" + visit(ctx.getChild(4));
+                //return tmp;
             case 5: // lparen
                 return visit(ctx.getChild(1));
         }
@@ -465,7 +469,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         String id = ctx.getChild(0).getText();
         String lvalueTail = visit(ctx.getChild(1));
         if(lvalueTail != null) {
-            id += ";" + lvalueTail;
+            String tmp = newTemp();
+            emit("load, " + tmp + ", " + id + ", " + lvalueTail);
+            return tmp;
         }
         
         return id;
