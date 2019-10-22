@@ -3,6 +3,10 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.Token;
 import java.util.Arrays;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.IOException;
 
 /**
  * This class provides an empty implementation of {@link tigerVisitor},
@@ -16,14 +20,31 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     private SymbolTable symTable;
     private int tempCount = 0;
     private int labelCount = 0;
+    private boolean verboseOutput;
+    private PrintWriter outWriter;
 
-    public IRCodeGenerator() {
-        System.out.println("\nIR GENERATED CODE:");
+    public IRCodeGenerator(String outFileName, boolean verboseOutput) throws IOException {
+        if (this.verboseOutput)
+            System.out.println("\nIR GENERATED CODE:");
         this.symTable = new SymbolTable();
+        this.verboseOutput = verboseOutput;
+        this.outWriter = (outFileName == null) ? null : new PrintWriter(new FileWriter(outFileName));
+    }
+
+    public IRCodeGenerator(boolean verboseOutput) throws IOException {
+        this(null, verboseOutput);
     }
 
     public void emit(String s) {
-        System.out.println(s);
+        if (verboseOutput)
+            System.out.println(s);
+        if (outWriter != null)
+            this.outWriter.print(s + "\n");
+    }
+
+    public void closeOutput() {
+        if (this.outWriter != null)
+            this.outWriter.close();
     }
 
     public String newTemp() {
@@ -44,7 +65,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitTiger_program(tigerParser.Tiger_programContext ctx) {
-        return visitChildren(ctx);
+        String out = visitChildren(ctx);
+        this.closeOutput();
+        return out;
     }
 	/**
 	 * {@inheritDoc}

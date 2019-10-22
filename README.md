@@ -38,7 +38,7 @@ make cleanjava
 ## Using the Compiler
 To compile a Tiger program (called `<file-name>`) with the built compiler, run
 ```
-java TigerCompiler <file-name> [-no-print]
+java TigerCompiler <file-name> [-no-print] [-no-ir-file]
 ```
 
-To supress unnecessary output and only print errors, use the `-no-print` flag.
+To supress unnecessary output and only print errors, use the `-no-print` flag. The `-no-ir-file` flag will not create a `.ir` file for the compiled program.

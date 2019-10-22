@@ -5,12 +5,19 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 public class TigerCompiler {
     private static boolean verbosePrint = true;
+    private static boolean noIrOutput = false;
     public static void main(String[] args) throws IOException {
         // Validate args
-        if ((args.length == 2) && (args[1].equals("-no-print"))) {
+        if (args.length >= 2) {
+            for (String arg : args) {
+                if (arg.equals("-no-print"))
+                    verbosePrint = false;
+                if (arg.equals("-no-ir-file"))
+                    noIrOutput = true;
+            }
             verbosePrint = false;
         } else if (args.length != 1) {
-            System.out.println("Tiger Compiler Usage: java TigerCompiler <filename> [-no-print]");
+            System.out.println("Tiger Compiler Usage: java TigerCompiler <filename> [-no-print] [-no-ir-file]");
             System.exit(1);
         }
 
@@ -53,7 +60,7 @@ public class TigerCompiler {
 
         wrapper.reset();
 
-        IRCodeGenerator irCodeGenerator = new IRCodeGenerator();
+        IRCodeGenerator irCodeGenerator = new IRCodeGenerator(noIrOutput ? null : (fileName + ".ir"), verbosePrint);
         String res = irCodeGenerator.visit(wrapper.getParseTree());
         // semChecker.printSymbolTable();
 

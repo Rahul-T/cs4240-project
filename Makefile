@@ -19,7 +19,7 @@ default: parser compiler
 compiler: $(CLASSES:.java=.class)
 
 clean: 
-	@$(RM) *.class $(ANTLR_FILES)
+	@$(RM) *.class *.ir $(ANTLR_FILES)
 
 cleanjava:
 	@$(RM) *.class
