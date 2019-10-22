@@ -846,6 +846,10 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             return factorVal;
         }
         String tmp = newTemp();
+        // emit("add, 1, 0, " + tmp);
+        // for(int i=1; i<= Integer.parseInt(powTailVal); i++) {
+        //     emit("mult " + tmp + ", " + factorVal + ", " + tmp);
+        // }
         emit("pow " + factorVal + ", " + powTailVal + ", " + tmp);
         return tmp;
     }
@@ -868,7 +872,12 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if(powTailVal == null) {
             return factorVal;
         }
+
         String tmp = newTemp();
+        // emit("add, 1, 0, " + tmp);
+        // for(int i=1; i<= Integer.parseInt(powTailVal); i++) {
+        //     emit("mult " + tmp + ", " + factorVal + ", " + tmp);
+        // }
         emit("pow " + factorVal + ", " + powTailVal + ", " + tmp);
 
         return tmp;
