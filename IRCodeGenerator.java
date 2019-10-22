@@ -13,6 +13,16 @@ import java.util.Arrays;
  * operations with no return type.
  */
 public class IRCodeGenerator extends tigerBaseVisitor<String> {
+    private SymbolTable symTable;
+
+    public IRCodeGenerator() {
+        this.symTable = new SymbolTable();
+    }
+
+    public void emit(String s) {
+        System.out.println(s);
+    }
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -71,7 +81,18 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitType_declaration(tigerParser.Type_declarationContext ctx) {
-        return visitChildren(ctx);
+        // type_declaration : TYPE ID EQUALS type SEMI;
+
+        String type = visit(ctx.getChild(3));
+        String id = ctx.getChild(1).getText();
+        String[] typeArr = type.split(" ");
+
+        if (typeArr.length == 1) {
+            this.symTable.addType(id, type);
+        } else {
+            this.symTable.addArray(id, "type", typeArr[2], Integer.parseInt(typeArr[1]));
+        }
+        return "";
     }
 	/**
 	 * {@inheritDoc}
@@ -81,7 +102,13 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitType(tigerParser.TypeContext ctx) {
-        return visitChildren(ctx);
+        // type : ARRAY LBRACK INTLIT RBRACK OF type_id | ID | type_id;
+        if(ctx.getChildCount() == 1) {
+            return ctx.getChild(0).getText();
+        } else {
+            return ctx.getChild(0).getText() + " " + ctx.getChild(2).getText()
+                    + " " + ctx.getChild(5).getText();
+        }
     }
 	/**
 	 * {@inheritDoc}
@@ -101,7 +128,29 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitVar_declaration(tigerParser.Var_declarationContext ctx) {
-        return visitChildren(ctx);
+        // var_declaration : VAR id_list COLON type optional_init SEMI; 
+        String ids = visit(ctx.getChild(1));
+        String[] idList = ids.split(" ");
+        String[] typeInfo = visit(ctx.getChild(3)).split(" ");
+        String initValue = visit(ctx.getChild(4));
+
+        if(typeInfo.length > 1) {
+            for(String id: idList) {
+                symTable.addArray(id, "var" ,typeInfo[2], Integer.parseInt(typeInfo[1]));
+                if(initValue != null) {
+                    emit("assign " + id + ", " + initValue);
+                }
+            }
+        } else {
+            for(String id: idList) {
+                symTable.addVariable(id, typeInfo[0]);
+                if(initValue != null) {
+                    emit("assign " + id + ", " + initValue);
+                }
+            }
+        }
+        
+        return "";
     }
 	/**
 	 * {@inheritDoc}
@@ -111,7 +160,10 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitId_list(tigerParser.Id_listContext ctx) {
-        return visitChildren(ctx);
+        // id_list : ID id_list_tail;
+        String id = ctx.getChild(0).getText();
+        String idListTail = visit(ctx.getChild(1));
+        return id + " " + idListTail;
     }
 	/**
 	 * {@inheritDoc}
@@ -121,7 +173,13 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitId_list_tail(tigerParser.Id_list_tailContext ctx) {
-        return visitChildren(ctx);
+        // id_list_tail : COMMA ID id_list_tail | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return "";
+        }
+        String id = ctx.getChild(1).getText();
+        String idListTail = visit(ctx.getChild(2));
+        return id + " " + idListTail;
     }
 	/**
 	 * {@inheritDoc}
@@ -131,7 +189,11 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitOptional_init(tigerParser.Optional_initContext ctx) {
-        return visitChildren(ctx);
+        // optional_init : ASSIGN constant | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return null;
+        }
+        return ctx.getChild(1).getText();
     }
 	/**
 	 * {@inheritDoc}

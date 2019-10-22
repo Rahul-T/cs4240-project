@@ -196,6 +196,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         String ids = visit(ctx.getChild(1));
         String[] idList = ids.split(" ");
         String[] typeInfo = visit(ctx.getChild(3)).split(" ");
+        
         boolean success;
         if(typeInfo.length > 1) {
             // type is array
@@ -211,8 +212,15 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                     symbolTableError(ctx, 1, id, "previously declared");
             }
         }
-
-        return visitChildren(ctx);
+        String optionalInitType = visit(ctx.getChild(4));
+        if(optionalInitType != null) {
+            if(typeInfo.length == 1 && !typeInfo[0].equals(optionalInitType)) {
+                semanticError(ctx.getStart(), "Type mismatch!");
+            } else if(typeInfo.length > 1 && !typeInfo[2].equals(optionalInitType)) {
+                semanticError(ctx.getStart(), "Type mismatch!");
+            }
+        }
+        return "";
     }
     
     /**
@@ -254,7 +262,16 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitOptional_init(tigerParser.Optional_initContext ctx) {
-        return visitChildren(ctx);
+        // optional_init : ASSIGN constant | /* NULL */;
+        if(ctx.getChildCount() == 0) {
+            return null;
+        }
+        int constType = ctx.getStop().getType();
+        if(constType == 51) {
+            return "int";
+        } else {
+            return "float";
+        }
     }
     
     /**

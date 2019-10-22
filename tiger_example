@@ -2,9 +2,10 @@ main let
 	type TEST = float;
 	type TESTARR = array[10] of float;
 	var A,B,D : float;
-	var C: array[10] of int;
+	var C: array[10] of int := 2.0;
 	var E, G: TEST;
 	var F: int;
+	var P: int := 2;
 
 	function printf (n : float, f : int) :float begin
 		B := n + 5.0;
