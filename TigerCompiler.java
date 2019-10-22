@@ -59,7 +59,6 @@ public class TigerCompiler {
         String result = semChecker.visit(wrapper.getParseTree());
 
         wrapper.reset();
-
         IRCodeGenerator irCodeGenerator = new IRCodeGenerator(noIrOutput ? null : (fileName + ".ir"), verbosePrint);
         String res = irCodeGenerator.visit(wrapper.getParseTree());
         // semChecker.printSymbolTable();

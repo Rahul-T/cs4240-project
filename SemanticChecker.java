@@ -581,7 +581,6 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 
             return symTable.getType(ctx.getStart().getText());
         }
-
         return visit(ctx.getChild(0));
     }
     
@@ -656,7 +655,6 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 
         String andType = visit(ctx.getChild(0));
         String eTailType = visit(ctx.getChild(1));
-
         if (eTailType == null)
             return andType;
         else if (!andType.equals("int") || !eTailType.equals("int"))
@@ -945,10 +943,9 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 return visit(ctx.getChild(0));
             case 53: // constant / INTLIT
                 return "int";
-            case 55: // constant / FLOATLIT
+            case 54: // constant / FLOATLIT
                 return "float";
         }
-        
         return null;
     }
     

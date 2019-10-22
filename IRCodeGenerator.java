@@ -843,7 +843,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         String multTailStr = visit(ctx.getChild(2));
 
         if(multTailStr == null) {
-            return subTermValAndType[0] + subTermValAndType[1];
+            return subTermValAndType[0] + " " + subTermValAndType[1];
         }
         String[] multTailValAndType = multTailStr.split(" ");
         String multTailVal = multTailValAndType[0];
@@ -861,7 +861,6 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 
 
         emit("mult " + subTermVal + ", " + multTailVal + ", " + tmp);
-
         return tmp + " " + tmpType;
     }
 	/**
