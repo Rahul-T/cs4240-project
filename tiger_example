@@ -13,28 +13,27 @@ main let
 	end;
 
 in begin
-	for F := 1 to 2 do 
-		A := 1.5;
-	enddo;
 
-	F := C[10] - F ** C[10];
-	F := printi(F);
+	F := 2 ** 2 ** 2 ** 2;
+	F := 2 + 2 + 2;
+
+	/*F := C[10] - F ** C[10];
+	F := printi(F);*/
 
 	/* hasdfasdfi */
 
-	let
+	/*let
 		var X: int;
 	in
-		X := 2;
-	end;
+		X := 2;*/
 	/* X := 3; asdfsdf _+@#$!@#)*$#@!$DSAF~@!#*/
 	/* wow look
 	a multline comment */
 
-	if 1==1 then
+	/*if 1==1 then
 		P := 3;
-	endif;
+	endif;*/
 
-	F := 2 ** 2 ** 2 ** 2;
-	A := 10.0;
+	
+	/*A := 10.0;*/
 end
