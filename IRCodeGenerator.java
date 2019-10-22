@@ -267,7 +267,6 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0) {
             return "";
         }
-
         return visit(ctx.getChild(0)) + visit(ctx.getChild(1));
     }
 	/**
@@ -302,7 +301,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitParam(tigerParser.ParamContext ctx) {
-        return visitChildren(ctx);
+        // param : ID COLON type;
+        this.symTable.addVariable(ctx.getChild(0).getText(), visit(ctx.getChild(2)));
+        return ctx.getChild(2).getText();
     }
 	/**
 	 * {@inheritDoc}
@@ -356,14 +357,14 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 break;
             case "for":
                 String id = ctx.getChild(1).getText();
-                String expr1 = visit(ctx.getChild(3));
-                emit("assign " + id + ", " + expr1);
+                String[] expr1 = visit(ctx.getChild(3)).split(" ");
+                emit("assign " + id + ", " + expr1[0]);
                 break;
             case "break":
                 break;
             case "return":
-                String retVal = visit(ctx.getChild(1));
-                emit("return " + retVal);
+                String[] retVal = visit(ctx.getChild(1)).split(" ");
+                emit("return " + retVal[0]);
                 break;
             case "let":
                 symTable.openScope();
@@ -371,10 +372,12 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 visit(ctx.getChild(3));
                 symTable.closeScope();
                 break;
-            default:
+            default: // ID id_tail;
                 String currId = ctx.getChild(0).getText();
                 String idTail = visit(ctx.getChild(1));
-                String[] params = idTail.split(" ");
+                // System.out.println(currId);
+                // System.out.println(idTail);
+                String[] params = idTail.split("#");
                 boolean isAssign = ctx.getChild(1).getText().substring(0,2).equals(":=");
                 boolean isArray = symTable.lookupSymbol(currId).isArray();
 
@@ -382,15 +385,18 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                     if(isAssign) {
                         String allParams = "";
                         for(int i=1; i<params.length; i++) {
-                            allParams += ", " + params[i];
+                            String[] valType = params[i].split(" ");
+                            allParams += ", " + valType[0];
                         }
                         emit("callr, " + currId + ", " + params[0] + allParams);
                     } else {
                         String allParams = "";
                         for(int i=1; i<params.length; i++) {
-                            allParams += ", " + params[i];
+                            String[] valType = params[i].split(" ");
+                            allParams += ", " + valType[0];
                         }
-                        emit("call, " + currId + ", " + params[0] + allParams);
+                        String[] valType = params[0].split(" ");
+                        emit("call, " + currId + ", " + valType[0] + allParams);
                     }
                 } else {
                     if(!isAssign && !isArray) {
@@ -398,7 +404,8 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                     }
                     //Regular assign "F := 2"
                     else if(isAssign && !isArray && !params[0].contains(";")) {
-                        emit("assign, " + currId + ", " + params[0]);
+                        String[] valType = params[0].split(" ");
+                        emit("assign, " + currId + ", " + valType[0]);
                     }
                     // Assigning indexed array val to non-array "F := C[2]"
                     else if(isAssign && !isArray && params[0].contains(";")) {
@@ -408,7 +415,8 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 
                     // Assigning array to array "C := C"
                     else if(isAssign && isArray) {
-                        emit("assign, " + currId + ", " + params[0]);
+                        String[] valType = params[0].split(" ");
+                        emit("assign, " + currId + ", " + valType[0]);
                     }
                     else {
                         // System.out.println("1");
@@ -416,7 +424,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                         // Assigning val to indexed array "C[1] := 2"
                         if(!isAssign && moreArrayInfo.length == 2) {
                             // System.out.println("2");
-                            emit("store, " + currId + ", " + moreArrayInfo[0] + ", " + moreArrayInfo[1]);
+                            String[] valType0 = moreArrayInfo[0].split(" ");
+                            String[] valType1 = moreArrayInfo[1].split(" ");
+                            emit("store, " + currId + ", " + valType0[0] + ", " + valType1[0]);
                         }
                         // Assigning indexed array val to indexed array "C[1] := ZZ[2]"
                         // else if(!isAssign && moreArrayInfo.length == 3) {
@@ -475,7 +485,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if(ctx.getChild(1).getText().equals("(")) {
             String params = visit(ctx.getChild(2));
             //symTable.getType(ctx.getStart().getText());
-            return ctx.getStart().getText() + " " + params;
+            return ctx.getStart().getText() + "#" + params;
         }
 
         return visit(ctx.getChild(0));
@@ -493,11 +503,13 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         String lvalueTail = visit(ctx.getChild(1));
         if(lvalueTail != null) {
             String tmp = newTemp();
-            emit("load, " + tmp + ", " + id + ", " + lvalueTail);
-            return tmp;
+            String[] valType = lvalueTail.split(" ");
+            emit("load, " + tmp + ", " + id + ", " + valType[0]);
+            this.symTable.addVariable(tmp, this.symTable.getType(id));
+            return tmp + " " + this.symTable.getType(id);
         }
         
-        return id;
+        return id + " " + this.symTable.getType(id);
     }
 	/**
 	 * {@inheritDoc}
@@ -532,15 +544,21 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitExpr(tigerParser.ExprContext ctx) {
         // expr : and_term e_tail;
-        String andTermVal = visit(ctx.getChild(0));
-        String eTailVal = visit(ctx.getChild(1));
-        if(eTailVal == null) {
-            return andTermVal;
+        String[] andTermValAndType = visit(ctx.getChild(0)).split(" ");
+        String andTermVal = andTermValAndType[0];
+        String eTailStr = visit(ctx.getChild(1));
+
+        if(eTailStr == null) {
+            return andTermValAndType[0] + " " + andTermValAndType[1];
         }
+        String[] eTailValAndType = eTailStr.split(" ");
+        String eTailVal = eTailValAndType[0];
+
         String tmp = newTemp();
         emit("or " + andTermVal + ", " + eTailVal + ", " + tmp);
+        this.symTable.addVariable(tmp, "int");
 
-        return tmp;
+        return tmp + " int";
     }
 	/**
 	 * {@inheritDoc}
@@ -555,16 +573,21 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String andTermVal = visit(ctx.getChild(1));
-        String eTailVal = visit(ctx.getChild(2));
+        String[] andTermValAndType = visit(ctx.getChild(1)).split(" ");
+        String andTermVal = andTermValAndType[0];
+        String eTailStr = visit(ctx.getChild(2));
 
-        if(eTailVal == null) {
-            return andTermVal;
+        if(eTailStr == null) {
+            return andTermValAndType[0] + " " + andTermValAndType[1];
         }
+        String[] eTailValAndType = eTailStr.split(" ");
+        String eTailVal = eTailValAndType[0];
+
         String tmp = newTemp();
         emit("or " + andTermVal + ", " + eTailVal + ", " + tmp);
+        this.symTable.addVariable(tmp, "int");
 
-        return tmp;
+        return tmp + " int";
     }
 	/**
 	 * {@inheritDoc}
@@ -575,17 +598,23 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitAnd_term(tigerParser.And_termContext ctx) {
         // and_term : comparison_term and_tail;
+        
+        String[] compTermValAndType = visit(ctx.getChild(0)).split(" ");
 
-        String compTermVal = visit(ctx.getChild(0));
-        String andTailVal = visit(ctx.getChild(1));
-
-        if(andTailVal == null) {
-            return compTermVal;
+        String compTermVal = compTermValAndType[0];
+        String andTailStr= visit(ctx.getChild(1));
+        if(andTailStr == null) {
+            return compTermValAndType[0] + " " + compTermValAndType[1];
         }
+        String[] andTailValAndType = andTailStr.split(" ");
+        String andTailVal = andTailValAndType[0];
+
         String tmp = newTemp();
         emit("and " + compTermVal + ", " + andTailVal + ", " + tmp);
 
-        return tmp;
+        this.symTable.addVariable(tmp, "int");
+
+        return tmp + " int";
     }
 	/**
 	 * {@inheritDoc}
@@ -599,16 +628,21 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String compTermVal = visit(ctx.getChild(1));
-        String andTailVal = visit(ctx.getChild(2));
+        String[] compTermValAndType = visit(ctx.getChild(1)).split(" ");
+        String compTermVal = compTermValAndType[0];
+        String andTailStr = visit(ctx.getChild(2));
 
-        if(andTailVal == null) {
-            return compTermVal;
+        if(andTailStr == null) {
+            return compTermValAndType[0] + " " + compTermValAndType[1];
         }
+        String[] andTailValAndType = andTailStr.split(" ");
+        String andTailVal = andTailValAndType[0];
+
         String tmp = newTemp();
         emit("and " + compTermVal + ", " + andTailVal + ", " + tmp);
+        this.symTable.addVariable(tmp, "int");
 
-        return tmp;
+        return tmp + " int";
     }
 	/**
 	 * {@inheritDoc}
@@ -620,12 +654,16 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     public String visitComparison_term(tigerParser.Comparison_termContext ctx) {
         // comparison_term: div_term comparison_tail;
 
-        String divTermVal = visit(ctx.getChild(0));
-        String compTailVal = visit(ctx.getChild(1));
+        String[] divTermValAndType = visit(ctx.getChild(0)).split(" ");
 
-        if(compTailVal == null) {
-            return divTermVal;
+        String divTermVal = divTermValAndType[0];
+        String compTailStr = visit(ctx.getChild(1));
+        if(compTailStr == null) {
+            return divTermValAndType[0] + " " + divTermValAndType[1];
         }
+
+        String[] compTailValAndType = compTailStr.split(" ");
+        String compTailVal = compTailValAndType[0];
 
         String comparatorOp = ctx.getChild(1).getChild(0).getText();
         String lbl1 = newLabel();
@@ -658,7 +696,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         emit("add, 0, 0, " + tmp);
         emit(lbl2);
 
-        return tmp;
+        this.symTable.addVariable(tmp, "int");
+
+        return tmp + " int";
     }
 	/**
 	 * {@inheritDoc}
@@ -673,9 +713,10 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String divTermVal = visit(ctx.getChild(1));
+        String[] divTermValAndType = visit(ctx.getChild(1)).split(" ");
+        String divTermVal = divTermValAndType[0];
 
-        return divTermVal;
+        return divTermVal + " " + divTermValAndType[1];
     }
 	/**
 	 * {@inheritDoc}
@@ -687,16 +728,30 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     public String visitDiv_term(tigerParser.Div_termContext ctx) {
         // div_term : mult_term div_tail;
 
-        String multTermVal = visit(ctx.getChild(0));
-        String divTailVal = visit(ctx.getChild(1));
+        String[] multTermValAndType = visit(ctx.getChild(0)).split(" ");
 
-        if(divTailVal == null) {
-            return multTermVal;
+        String multTermVal = multTermValAndType[0];
+        String divTailStr= visit(ctx.getChild(1));
+        if(divTailStr == null) {
+            return multTermValAndType[0] + " " + multTermValAndType[1];
         }
+        String[] divTailValAndType = divTailStr.split(" ");
+        String divTailVal = divTailValAndType[0];
+
         String tmp = newTemp();
+        String tmpType = "";
+        if(multTermValAndType[1].equals(divTailValAndType[1])) {
+            tmpType = multTermValAndType[1];
+        } else if(multTermValAndType[1].equals("float") || divTailValAndType[1].equals("float")) {
+            tmpType = "float";
+        } else {
+            tmpType = "int";
+        }
+        this.symTable.addVariable(tmp, tmpType);
+
         emit("div " + multTermVal + ", " + divTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " " + tmpType;
     }
 	/**
 	 * {@inheritDoc}
@@ -711,16 +766,30 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String multTermVal = visit(ctx.getChild(1));
-        String divTailVal = visit(ctx.getChild(2));
+        String[] multTermValAndType = visit(ctx.getChild(1)).split(" ");
+        String multTermVal = multTermValAndType[0];
+        String divTailStr = visit(ctx.getChild(2));
 
-        if(divTailVal == null) {
-            return multTermVal;
+        if(divTailStr == null) {
+            return multTermValAndType[0] + " " + multTermValAndType[1];
         }
+        String[] divTailValAndType = divTailStr.split(" ");
+        String divTailVal = divTailValAndType[0];
+
         String tmp = newTemp();
+        String tmpType = "";
+        if(multTermValAndType[1].equals(divTailValAndType[1])) {
+            tmpType = multTermValAndType[1];
+        } else if(multTermValAndType[1].equals("float") || divTailValAndType[1].equals("float")) {
+            tmpType = "float";
+        } else {
+            tmpType = "int";
+        }
+        this.symTable.addVariable(tmp, tmpType);
+
         emit("div " + multTermVal + ", " + divTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " " + tmpType;
     }
 	/**
 	 * {@inheritDoc}
@@ -732,16 +801,30 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     public String visitMult_term(tigerParser.Mult_termContext ctx) {
         // mult_term : sub_term mult_tail;
 
-        String subTermVal = visit(ctx.getChild(0));
-        String multTailVal = visit(ctx.getChild(1));
+        String[] subTermValAndType = visit(ctx.getChild(0)).split(" ");
 
-        if(multTailVal == null) {
-            return subTermVal;
+        String subTermVal = subTermValAndType[0];
+        String multTailStr= visit(ctx.getChild(1));
+        if(multTailStr == null) {
+            return subTermValAndType[0] + " " + subTermValAndType[1];
         }
+        String[] multTailValAndType = multTailStr.split(" ");
+        String multTailVal = multTailValAndType[0];
+
         String tmp = newTemp();
+        String tmpType = "";
+        if(subTermValAndType[1].equals(multTailValAndType[1])) {
+            tmpType = subTermValAndType[1];
+        } else if(subTermValAndType[1].equals("float") || multTailValAndType[1].equals("float")) {
+            tmpType = "float";
+        } else {
+            tmpType = "int";
+        }
+        this.symTable.addVariable(tmp, tmpType);
+
         emit("mult " + subTermVal + ", " + multTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " " + tmpType;
     }
 	/**
 	 * {@inheritDoc}
@@ -755,16 +838,31 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String subTermVal = visit(ctx.getChild(1));
-        String multTailVal = visit(ctx.getChild(2));
+        String[] subTermValAndType = visit(ctx.getChild(1)).split(" ");
+        String subTermVal = subTermValAndType[0];
+        String multTailStr = visit(ctx.getChild(2));
 
-        if(multTailVal == null) {
-            return subTermVal;
+        if(multTailStr == null) {
+            return subTermValAndType[0] + subTermValAndType[1];
         }
+        String[] multTailValAndType = multTailStr.split(" ");
+        String multTailVal = multTailValAndType[0];
+
         String tmp = newTemp();
+        String tmpType = "";
+        if(subTermValAndType[1].equals(multTailValAndType[1])) {
+            tmpType = subTermValAndType[1];
+        } else if(subTermValAndType[1].equals("float") || multTailValAndType[1].equals("float")) {
+            tmpType = "float";
+        } else {
+            tmpType = "int";
+        }
+        this.symTable.addVariable(tmp, tmpType);
+
+
         emit("mult " + subTermVal + ", " + multTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " " + tmpType;
     }
 	/**
 	 * {@inheritDoc}
@@ -776,16 +874,29 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     public String visitSub_term(tigerParser.Sub_termContext ctx) {
         // sub_term : add_term sub_tail;
 
-        String addTermVal = visit(ctx.getChild(0));
-        String subTailVal = visit(ctx.getChild(1));
+        String[] addTermValAndType = visit(ctx.getChild(0)).split(" ");
 
-        if(subTailVal == null) {
-            return addTermVal;
+        String addTermVal = addTermValAndType[0];
+        String subTailStr= visit(ctx.getChild(1));
+        if(subTailStr == null) {
+            return addTermValAndType[0] + " " + addTermValAndType[1];
         }
+        String[] subTailValAndType = subTailStr.split(" ");
+        String subTailVal = subTailValAndType[0];
+
         String tmp = newTemp();
+        String tmpType = "";
+        if(addTermValAndType[1].equals(subTailValAndType[1])) {
+            tmpType = addTermValAndType[1];
+        } else if(addTermValAndType[1].equals("float") || subTailValAndType[1].equals("float")) {
+            tmpType = "float";
+        } else {
+            tmpType = "int";
+        }
+        this.symTable.addVariable(tmp, tmpType);
         emit("sub " + addTermVal + ", " + subTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " " + tmpType;
     }
 	/**
 	 * {@inheritDoc}
@@ -800,16 +911,30 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String addTermVal = visit(ctx.getChild(1));
-        String subTailVal = visit(ctx.getChild(2));
+        String[] addTermValAndType = visit(ctx.getChild(1)).split(" ");
+        String addTermVal = addTermValAndType[0];
+        String subTailStr = visit(ctx.getChild(2));
 
-        if(subTailVal == null) {
-            return addTermVal;
+        if(subTailStr == null) {
+            return addTermValAndType[0] + " " + addTermValAndType[1];
         }
+        String[] subTailValAndType = subTailStr.split(" ");
+        String subTailVal = subTailValAndType[0];
+
         String tmp = newTemp();
+        String tmpType = "";
+        if(addTermValAndType[1].equals(subTailValAndType[1])) {
+            tmpType = addTermValAndType[1];
+        } else if(addTermValAndType[1].equals("float") || subTailValAndType[1].equals("float")) {
+            tmpType = "float";
+        } else {
+            tmpType = "int";
+        }
+        this.symTable.addVariable(tmp, tmpType);
+
         emit("sub " + addTermVal + ", " + subTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " " + tmpType;
     }
 	/**
 	 * {@inheritDoc}
@@ -821,15 +946,30 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     public String visitAdd_term(tigerParser.Add_termContext ctx) {
         // add_term : pow_term add_tail;
 
-        String powTermVal = visit(ctx.getChild(0));
-        String addTailVal = visit(ctx.getChild(1));
-        if(addTailVal == null) {
-            return powTermVal;
+        String[] powTermValAndType = visit(ctx.getChild(0)).split(" ");
+
+        String powTermVal = powTermValAndType[0];
+        String addTailStr= visit(ctx.getChild(1));
+        if(addTailStr == null) {
+            return powTermValAndType[0] + " " + powTermValAndType[1];
         }
+        String[] addTailValAndType = addTailStr.split(" ");
+        String addTailVal = addTailValAndType[0];
+
         String tmp = newTemp();
+        String tmpType = "";
+        
+        if(powTermValAndType[1].equals(addTailValAndType[1])) {
+            tmpType = powTermValAndType[1];
+        } else if(powTermValAndType[1].equals("float") || addTailValAndType[1].equals("float")) {
+            tmpType = "float";
+        } else {
+            tmpType = "int";
+        }
+        this.symTable.addVariable(tmp, tmpType);
         emit("add " + powTermVal + ", " + addTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " " + tmpType;
     }
 	/**
 	 * {@inheritDoc}
@@ -843,16 +983,30 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String powTermVal = visit(ctx.getChild(1));
-        String addTailVal = visit(ctx.getChild(2));
-
-        if(addTailVal == null) {
-            return powTermVal;
+        String[] powTermValAndType = visit(ctx.getChild(1)).split(" ");
+        String powTermVal = powTermValAndType[0];
+        String addTailStr = visit(ctx.getChild(2));
+        
+        if(addTailStr == null) {
+            return powTermValAndType[0] + " " + powTermValAndType[1];
         }
+
+        String[] addTailValAndType = addTailStr.split(" ");
+        String addTailVal = addTailValAndType[0];
+        
         String tmp = newTemp();
+        String tmpType = "";
+        if(powTermValAndType[1].equals(addTailValAndType[1])) {
+            tmpType = powTermValAndType[1];
+        } else if(powTermValAndType[1].equals("float") || addTailValAndType[1].equals("float")) {
+            tmpType = "float";
+        } else {
+            tmpType = "int";
+        }
+        this.symTable.addVariable(tmp, tmpType);
         emit("add " + powTermVal + ", " + addTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " " + tmpType;
     }
 	/**
 	 * {@inheritDoc}
@@ -863,18 +1017,25 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitPow_term(tigerParser.Pow_termContext ctx) {
         // pow_term : factor pow_tail;
-        String factorVal = visit(ctx.getChild(0));
-        String powTailVal = visit(ctx.getChild(1));
-        if(powTailVal == null) {
-            return factorVal;
+
+        String[] factorValAndType = visit(ctx.getChild(0)).split(" ");
+
+        String factorVal = factorValAndType[0];
+        String powTailStr = visit(ctx.getChild(1));
+        if(powTailStr == null) {
+            return factorValAndType[0] + " " + factorValAndType[1];
         }
+        String[] powTailValAndType = powTailStr.split(" ");
+        String powTailVal = powTailValAndType[0];
+
         String tmp = newTemp();
         // emit("add, 1, 0, " + tmp);
         // for(int i=1; i<= Integer.parseInt(powTailVal); i++) {
         //     emit("mult " + tmp + ", " + factorVal + ", " + tmp);
         // }
+        this.symTable.addVariable(tmp, factorValAndType[1]);
         emit("pow " + factorVal + ", " + powTailVal + ", " + tmp);
-        return tmp;
+        return tmp + " " + factorValAndType[1];
     }
 	/**
 	 * {@inheritDoc}
@@ -889,21 +1050,21 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String factorVal = visit(ctx.getChild(1));
-        String powTailVal = visit(ctx.getChild(2));
-
-        if(powTailVal == null) {
-            return factorVal;
+        String[] factorValAndType = visit(ctx.getChild(1)).split(" ");
+        String factorVal = factorValAndType[0];
+        String powTailStr = visit(ctx.getChild(2));
+        if(powTailStr == null) {
+            return factorValAndType[0] + " " + factorValAndType[1];
         }
 
+        String[] powTailValAndType = powTailStr.split(" ");
+        String powTailVal = powTailValAndType[0];
+
         String tmp = newTemp();
-        // emit("add, 1, 0, " + tmp);
-        // for(int i=1; i<= Integer.parseInt(powTailVal); i++) {
-        //     emit("mult " + tmp + ", " + factorVal + ", " + tmp);
-        // }
+        this.symTable.addVariable(tmp, "int");
         emit("pow " + factorVal + ", " + powTailVal + ", " + tmp);
 
-        return tmp;
+        return tmp + " int";
     }
 	/**
 	 * {@inheritDoc}
@@ -921,8 +1082,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             case 50: // lvalue / ID
                 return visit(ctx.getChild(0));
             case 51: // constant / INTLIT
+                return ctx.getChild(0).getText() + " int";
             case 52: // constant / FLOATLIT
-                return ctx.getChild(0).getText();
+                return ctx.getChild(0).getText() + " float";
         }
         return null;
     }
@@ -950,7 +1112,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         }
         String expr = visit(ctx.getChild(0));
         String exprList = visit(ctx.getChild(1));
-        return expr + " " + exprList;
+        return expr + "#" + exprList;
     }
 	/**
 	 * {@inheritDoc}
