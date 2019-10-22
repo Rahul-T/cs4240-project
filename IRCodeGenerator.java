@@ -454,7 +454,20 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitComparison_term(tigerParser.Comparison_termContext ctx) {
-        return visitChildren(ctx);
+        // comparison_term: div_term comparison_tail;
+
+        String divTermVal = visit(ctx.getChild(0));
+        String compTailVal = visit(ctx.getChild(1));
+
+        if(compTailVal == null) {
+            return divTermVal;
+        }
+
+        String tmp = newTemp();
+
+        emit("comp " + divTermVal + ", " + compTailVal + ", " + tmp);
+
+        return tmp;
     }
 	/**
 	 * {@inheritDoc}
@@ -464,7 +477,14 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitComparison_tail(tigerParser.Comparison_tailContext ctx) {
-        return visitChildren(ctx);
+        // comparison_tail : (EQ | NEQ | LESSER | LESSEREQ | GREATER | GREATEREQ) div_term | /* NULL */;
+        
+        if (ctx.getChildCount() == 0)
+            return null;
+
+        String divTermVal = visit(ctx.getChild(1));
+
+        return divTermVal;
     }
 	/**
 	 * {@inheritDoc}
@@ -483,7 +503,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             return multTermVal;
         }
         String tmp = newTemp();
-        emit("div " + divTailVal + ", " + multTermVal + ", " + tmp);
+        emit("div " + multTermVal + ", " + divTailVal + ", " + tmp);
 
         return tmp;
     }
@@ -528,7 +548,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             return subTermVal;
         }
         String tmp = newTemp();
-        emit("mult " + multTailVal + ", " + subTermVal + ", " + tmp);
+        emit("mult " + subTermVal + ", " + multTailVal + ", " + tmp);
 
         return tmp;
     }
@@ -572,7 +592,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             return addTermVal;
         }
         String tmp = newTemp();
-        emit("sub " + subTailVal + ", " + addTermVal + ", " + tmp);
+        emit("sub " + addTermVal + ", " + subTailVal + ", " + tmp);
 
         return tmp;
     }
@@ -616,7 +636,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             return powTermVal;
         }
         String tmp = newTemp();
-        emit("add " + addTailVal + ", " + powTermVal + ", " + tmp);
+        emit("add " + powTermVal + ", " + addTailVal + ", " + tmp);
 
         return tmp;
     }
@@ -632,8 +652,8 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String addTailVal = visit(ctx.getChild(2));
         String powTermVal = visit(ctx.getChild(1));
+        String addTailVal = visit(ctx.getChild(2));
 
         if(addTailVal == null) {
             return powTermVal;
@@ -674,8 +694,8 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if (ctx.getChildCount() == 0)
             return null;
 
-        String powTailVal = visit(ctx.getChild(2));
         String factorVal = visit(ctx.getChild(1));
+        String powTailVal = visit(ctx.getChild(2));
 
         if(powTailVal == null) {
             return factorVal;
