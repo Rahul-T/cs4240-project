@@ -2,7 +2,7 @@ main let
 	type TEST = float;
 	type TESTARR = array[10] of float;
 	var A,B,D : float;
-	var C: array[10] of int := 3;
+	var D: array[10] of int := 3;
 	var ZZ: array[10] of int := 3;
 	var E, G: TEST;
 	var F: int;

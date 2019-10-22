@@ -12,7 +12,11 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 
     private void symbolTableError(ParserRuleContext ctx, int index, String id, String err) {
         // ParserRuleContext prc = (ParserRuleContext) ctx;
-        Token errToken = ctx.getToken(50, index).getSymbol(); //token 50 is the id
+        Token errToken;
+        if (ctx.getToken(50, index) == null)
+            errToken = ctx.getStart();
+        else
+            errToken = ctx.getToken(50, index).getSymbol(); //token 50 is the id
         System.out.println("\nCOMPLIATION ERROR! Error while building symbol table at line " 
             + String.valueOf(errToken.getLine()) + " character " + String.valueOf(errToken.getCharPositionInLine()));
 
@@ -200,10 +204,13 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
         boolean success;
         if(typeInfo.length > 1) {
             // type is array
+            int count = 1;
             for(String id: idList) {
+                // System.out.println(id);
                 success = symTable.addArray(id, "var" ,typeInfo[2], Integer.parseInt(typeInfo[1]));
                 if (!success)
                     symbolTableError(ctx, 1, id, "previously declared");
+                count++;
             }
         } else {
             for(String id: idList) {
