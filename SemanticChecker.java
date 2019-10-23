@@ -310,21 +310,31 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitFunction_declaration(tigerParser.Function_declarationContext ctx) {
         // function_declaration : FUNC ID LPAREN param_list RPAREN ret_type BEGIN stat_seq END SEMI;
-        symTable.openScope();
-        String paramTypeString = visit(ctx.getChild(3));
-        String actualRetType = visit(ctx.getChild(7));
-        symTable.closeScope();
-        String[] paramTypeArr = paramTypeString.split(",");
-        
-        // First one: Func Name
+         // First one: Func Name
         // Second one: Ret Type
         String id = ctx.getChild(1).getText();
         String declaredRetType = visit(ctx.getChild(5));
-
+        String paramNameAndTypeString = visit(ctx.getChild(3));
+        String[] paramNameAndTypeArr = paramNameAndTypeString.split(",");
+        String[] paramTypeArr = new String[paramNameAndTypeArr.length];
+        String[] paramNameArr = new String[paramNameAndTypeArr.length];
+        for(int i=0; i<paramTypeArr.length; i++) {
+            paramTypeArr[i] = paramNameAndTypeArr[i].split(" ")[1];
+            paramNameArr[i] = paramNameAndTypeArr[i].split(" ")[0];
+        }
         boolean success = symTable.addFunction(id, declaredRetType, paramTypeArr);
             
         if (!success)
-            symbolTableError(ctx, 1, "previously declared");
+            symbolTableError(ctx, 1, "function previously declared");
+
+        symTable.openScope();
+        for(int i=0; i<paramNameArr.length; i++) {
+            if(!this.symTable.addVariable(paramNameArr[i], paramTypeArr[i])) {
+                semanticError(ctx.getStart(), "previously declared");
+            }
+        }
+        String actualRetType = visit(ctx.getChild(7));
+        symTable.closeScope();
 
         if (!declaredRetType.equals(actualRetType)) 
             semanticError(ctx.getStart(), 
@@ -385,9 +395,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
     @Override
     public String visitParam(tigerParser.ParamContext ctx) {
         // param : ID COLON type;
-        if (!this.symTable.addVariable(ctx.getChild(0).getText(), visit(ctx.getChild(2))))
-            symbolTableError(ctx, 0, "previously declared");
-        return ctx.getChild(2).getText();
+        return ctx.getChild(0).getText() + " " + ctx.getChild(2).getText();
     }
     
     /**

@@ -69,6 +69,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitTiger_program(tigerParser.Tiger_programContext ctx) {
         emit("# start_function main");
+        emit("void main():");
         String out = visitChildren(ctx);
         emit("# end_function main");
         this.closeOutput();
@@ -245,21 +246,32 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitFunction_declaration(tigerParser.Function_declarationContext ctx) {
         // function_declaration : FUNC ID LPAREN param_list RPAREN ret_type BEGIN stat_seq END SEMI;
-        emit("# start_function " + ctx.getChild(1).getText());
-        symTable.openScope();
-        String paramTypeString = visit(ctx.getChild(3));
-        String actualRetType = visit(ctx.getChild(7));
-        symTable.closeScope();
-        String[] paramTypeArr = paramTypeString.split(",");
 
         // First one: Func Name
         // Second one: Ret Type
         String id = ctx.getChild(1).getText();
+        emit("# start_function " + id);
         String declaredRetType = visit(ctx.getChild(5));
+        String paramNameAndTypeString = visit(ctx.getChild(3));
+        String[] paramNameAndTypeArr = paramNameAndTypeString.split(",");
+        String[] paramTypeArr = new String[paramNameAndTypeArr.length];
+        String[] paramNameArr = new String[paramNameAndTypeArr.length];
+        for(int i=0; i<paramTypeArr.length; i++) {
+            paramTypeArr[i] = paramNameAndTypeArr[i].split(" ")[0];
+            paramNameArr[i] = paramNameAndTypeArr[i].split(" ")[1];
+        }
+        emit(declaredRetType + " " + id + "(" + String.join(", ", paramNameAndTypeArr) + "):");
+        emit("args: " + String.join(", ", paramNameArr));
         symTable.addFunction(id, declaredRetType, paramTypeArr);
-        emit("# end_function " + ctx.getChild(1).getText());
 
-        return "";
+        symTable.openScope();
+        for(int i=0; i<paramNameArr.length; i++) {
+            this.symTable.addVariable(paramNameArr[i], paramTypeArr[i]);      
+        }
+        String actualRetType = visit(ctx.getChild(7));
+        symTable.closeScope();
+        emit("# end_function " + id);
+        return null;
     }
 	/**
 	 * {@inheritDoc}
@@ -308,8 +320,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitParam(tigerParser.ParamContext ctx) {
         // param : ID COLON type;
-        this.symTable.addVariable(ctx.getChild(0).getText(), visit(ctx.getChild(2)));
-        return ctx.getChild(2).getText();
+        return ctx.getChild(2).getText() + " " + ctx.getChild(0).getText();
     }
 	/**
 	 * {@inheritDoc}
