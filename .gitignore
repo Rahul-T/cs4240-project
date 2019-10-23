@@ -28,6 +28,9 @@ hs_err_pid*
 # IntelliJ Settings
 .idea/
 
+# VSCode Settings
+.vscode/
+
 # Ignore Antlr Outputs
 .antlr/
 tiger.interp
