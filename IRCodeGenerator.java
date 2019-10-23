@@ -346,19 +346,71 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         */
         // System.out.println("statement");
         switch(ctx.getChild(0).getText()) {
-            case "if":
-                visit(ctx.getChild(1));
+            case "if": // IF expr THEN stat_seq else_stat ENDIF SEMI
+
+                String ifCondExpr = visit(ctx.getChild(1)).split(" ")[0];
+                /*
+                    condExpr = visit(ctx.getChild(1));
+                    breq condExpr, 0, elseLabel
+                    visit(ctx.getChild(3));
+                    goto ifendLabel
+                    *elseLabel*
+                    visit(ctx.getChild(4));
+                    *ifendLabel*
+                */
+                String elseLabel = newLabel();
+                String ifendLabel = newLabel();
+                emit("breq " + ifCondExpr + ", 0, " + elseLabel);
                 visit(ctx.getChild(3));
+                emit("goto " + ifendLabel);
+                emit(elseLabel);
                 visit(ctx.getChild(4));
+                emit(ifendLabel);
                 break;
-            case "while":
-                visit(ctx.getChild(1));
+            case "while": // WHILE expr DO stat_seq ENDDO SEMI |
+                /* 
+                    *whileStartLabel*
+                    condExpr = visit(ctx.getChild(1));
+                    breq condExpr, 0, endLabel
+                    visit(ctx.getChild(3));
+                    goto whileStartLabel
+                    *whileEndLabel*
+                */
+                String whileStartLabel = newLabel();
+                String whileEndLabel = newLabel();
+                emit(whileStartLabel);
+                String whileCondExpr = visit(ctx.getChild(1)).split(" ")[0];
+                emit("breq " + whileCondExpr + ", 0, " + whileEndLabel);
                 visit(ctx.getChild(3));
+                emit("goto " + whileStartLabel);
+                emit(whileEndLabel);
                 break;
-            case "for":
+            case "for": // FOR ID ASSIGN expr TO expr DO stat_seq ENDDO SEMI
+                /*
+                    id = ctx.getChild(1).getText();
+                    String forLoopStartExpr = visit(ctx.getChild(3)).split(" ")[0];
+                    String forLoopEndExpr = visit(ctx.getChild(5)).split(" ")[0];
+                    assign forLoopStartExpr to value of id
+                    *startforloop*
+                    brgt id.value, forLoopEndExpr, afterForLoop
+                    visit(ctx.getChild(7));
+                    add id.val, 1, id.val
+                    goto startforloop
+                    *afterForLoop*
+                */
+                String forStartLabel = newLabel();
+                String forEndLabel = newLabel();
+
                 String id = ctx.getChild(1).getText();
-                String[] expr1 = visit(ctx.getChild(3)).split(" ");
-                emit("assign " + id + ", " + expr1[0]);
+                String forLoopStartExpr = visit(ctx.getChild(3)).split(" ")[0];
+                String forLoopEndExpr = visit(ctx.getChild(5)).split(" ")[0];
+                emit("assign " + id + ", " + forLoopStartExpr);
+                emit(forStartLabel);
+                emit("brgt " + id + ", " + forLoopEndExpr + ", " + forEndLabel);
+                visit(ctx.getChild(7));
+                emit("add " + id + ", " + "1, " + id);
+                emit("goto " + forStartLabel);
+                emit(forEndLabel);
                 break;
             case "break":
                 break;
@@ -388,7 +440,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                             String[] valType = params[i].split(" ");
                             allParams += ", " + valType[0];
                         }
-                        emit("callr, " + currId + ", " + params[0] + allParams);
+                        emit("callr " + currId + ", " + params[0] + allParams);
                     } else {
                         String allParams = "";
                         for(int i=1; i<params.length; i++) {
@@ -396,7 +448,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                             allParams += ", " + valType[0];
                         }
                         String[] valType = params[0].split(" ");
-                        emit("call, " + currId + ", " + valType[0] + allParams);
+                        emit("call " + currId + ", " + valType[0] + allParams);
                     }
                 } else {
                     if(!isAssign && !isArray) {
@@ -405,18 +457,18 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                     //Regular assign "F := 2"
                     else if(isAssign && !isArray && !params[0].contains(";")) {
                         String[] valType = params[0].split(" ");
-                        emit("assign, " + currId + ", " + valType[0]);
+                        emit("assign " + currId + ", " + valType[0]);
                     }
                     // Assigning indexed array val to non-array "F := C[2]"
                     else if(isAssign && !isArray && params[0].contains(";")) {
                         String[] arrayInfo = params[0].split(";");
-                        emit("load, " + currId + ", " + arrayInfo[0] + ", " + arrayInfo[1]);
+                        emit("load " + currId + ", " + arrayInfo[0] + ", " + arrayInfo[1]);
                     }
 
                     // Assigning array to array "C := C"
                     else if(isAssign && isArray) {
                         String[] valType = params[0].split(" ");
-                        emit("assign, " + currId + ", " + valType[0]);
+                        emit("assign " + currId + ", " + valType[0]);
                     }
                     else {
                         // System.out.println("1");
@@ -426,7 +478,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                             // System.out.println("2");
                             String[] valType0 = moreArrayInfo[0].split(" ");
                             String[] valType1 = moreArrayInfo[1].split(" ");
-                            emit("store, " + currId + ", " + valType0[0] + ", " + valType1[0]);
+                            emit("store " + currId + ", " + valType0[0] + ", " + valType1[0]);
                         }
                         // Assigning indexed array val to indexed array "C[1] := ZZ[2]"
                         // else if(!isAssign && moreArrayInfo.length == 3) {
@@ -504,7 +556,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         if(lvalueTail != null) {
             String tmp = newTemp();
             String[] valType = lvalueTail.split(" ");
-            emit("load, " + tmp + ", " + id + ", " + valType[0]);
+            emit("load " + tmp + ", " + id + ", " + valType[0]);
             this.symTable.addVariable(tmp, this.symTable.getType(id));
             return tmp + " " + this.symTable.getType(id);
         }
@@ -672,28 +724,28 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 
         switch(comparatorOp) {
             case "!=":
-                emit("breq, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                emit("breq " + divTermVal + ", " + compTailVal + ", " + lbl1);
                 break;
             case "==":
-                emit("brneq, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                emit("brneq " + divTermVal + ", " + compTailVal + ", " + lbl1);
                 break;
             case ">=":
-                emit("brlt, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                emit("brlt " + divTermVal + ", " + compTailVal + ", " + lbl1);
                 break;
             case "<=":
-                emit("brlt, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                emit("brlt " + divTermVal + ", " + compTailVal + ", " + lbl1);
                 break;
             case "<":
-                emit("brgeq, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                emit("brgeq " + divTermVal + ", " + compTailVal + ", " + lbl1);
                 break;
             case ">":
-                emit("brleq, " + divTermVal + ", " + compTailVal + ", " + lbl1);
+                emit("brleq " + divTermVal + ", " + compTailVal + ", " + lbl1);
                 break;
         }
-        emit("add, 1, 0, " + tmp);
+        emit("add 1, 0, " + tmp);
         emit("goto " + lbl2);
         emit(lbl1);
-        emit("add, 0, 0, " + tmp);
+        emit("add 0, 0, " + tmp);
         emit(lbl2);
 
         this.symTable.addVariable(tmp, "int");
