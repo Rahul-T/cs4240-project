@@ -10,6 +10,7 @@ add sum, t1, t2
 load t3, Y, i
 mult t2, t3, t4
 assign sum, t4
+goto l2
 add i, 1, i
 goto l1
 l2

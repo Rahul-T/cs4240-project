@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.IOException;
+import java.util.*;
 
 /**
  * This class provides an empty implementation of {@link tigerVisitor},
@@ -22,10 +23,12 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     private int labelCount = 0;
     private boolean verboseOutput;
     private PrintWriter outWriter;
+    private Stack<String> labelStack;
 
     public IRCodeGenerator(String outFileName, boolean verboseOutput) throws IOException {
         if (this.verboseOutput)
             System.out.println("\nIR GENERATED CODE:");
+        this.labelStack = new Stack<String>();
         this.symTable = new SymbolTable();
         this.verboseOutput = verboseOutput;
         this.outWriter = (outFileName == null) ? null : new PrintWriter(new FileWriter(outFileName));
@@ -360,12 +363,14 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 */
                 String elseLabel = newLabel();
                 String ifendLabel = newLabel();
+                labelStack.push(ifendLabel);
                 emit("breq " + ifCondExpr + ", 0, " + elseLabel);
                 visit(ctx.getChild(3));
                 emit("goto " + ifendLabel);
                 emit(elseLabel);
                 visit(ctx.getChild(4));
                 emit(ifendLabel);
+                labelStack.pop();
                 break;
             case "while": // WHILE expr DO stat_seq ENDDO SEMI |
                 /* 
@@ -378,12 +383,14 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 */
                 String whileStartLabel = newLabel();
                 String whileEndLabel = newLabel();
+                labelStack.push(whileEndLabel);
                 emit(whileStartLabel);
                 String whileCondExpr = visit(ctx.getChild(1)).split(" ")[0];
                 emit("breq " + whileCondExpr + ", 0, " + whileEndLabel);
                 visit(ctx.getChild(3));
                 emit("goto " + whileStartLabel);
                 emit(whileEndLabel);
+                labelStack.pop();
                 break;
             case "for": // FOR ID ASSIGN expr TO expr DO stat_seq ENDDO SEMI
                 /*
@@ -405,14 +412,25 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 String forLoopStartExpr = visit(ctx.getChild(3)).split(" ")[0];
                 String forLoopEndExpr = visit(ctx.getChild(5)).split(" ")[0];
                 emit("assign " + id + ", " + forLoopStartExpr);
+                labelStack.push(forEndLabel);
                 emit(forStartLabel);
                 emit("brgt " + id + ", " + forLoopEndExpr + ", " + forEndLabel);
                 visit(ctx.getChild(7));
                 emit("add " + id + ", " + "1, " + id);
                 emit("goto " + forStartLabel);
                 emit(forEndLabel);
+                labelStack.pop();
                 break;
-            case "break":
+            case "break": // BREAK SEMI
+            /*
+                startwhilelabel
+                while() {
+                    break;
+
+                }
+                endwhilelabel
+            */
+                emit("goto " + this.labelStack.peek());
                 break;
             case "return":
                 String[] retVal = visit(ctx.getChild(1)).split(" ");
@@ -427,8 +445,6 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
             default: // ID id_tail;
                 String currId = ctx.getChild(0).getText();
                 String idTail = visit(ctx.getChild(1));
-                // System.out.println(currId);
-                // System.out.println(idTail);
                 String[] params = idTail.split("#");
                 boolean isAssign = ctx.getChild(1).getText().substring(0,2).equals(":=");
                 boolean isArray = symTable.lookupSymbol(currId).isArray();
