@@ -28,8 +28,32 @@ public class SymbolTable {
         this.addFunction("getchar", "string", null);
     }
 
+    @Override
+    public String toString() {
+        return toStringHelper(this.head, 0, "");
+    }
+
+    private String toStringHelper(ScopeNode current, int indentNo, String retString) {
+        String indents = "";
+        for (int i = 0; i < indentNo; i++) {
+            indents += "\t";
+        }
+
+        SymbolData entry;
+        retString += indents + current.getScopeName() + ":\n";
+        for (String key : current.getScopeEntries().keySet()) {
+            entry = current.lookupEntry(key);
+            retString += String.format("\t%s%s, %s, %s\n", indents, key, 
+                entry.getClassification(), entry.getType());
+        }
+        for (ScopeNode node : current.getChildren()) {
+            retString = toStringHelper(node, indentNo + 1, retString);
+        }
+        return retString;
+    }
+
     void openScope() {
-        ScopeNode newNode = new ScopeNode("scope" + scopeAmount++, current);
+        ScopeNode newNode = new ScopeNode("scope " + scopeAmount++, current);
         current.addChildren(newNode);
         current = newNode;
     }
@@ -78,23 +102,6 @@ public class SymbolTable {
     boolean addType(String name, String type) {
         SymbolData newDataNode = new SymbolData("type", type);
         return current.addEntry(name, newDataNode);
-    }
-
-    @Override
-    public String toString() {
-        String retString = head.toString() + "\n";
-        for (ScopeNode curr : head.getChildren()) {
-            retString = toStringHelper(curr, retString);
-        }
-        return retString;
-    }
-
-    private String toStringHelper(ScopeNode parent, String retString) {
-        retString = retString + "\n" + parent.toString();
-        for (ScopeNode curr : parent.getChildren()) {
-            retString = retString + "\n" + curr.toString() + "\n";
-        }
-        return retString;
     }
 
     public boolean containsSymbol(String entryName) {
