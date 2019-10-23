@@ -3,6 +3,7 @@ import java.io.IOException;
 public class Testing {
     public static void main(String[] args) throws IOException {
         String[] testFiles = {
+        "Testing/factorial.tiger",
         "Testing/testfor.tiger",
         "Testing/testfunction.tiger",
         "Testing/testif.tiger",
