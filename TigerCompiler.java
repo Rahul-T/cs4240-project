@@ -74,7 +74,10 @@ public class TigerCompiler {
         
         SemanticChecker semChecker = new SemanticChecker();
         String result = semChecker.visit(wrapper.getParseTree());
-        if (verbosePrint) semChecker.printSymbolTable();
+        if (verbosePrint) {
+            System.out.println("\nSuccessful Compile\n");
+            semChecker.printSymbolTable();
+        }
 
         wrapper.reset();
         IRCodeGenerator irCodeGenerator = new IRCodeGenerator(noIrOutput ? null : outFileName, verbosePrint);
