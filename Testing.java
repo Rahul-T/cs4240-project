@@ -9,8 +9,8 @@ public class Testing {
         "Testing/testif.tiger",
         "Testing/testopassoc.tiger",
         "Testing/testoppres.tiger",
+        "Testing/testwhile.tiger",
         "Testing/testtypechecking.tiger",
-        "Testing/testwhile.tiger"
         };
 
         for (String testFile : testFiles) {
