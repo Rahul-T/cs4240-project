@@ -366,14 +366,12 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 */
                 String elseLabel = newLabel();
                 String ifendLabel = newLabel();
-                labelStack.push(ifendLabel);
                 emit("breq " + ifCondExpr + ", 0, " + elseLabel);
                 visit(ctx.getChild(3));
                 emit("goto " + ifendLabel);
                 emit(elseLabel + ":");
                 visit(ctx.getChild(4));
                 emit(ifendLabel + ":");
-                labelStack.pop();
                 break;
             case "while": // WHILE expr DO stat_seq ENDDO SEMI |
                 /* 

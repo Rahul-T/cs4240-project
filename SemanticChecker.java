@@ -1,10 +1,11 @@
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.Token;
-import java.util.Arrays;
+import java.util.*;
 
 public class SemanticChecker extends tigerBaseVisitor<String> {
     private SymbolTable symTable;
+    private Stack<String> loops;
 
     public void printSymbolTable() {
         System.out.println(symTable);
@@ -74,6 +75,7 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
 
     public SemanticChecker() {
         this.symTable = new SymbolTable();
+        this.loops = new Stack<String>();
     }
 
     @Override
@@ -455,12 +457,15 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 visit(ctx.getChild(4));
                 break;
             case "while":
+                loops.push("while");
                 exprType = visit(ctx.getChild(1));
                 if (!exprType.equals("int"))
                     semanticError(ctx.getStart(), "Conditional must evaluate to integer!");
                 visit(ctx.getChild(3));
+                loops.pop();
                 break;
             case "for":
+                loops.push("for");
                 if(!symTable.containsSymbol(ctx.getChild(1).getText())) {
                     symbolTableError(ctx, 1, "undeclared");
                 } else {
@@ -470,9 +475,13 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                     if (!idType.equals("int") || !expr1Type.equals("int") || !expr2Type.equals("int"))
                         semanticError(ctx.getStart(), "For loop variables must be integers!");
                     visit(ctx.getChild(7));
+                    loops.pop();
                 }
                 break;
             case "break":
+                if(loops.isEmpty()) {
+                    semanticError(ctx.getStart(), "Break statement must be inside loop");
+                }
                 break;
             case "return":
                 return visit(ctx.getChild(1));
