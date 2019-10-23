@@ -26,12 +26,12 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     private Stack<String> labelStack;
 
     public IRCodeGenerator(String outFileName, boolean verboseOutput) throws IOException {
-        if (this.verboseOutput)
-            System.out.println("\nIR GENERATED CODE:");
         this.labelStack = new Stack<String>();
         this.symTable = new SymbolTable();
         this.verboseOutput = verboseOutput;
         this.outWriter = (outFileName == null) ? null : new PrintWriter(new FileWriter(outFileName));
+        if (this.verboseOutput)
+            System.out.println("\nIR GENERATED CODE:\n");
     }
 
     public IRCodeGenerator(boolean verboseOutput) throws IOException {
@@ -39,9 +39,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     }
 
     public void emit(String s) {
-        if (verboseOutput)
+        if (this.verboseOutput)
             System.out.println(s);
-        if (outWriter != null)
+        if (this.outWriter != null)
             this.outWriter.print(s + "\n");
     }
 
@@ -57,7 +57,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 
     public String newLabel() {
         labelCount++;
-        return "l" + String.valueOf(labelCount);
+        return "label" + String.valueOf(labelCount);
     }
 
 	/**
@@ -68,7 +68,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitTiger_program(tigerParser.Tiger_programContext ctx) {
+        emit("# start_function main");
         String out = visitChildren(ctx);
+        emit("# end_function main");
         this.closeOutput();
         return out;
     }
@@ -243,7 +245,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
     @Override
     public String visitFunction_declaration(tigerParser.Function_declarationContext ctx) {
         // function_declaration : FUNC ID LPAREN param_list RPAREN ret_type BEGIN stat_seq END SEMI;
-
+        emit("# start_function " + ctx.getChild(1).getText());
         symTable.openScope();
         String paramTypeString = visit(ctx.getChild(3));
         String actualRetType = visit(ctx.getChild(7));
@@ -255,6 +257,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         String id = ctx.getChild(1).getText();
         String declaredRetType = visit(ctx.getChild(5));
         symTable.addFunction(id, declaredRetType, paramTypeArr);
+        emit("# end_function " + ctx.getChild(1).getText());
 
         return "";
     }
@@ -367,9 +370,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 emit("breq " + ifCondExpr + ", 0, " + elseLabel);
                 visit(ctx.getChild(3));
                 emit("goto " + ifendLabel);
-                emit(elseLabel);
+                emit(elseLabel + ":");
                 visit(ctx.getChild(4));
-                emit(ifendLabel);
+                emit(ifendLabel + ":");
                 labelStack.pop();
                 break;
             case "while": // WHILE expr DO stat_seq ENDDO SEMI |
@@ -384,12 +387,12 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 String whileStartLabel = newLabel();
                 String whileEndLabel = newLabel();
                 labelStack.push(whileEndLabel);
-                emit(whileStartLabel);
+                emit(whileStartLabel + ":");
                 String whileCondExpr = visit(ctx.getChild(1)).split(" ")[0];
                 emit("breq " + whileCondExpr + ", 0, " + whileEndLabel);
                 visit(ctx.getChild(3));
                 emit("goto " + whileStartLabel);
-                emit(whileEndLabel);
+                emit(whileEndLabel + ":");
                 labelStack.pop();
                 break;
             case "for": // FOR ID ASSIGN expr TO expr DO stat_seq ENDDO SEMI
@@ -413,12 +416,12 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                 String forLoopEndExpr = visit(ctx.getChild(5)).split(" ")[0];
                 emit("assign " + id + ", " + forLoopStartExpr);
                 labelStack.push(forEndLabel);
-                emit(forStartLabel);
+                emit(forStartLabel + ":");
                 emit("brgt " + id + ", " + forLoopEndExpr + ", " + forEndLabel);
                 visit(ctx.getChild(7));
                 emit("add " + id + ", " + "1, " + id);
                 emit("goto " + forStartLabel);
-                emit(forEndLabel);
+                emit(forEndLabel + ":");
                 labelStack.pop();
                 break;
             case "break": // BREAK SEMI
@@ -760,9 +763,9 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         }
         emit("add 1, 0, " + tmp);
         emit("goto " + lbl2);
-        emit(lbl1);
+        emit(lbl1 + ":");
         emit("add 0, 0, " + tmp);
-        emit(lbl2);
+        emit(lbl2 + ":");
 
         this.symTable.addVariable(tmp, "int");
 

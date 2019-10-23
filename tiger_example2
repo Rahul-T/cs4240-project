@@ -4,9 +4,8 @@ main let
         var i, sum : int := 0;
 in
 begin
-        for i := 0 to 99 do /* for loop for dot product */
+        while i < 100 do /* while loop for dot product */
                 sum := sum + X[i] * Y [i];
-                break;
         enddo;
 end
 

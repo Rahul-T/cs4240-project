@@ -1,0 +1,21 @@
+# start_function main
+assign X, 10
+assign Y, 10
+assign i, 0
+assign sum, 0
+label1:
+brgeq i, 100, label3
+add 1, 0, t1
+goto label4
+label3:
+add 0, 0, t1
+label4:
+breq t1, 0, label2
+load t2, X, i
+add sum, t2, t3
+load t4, Y, i
+mult t3, t4, t5
+assign sum, t5
+goto label1
+label2:
+# end_function main
