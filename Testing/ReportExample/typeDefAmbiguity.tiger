@@ -1,0 +1,18 @@
+main let
+	type First_Int = int;
+	type Second_Int = First_Int;
+	type Third_Int = First_Int;
+	var X : First_Int := 0;
+	var Y : Second_Int;
+	var Z : Second_Int;
+	var A : int := 0;
+
+    function simple ( n : Second_Int ) : First_Int begin
+        return X;
+    end;
+
+in begin
+    Z := Y;
+    X := simple(Z);
+	A := A + 5;
+end

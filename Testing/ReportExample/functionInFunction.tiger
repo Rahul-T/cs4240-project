@@ -1,0 +1,14 @@
+main let
+    var i : int := 1;
+
+    function first ( j : int ) : int begin
+        return j;
+    end;
+
+    function second ( k : int ) : int begin
+        k := first(k);
+        return k;
+    end;
+in begin
+    i := second(i);
+end
