@@ -1,0 +1,21 @@
+main let
+	var D : float;
+	var C: array[10] of int := 3;
+	var ZZ: array[10] of int := 3;
+	var F: int;
+
+in begin
+
+    /* This is Just a comment*/
+    /* Wow! look
+        a multiline comment on a
+        tiger program
+    */
+	F := 2 -2;
+	D := 1.0;
+	F := C[2] + C[2];
+	C := C;
+	C[1] := 2;
+	C[1] := ZZ[2] + ZZ[3] ** 7;
+
+end

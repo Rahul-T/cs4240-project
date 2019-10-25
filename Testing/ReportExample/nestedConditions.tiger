@@ -1,0 +1,11 @@
+main let
+    var i : int := 1;
+in begin
+    if(i == 1) then
+        if (i > 0) then
+            i := 2;
+        endif;
+	else
+		i := 2;
+    endif;
+end
