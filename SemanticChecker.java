@@ -241,7 +241,8 @@ public class SemanticChecker extends tigerBaseVisitor<String> {
                 actualType = typeInfo[0];
             }
             this.symTable.getType(typeInfo[0]);
-            if(typeInfo.length == 1 && !actualType.equals(optionalInitType)) {
+            if (typeInfo.length == 1 && !actualType.equals(optionalInitType) &&
+                !(actualType.equals("float") && optionalInitType.equals("int"))) { // allow ints to be autopromoted to float
                 semanticError(ctx.getStart(), "Type mismatch!");
             } else if(typeInfo.length > 1 && !typeInfo[2].equals(optionalInitType)) {
                 semanticError(ctx.getStart(), "Type mismatch!");

@@ -1,0 +1,9 @@
+main let
+    var i,x : int :=0;
+in
+begin
+    let var z:int := 10; in
+        i := x + z;
+    end;
+    z := x + i;
+end;

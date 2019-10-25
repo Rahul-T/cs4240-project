@@ -1,0 +1,9 @@
+main let
+    var a,b : float := 0;
+    var A, B : array[10] of float;
+in
+begin
+    A[5] := a + 100;
+    b := A[5] + 10;
+    B := A;
+end;

@@ -1,0 +1,12 @@
+main let
+    var i: int := -10;
+in
+begin
+    while i < 10 do
+        if i < 0 then
+            break;
+        endif;
+        i := i + 4;
+    enddo;
+    break;
+end
