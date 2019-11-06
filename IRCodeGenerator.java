@@ -480,7 +480,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                     }
                 } else {
                     if(!isAssign && !isArray) {
-                        System.out.println("Should be unreachable");
+                        // System.out.println("Should be unreachable");
                     }
                     //Regular assign "F := 2"
                     else if(isAssign && !isArray && !params[0].contains(";")) {
@@ -516,7 +516,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
                         //     emit("store, " + currId + ", " + moreArrayInfo[0] + ", " + tmp);
                         // } 
                         else {
-                            System.out.println("Should be unreachable");
+                            // System.out.println("Should be unreachable");
                         }
                     }
                 }
@@ -985,10 +985,11 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
 	 */
     @Override
     public String visitSub_tail(tigerParser.Sub_tailContext ctx) {
-        // sub_tail : PLUS add_term sub_tail | /* NULL */;
+        // sub_tail : MINUS add_term sub_tail | /* NULL */; 
 
         if (ctx.getChildCount() == 0)
             return null;
+
 
         String[] addTermValAndType = visit(ctx.getChild(1)).split(" ");
         String addTermVal = addTermValAndType[0];
@@ -1012,6 +1013,7 @@ public class IRCodeGenerator extends tigerBaseVisitor<String> {
         this.symTable.addVariable(tmp, tmpType);
 
         emit("sub " + addTermVal + ", " + subTailVal + ", " + tmp);
+
 
         return tmp + " " + tmpType;
     }

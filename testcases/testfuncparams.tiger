@@ -1,0 +1,14 @@
+/* Expression_list testing */
+main
+let
+	var X, Y : float := 0.0;
+	
+	function print (X : int, Y: float, Q: int, R: int) : int begin
+		X := 42;
+        return X;
+    end;
+in
+begin
+	X:=print((1+2/3-4) ** 1 - (4-5*6+7), X);
+	X:= (1+2/3-4) ** 1 - (4-5*6+7);
+end

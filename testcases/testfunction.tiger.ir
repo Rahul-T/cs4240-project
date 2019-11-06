@@ -1,0 +1,9 @@
+# start_function main
+void main():
+# start_function simple
+int simple(int n):
+args: n
+return n
+# end_function simple
+callr X, simple, 5
+# end_function main

@@ -1,0 +1,18 @@
+# start_function main
+void main():
+add 3, 2, t1
+sub 5, t1, t2
+assign X, t2
+add 5, 3, t3
+mult t3, 2, t4
+assign X, t4
+mult 5, 3, t5
+div t5, 2, t6
+assign X, t6
+add 1, 1, t7
+div 4, t7, t8
+assign X, t8
+pow 3, 2, t9
+mult 5, t9, t10
+assign X, t10
+# end_function main
