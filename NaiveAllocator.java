@@ -61,27 +61,39 @@ public class NaiveAllocator {
                         break;
 
                     case "breq":
-                        pseudoMips.add(line.replace("breq", "beq"));
+                        generateLoad(lineElements[1], "$t0", pseudoMips);
+                        generateLoad(lineElements[2], "$t1", pseudoMips);
+                        pseudoMips.add("beq $t0, $t1, " + lineElements[3]);
                         break;
 
                     case "brneq":
-                        pseudoMips.add(line.replace("brneq", "bne"));
+                        generateLoad(lineElements[1], "$t0", pseudoMips);
+                        generateLoad(lineElements[2], "$t1", pseudoMips);
+                        pseudoMips.add("bne $t0, $t1, " + lineElements[3]);
                         break;
 
                     case "brlt":
-                        pseudoMips.add(line.replace("brlt", "blt"));
+                        generateLoad(lineElements[1], "$t0", pseudoMips);
+                        generateLoad(lineElements[2], "$t1", pseudoMips);
+                        pseudoMips.add("blt $t0, $t1, " + lineElements[3]);
                         break;
 
                     case "brgt":
-                        pseudoMips.add(line.replace("brgt", "bgt"));
+                        generateLoad(lineElements[1], "$t0", pseudoMips);
+                        generateLoad(lineElements[2], "$t1", pseudoMips);
+                        pseudoMips.add("bgt $t0, $t1, " + lineElements[3]);
                         break;
 
                     case "brgeq":
-                        pseudoMips.add(line.replace("brgeq", "bge"));
+                        generateLoad(lineElements[1], "$t0", pseudoMips);
+                        generateLoad(lineElements[2], "$t1", pseudoMips);
+                        pseudoMips.add("bge $t0, $t1, " + lineElements[3]);
                         break;
 
                     case "brleq":
-                        pseudoMips.add(line.replace("brleq", "ble"));
+                        generateLoad(lineElements[1], "$t0", pseudoMips);
+                        generateLoad(lineElements[2], "$t1", pseudoMips);
+                        pseudoMips.add("ble $t0, $t1, " + lineElements[3]);
                         break;
 
                     case "return":
