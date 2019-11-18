@@ -88,7 +88,19 @@ public class NaiveAllocator {
 
                     // TODO: Figure out what to do for function calls
                     case "call":
+                        // TODO: Figure stack for function calls
+                        for(int i = 0; i < lineElements.length - 2; i++) {
+                            generateLoad(lineElements[i + 2], "$a" + i, pseudoMips);
+                        }
+                        // TODO: Add return address from stack
+                        pseudoMips.add("j " + lineElements[2]);
+                        pseudoMips.add("sw " + lineElements[1] + ", " + "$v0");
+
                     case "callr":
+                        // TODO: Figure stack for function calls
+                        for(int i = 0; i < lineElements.length - 3; i++) {
+                            generateLoad(lineElements[i + 3], "$a" + i, pseudoMips);
+                        }
                         pseudoMips.add(line);
                         break;
                     default: {
