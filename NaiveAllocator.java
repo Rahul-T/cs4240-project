@@ -88,7 +88,7 @@ public class NaiveAllocator {
 
                     case "return":
                         if(lineElements.length > 1) {
-                            mips.add("lw $v0, " + lineElements[1]);
+                            generateLoad(lineElements[1], "$v0", mips);
                             mips.add("jr $ra");
                         } else {
                             mips.add("jr $ra");
