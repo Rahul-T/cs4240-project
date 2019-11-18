@@ -9,6 +9,7 @@ float-list:
  goto, main0
 main0:
  add, A0, 0, var0
+ array_store, arr, 0, a
  assign, A0, var0,
  add, B0, 1, var1
  assign, B0, var1,
