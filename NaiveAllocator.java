@@ -86,7 +86,7 @@ public class NaiveAllocator {
 
                     case "return":
                         if(lineElements.length > 1) {
-                            pseudoMips.add("lw $v0 " + lineElements[1]);
+                            pseudoMips.add("lw $v0, " + lineElements[1]);
                             pseudoMips.add("return $v0");
                         } else {
                             pseudoMips.add("syscall");
