@@ -61,39 +61,20 @@ public class NaiveAllocator {
                         break;
 
                     case "breq":
-                        generateLoad(lineElements[1], "$t0", pseudoMips);
-                        generateLoad(lineElements[2], "$t1", pseudoMips);
-                        pseudoMips.add("beq $t0, $t1, " + lineElements[3]);
-                        break;
-
                     case "brneq":
-                        generateLoad(lineElements[1], "$t0", pseudoMips);
-                        generateLoad(lineElements[2], "$t1", pseudoMips);
-                        pseudoMips.add("bne $t0, $t1, " + lineElements[3]);
-                        break;
-
                     case "brlt":
-                        generateLoad(lineElements[1], "$t0", pseudoMips);
-                        generateLoad(lineElements[2], "$t1", pseudoMips);
-                        pseudoMips.add("blt $t0, $t1, " + lineElements[3]);
-                        break;
-
                     case "brgt":
-                        generateLoad(lineElements[1], "$t0", pseudoMips);
-                        generateLoad(lineElements[2], "$t1", pseudoMips);
-                        pseudoMips.add("bgt $t0, $t1, " + lineElements[3]);
-                        break;
-
                     case "brgeq":
-                        generateLoad(lineElements[1], "$t0", pseudoMips);
-                        generateLoad(lineElements[2], "$t1", pseudoMips);
-                        pseudoMips.add("bge $t0, $t1, " + lineElements[3]);
-                        break;
-
                     case "brleq":
                         generateLoad(lineElements[1], "$t0", pseudoMips);
                         generateLoad(lineElements[2], "$t1", pseudoMips);
-                        pseudoMips.add("ble $t0, $t1, " + lineElements[3]);
+                        lineElements[0] = lineElements[0].replace("breq", "beq");
+                        lineElements[0] = lineElements[0].replace("brneq", "bne");
+                        lineElements[0] = lineElements[0].replace("brlt", "blt");
+                        lineElements[0] = lineElements[0].replace("brgt", "bgt");
+                        lineElements[0] = lineElements[0].replace("brgeq", "bge");
+                        lineElements[0] = lineElements[0].replace("brleq", "ble");
+                        pseudoMips.add(lineElements[0] + " $t0, $t1, " + lineElements[3]);
                         break;
 
                     case "return":
