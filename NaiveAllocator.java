@@ -10,10 +10,10 @@ public class NaiveAllocator {
         this.irFile = irFile;
     }
 
-    public ArrayList<String> generatePseudoMIPS() throws IOException {
+    public ArrayList<String> generatemips() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
         String line;
-        ArrayList<String> pseudoMips = new ArrayList<>();
+        ArrayList<String> mips = new ArrayList<>();
         while ((line = br.readLine()) != null) {
             // System.out.println(line);
             String[] lineElements = line.replaceAll(",","").trim().split(" ");
@@ -21,23 +21,32 @@ public class NaiveAllocator {
                 switch (lineElements[0]) {
                     case "assign":
                         if (lineElements.length == 3) {
-                            generateLoad(lineElements[2], "$t0", pseudoMips);
-                            pseudoMips.add("sw $t0, " + lineElements[1]);
+                            generateLoad(lineElements[2], "$t0", mips);
+                            mips.add("sw $t0, " + lineElements[1]);
                         } else if (lineElements.length == 4) {
-                            // TODO: Array initialization to value
+                            mips.add("li $t2, 0");
+                            mips.add(lineElements[1] + "_init_start:");
+
+                            mips.add("la $t3, " + lineElements[1]);
+                            mips.add("add $t0, $t3, $t2");
+                            generateLoad(lineElements[3], "$t1", mips);
+                            mips.add("sw $t1, ($t0)");
+
+                            mips.add("addi $t2, 1");
+                            mips.add("ble $t2, " + lineElements[2] + ", " + lineElements[1] + "_init_start:");
                         }
                         break;
                     
                     case "array_store":
-                        pseudoMips.add("la $t0, " + lineElements[1]);
-                        generateLoad(lineElements[3], "$t1", pseudoMips);
-                        pseudoMips.add("sw $t1, " + lineElements[2] + "($t0)");
+                        mips.add("la $t0, " + lineElements[1]);
+                        generateLoad(lineElements[3], "$t1", mips);
+                        mips.add("sw $t1, " + lineElements[2] + "($t0)");
                         break;
                     
                     case "array_load":
-                        pseudoMips.add("la $t0, " + lineElements[2]);
-                        pseudoMips.add("lw $t1, " + lineElements[3] + "($t0)");
-                        pseudoMips.add("sw $t1, " + lineElements[1]);
+                        mips.add("la $t0, " + lineElements[2]);
+                        mips.add("lw $t1, " + lineElements[3] + "($t0)");
+                        mips.add("sw $t1, " + lineElements[1]);
                         break;
 
                     case "add":
@@ -46,18 +55,18 @@ public class NaiveAllocator {
                     case "div":
                     case "and":
                     case "or":
-                        generateLoad(lineElements[2], "$t0", pseudoMips);
-                        generateLoad(lineElements[3], "$t1", pseudoMips);
+                        generateLoad(lineElements[2], "$t0", mips);
+                        generateLoad(lineElements[3], "$t1", mips);
                         if(lineElements[0].equals("mult")) {
-                            pseudoMips.add("mul $t2, $t0, $t1");
+                            mips.add("mul $t2, $t0, $t1");
                         } else {
-                            pseudoMips.add(lineElements[0] + " $t2, $t0, $t1");
+                            mips.add(lineElements[0] + " $t2, $t0, $t1");
                         }
-                        pseudoMips.add("sw $t2, " + lineElements[1]);
+                        mips.add("sw $t2, " + lineElements[1]);
                         break;
                     
                     case "goto":
-                        pseudoMips.add("j " + lineElements[1]);
+                        mips.add("j " + lineElements[1]);
                         break;
 
                     case "breq":
@@ -66,30 +75,30 @@ public class NaiveAllocator {
                     case "brgt":
                     case "brgeq":
                     case "brleq":
-                        generateLoad(lineElements[1], "$t0", pseudoMips);
-                        generateLoad(lineElements[2], "$t1", pseudoMips);
+                        generateLoad(lineElements[1], "$t0", mips);
+                        generateLoad(lineElements[2], "$t1", mips);
                         lineElements[0] = lineElements[0].replace("breq", "beq");
                         lineElements[0] = lineElements[0].replace("brneq", "bne");
                         lineElements[0] = lineElements[0].replace("brlt", "blt");
                         lineElements[0] = lineElements[0].replace("brgt", "bgt");
                         lineElements[0] = lineElements[0].replace("brgeq", "bge");
                         lineElements[0] = lineElements[0].replace("brleq", "ble");
-                        pseudoMips.add(lineElements[0] + " $t0, $t1, " + lineElements[3]);
+                        mips.add(lineElements[0] + " $t0, $t1, " + lineElements[3]);
                         break;
 
                     case "return":
                         if(lineElements.length > 1) {
-                            pseudoMips.add("lw $v0, " + lineElements[1]);
-                            pseudoMips.add("jr $ra");
+                            mips.add("lw $v0, " + lineElements[1]);
+                            mips.add("jr $ra");
                         } else {
-                            pseudoMips.add("jr $ra");
+                            mips.add("jr $ra");
                         }
                         break;
 
                     // TODO: Figure out what to do for function calls
                     case "call":
                     case "callr":
-                        pseudoMips.add(line);
+                        mips.add(line);
                         break;
 
                     default: {
@@ -98,17 +107,17 @@ public class NaiveAllocator {
                 }
             }
         }
-        for(String instr: pseudoMips) {
+        for(String instr: mips) {
             System.out.println(instr);
         }
-        return pseudoMips;
+        return mips;
     }
 
-    private void generateLoad(String element, String register, ArrayList<String> pseudoMips) {
+    private void generateLoad(String element, String register, ArrayList<String> mips) {
         if (isNumeric(element)) {
-            pseudoMips.add("li " + register + ", " + element);
+            mips.add("li " + register + ", " + element);
         } else {
-            pseudoMips.add("lw " + register + ", " + element);
+            mips.add("lw " + register + ", " + element);
         }
     }
 
@@ -123,6 +132,6 @@ public class NaiveAllocator {
 
     public static void main(String[] args) throws IOException{
         NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/example.ir");
-        ArrayList<String> ir = naiveAllocator.generatePseudoMIPS();
+        ArrayList<String> ir = naiveAllocator.generatemips();
     }
 }

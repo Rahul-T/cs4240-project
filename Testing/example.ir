@@ -8,6 +8,7 @@ float-list:
  assign, A0, 0,
  goto, main0
 main0:
+assign, X, 100, 10
  add, A0, 0, var0
  array_store, arr, 0, a
  assign, A0, var0,
