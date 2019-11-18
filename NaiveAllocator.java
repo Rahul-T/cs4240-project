@@ -91,8 +91,10 @@ public class NaiveAllocator {
                     case "callr":
                         pseudoMips.add(line);
                         break;
-
                     default: {
+                        if (lineElements[0].charAt(lineElements[0].length() - 1) == ':') {
+                            pseudoMips.add(lineElements[0]);
+                        }
                         continue;
                     }
                 }
