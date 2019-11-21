@@ -93,7 +93,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVars.get(currentFunction).keySet().contains(lineElements[i])) {
-                                System.out.println(lineElements[i]);
+                                // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
                         }
@@ -109,7 +109,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVars.get(currentFunction).keySet().contains(lineElements[i])) {
-                                System.out.println(lineElements[i]);
+                                // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
                         }
@@ -120,7 +120,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVars.get(currentFunction).keySet().contains(lineElements[i])) {
-                                System.out.println(lineElements[i]);
+                                // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
                         }
@@ -130,7 +130,7 @@ public class NaiveAllocator {
                             continue;
                         }
                         if(!functionToVars.get(currentFunction).keySet().contains(lineElements[1])) {
-                            System.out.println(lineElements[1]);
+                            // System.out.println(lineElements[1]);
                             globalVars.put(lineElements[1], "");
                         }
                         for(int i=3; i<lineElements.length; i++) {
@@ -138,7 +138,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVars.get(currentFunction).keySet().contains(lineElements[i])) {
-                                System.out.println(lineElements[i]);
+                                // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
                         }
@@ -287,7 +287,10 @@ public class NaiveAllocator {
                         mips.add("j " + lineElements[1]);
                         break;
                     default: {
-                        if (lineElements[0].charAt(lineElements[0].length() - 1) == ':') {
+                        if (lineElements[0].length() > 0 
+                            && lineElements[0].charAt(lineElements[0].length() - 1) == ':'
+                            && !lineElements[0].equals("int-list:")
+                            && !lineElements[0].equals("float-list:")) {
                             mips.add(lineElements[0]);
                         }
                         continue;
