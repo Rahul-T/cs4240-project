@@ -180,7 +180,7 @@ public class NaiveAllocator {
         
     }
 
-    public ArrayList<String> generatemips() throws IOException {
+    public ArrayList<String> buildTextSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
         String line;
         ArrayList<String> mips = new ArrayList<>();
@@ -326,6 +326,6 @@ public class NaiveAllocator {
         NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/test1.ir");
         // ArrayList<String> ir = naiveAllocator.generatemips();
         ArrayList<String> dataSection = naiveAllocator.buildDataSection();
-        ArrayList<String> ir = naiveAllocator.generatemips();
+        ArrayList<String> textSection = naiveAllocator.buildTextSection();
     }
 }
