@@ -189,7 +189,8 @@ public class NaiveAllocator {
 
         while ((line = br.readLine()) != null) {
             // System.out.println(line);
-            String[] lineElements = line.replaceAll(",","").trim().split(" ");
+            String[] lineElements = line.trim().split(",");
+            System.out.println(Arrays.toString(lineElements));
             if (lineElements.length != 0) {
                 switch (lineElements[0]) {
                     case "assign":
