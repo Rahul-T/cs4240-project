@@ -282,9 +282,9 @@ public class NaiveAllocator {
                     case "call":
                         // TODO: Figure stack for function calls
                         for(int i = 0; i < lineElements.length - 2; i++) {
-                            generateLoad(lineElements[i + 2], "$a" + i, pseudoMips);
+                            generateLoad(lineElements[i + 2], "$a" + i, mips);
                         }
-                        pseudoMips.add("j " + lineElements[1]);
+                        mips.add("j " + lineElements[1]);
                         break;
                     default: {
                         if (lineElements[0].charAt(lineElements[0].length() - 1) == ':') {
