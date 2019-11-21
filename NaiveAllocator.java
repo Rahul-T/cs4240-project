@@ -10,7 +10,7 @@ public class NaiveAllocator {
         this.irFile = irFile;
     }
 
-    public void setup() throws IOException {
+    public ArrayList<String> buildDataSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
         String line;
         HashMap<String, String> globalVars = new HashMap<String, String>();
@@ -151,15 +151,33 @@ public class NaiveAllocator {
             globalVars.put(globalVar, functionToVars.get("main").get(globalVar));
         }
 
-        System.out.println("Function To Vars");
-        functionToVars.entrySet().forEach(entry->{
-            System.out.println(entry.getKey() + " " + entry.getValue());  
-        });
-        System.out.println("Global Vars");
-        globalVars.entrySet().forEach(entry->{
-            System.out.println(entry.getKey() + " " + entry.getValue());  
-        });
+        ArrayList<String> dataSection = new ArrayList<String>();
+        dataSection.add(".data");
+        for(String globalVar: globalVars.keySet()) {
+            if(globalVars.get(globalVar).contains("array")) {
+                int arraySpace = Integer.valueOf(globalVar.substring(globalVar.indexOf("[")+1, globalVar.indexOf("]"))) * 4;
+                dataSection.add(globalVar.substring(0, globalVar.indexOf("[")) + ": .space " + arraySpace);
+            } else {
+                dataSection.add(globalVar + ": .space 4");
+            }
+        }
+        dataSection.add("");
 
+        // System.out.println("Function To Vars");
+        // functionToVars.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
+        // System.out.println("Global Vars");
+        // globalVars.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
+
+        for(String data: dataSection) {
+            System.out.println(data);
+        }
+
+        return dataSection;
+        
     }
 
     public ArrayList<String> generatemips() throws IOException {
@@ -167,12 +185,7 @@ public class NaiveAllocator {
         String line;
         ArrayList<String> mips = new ArrayList<>();
 
-        // mips.add(".data");
-        // String intDecl = br.readLine();
-        // mips.add(intDecl);
-        // String floatDecl = br.readLine();
-        // mips.add(floatDecl);
-        // mips.add(".text");
+        mips.add(".text");
 
         while ((line = br.readLine()) != null) {
             // System.out.println(line);
@@ -294,6 +307,7 @@ public class NaiveAllocator {
     public static void main(String[] args) throws IOException{
         NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/test1.ir");
         // ArrayList<String> ir = naiveAllocator.generatemips();
-        naiveAllocator.setup();
+        ArrayList<String> dataSection = naiveAllocator.buildDataSection();
+        ArrayList<String> ir = naiveAllocator.generatemips();
     }
 }
