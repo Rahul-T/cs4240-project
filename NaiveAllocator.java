@@ -6,15 +6,26 @@ import java.util.*;
 
 public class NaiveAllocator {
     private String irFile;
+    HashMap<String, HashMap<String, String>> functionToVarsToType;
+    HashMap<String, String> globalVars;
+    PriorityQueue<Integer> tRegistersInactive;
+    PriorityQueue<Integer> fRegistersInactive;
+    HashSet<String> tRegistersActive;
+    HashSet<String> fRegistersActive;
+    
+    int stackOffsetStart = 20;
+    HashMap<String, HashMap<String, String>> functionToVarsToOffset;
+
     public NaiveAllocator(String irFile) {
         this.irFile = irFile;
+        globalVars = new HashMap<String, String>();
+        functionToVarsToType = new HashMap<String, HashMap<String, String>>();
+        functionToVarsToOffset = new HashMap<String, HashMap<String, String>>(); 
     }
 
     public ArrayList<String> buildDataSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
         String line;
-        HashMap<String, String> globalVars = new HashMap<String, String>();
-        HashMap<String, HashMap<String, String>> functionToVars = new HashMap<String, HashMap<String, String>>();
         String currentFunction = "";
         boolean isMain = false;
 
@@ -27,9 +38,13 @@ public class NaiveAllocator {
             else if(line.contains("(") && line.contains(")")) {
                 isMain = line.contains("void main()");
 
-                HashMap<String, String> declaredVars = new HashMap<String, String>();
+                HashMap<String, String> declaredVarsToType = new HashMap<String, String>();
                 currentFunction = line.substring(line.indexOf(" ")+1, line.indexOf("("));
-                functionToVars.put(currentFunction, declaredVars);
+                functionToVarsToType.put(currentFunction, declaredVarsToType);
+
+                int stackOffset = stackOffsetStart;
+                HashMap<String, String> declaredVarsToOffset = new HashMap<String, String>();
+                functionToVarsToOffset.put(currentFunction, declaredVarsToOffset);
 
                 String[] paramsList = line.substring(line.indexOf("(")+1, line.indexOf(")")).split(",");
                 for(String param: paramsList) {
@@ -37,7 +52,7 @@ public class NaiveAllocator {
                         break;
                     }
                     String[] typeAndName = param.trim().split(" ");
-                    declaredVars.put(typeAndName[1], typeAndName[0]);
+                    declaredVarsToType.put(typeAndName[1], typeAndName[0]);
                 }
 
                 // int-list 
@@ -50,9 +65,11 @@ public class NaiveAllocator {
                     }
                     if(param.contains("[")) {
                         globalVars.put(param, "intarray");
-                        declaredVars.put(param, "intarray");
+                        declaredVarsToType.put(param, "intarray");
                     } else {
-                        declaredVars.put(param, "int");
+                        declaredVarsToType.put(param, "int");
+                        declaredVarsToOffset.put(param, String.valueOf(stackOffset));
+                        stackOffset += 4;
                     }
                 }
 
@@ -66,11 +83,14 @@ public class NaiveAllocator {
                     }
                     if(param.contains("[")) {
                         globalVars.put(param, "floatarray");
-                        declaredVars.put(param, "floatarray");
+                        declaredVarsToType.put(param, "floatarray");
                     } else {
-                        declaredVars.put(param, "float");
+                        declaredVarsToType.put(param, "float");
+                        declaredVarsToOffset.put(param, String.valueOf(stackOffset));
+                        stackOffset += 4;
                     }
                 }
+                declaredVarsToOffset.put("#total#", String.valueOf(stackOffset-4));
             }
             // Regular statements
             else if (!line.contains(":") && !isMain) {
@@ -79,6 +99,16 @@ public class NaiveAllocator {
                 // System.out.println(Arrays.toString(lineElements));
                 switch (lineElements[0]) {
                     case "assign":
+                        for(int i=1; i<lineElements.length; i++) {
+                            if(isNumeric(lineElements[i])) {
+                                continue;
+                            }
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
+                                // System.out.println(lineElements[i]);
+                                globalVars.put(lineElements[i], "");
+                            }
+                        }
+                        break;
                     case "add":
                     case "sub":
                     case "mult":
@@ -92,7 +122,7 @@ public class NaiveAllocator {
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVars.get(currentFunction).keySet().contains(lineElements[i])) {
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -108,7 +138,7 @@ public class NaiveAllocator {
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVars.get(currentFunction).keySet().contains(lineElements[i])) {
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -119,7 +149,7 @@ public class NaiveAllocator {
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVars.get(currentFunction).keySet().contains(lineElements[i])) {
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -129,7 +159,7 @@ public class NaiveAllocator {
                         if(isNumeric(lineElements[1])) {
                             continue;
                         }
-                        if(!functionToVars.get(currentFunction).keySet().contains(lineElements[1])) {
+                        if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[1])) {
                             // System.out.println(lineElements[1]);
                             globalVars.put(lineElements[1], "");
                         }
@@ -137,7 +167,7 @@ public class NaiveAllocator {
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVars.get(currentFunction).keySet().contains(lineElements[i])) {
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -148,7 +178,7 @@ public class NaiveAllocator {
             }
         }
         for (String globalVar: globalVars.keySet()) {
-            globalVars.put(globalVar, functionToVars.get("main").get(globalVar));
+            globalVars.put(globalVar, functionToVarsToType.get("main").get(globalVar));
         }
 
         ArrayList<String> dataSection = new ArrayList<String>();
@@ -164,7 +194,7 @@ public class NaiveAllocator {
         dataSection.add("");
 
         // System.out.println("Function To Vars");
-        // functionToVars.entrySet().forEach(entry->{
+        // functionToVarsToType.entrySet().forEach(entry->{
         //     System.out.println(entry.getKey() + " " + entry.getValue());  
         // });
         // System.out.println("Global Vars");
@@ -172,6 +202,12 @@ public class NaiveAllocator {
         //     System.out.println(entry.getKey() + " " + entry.getValue());  
         // });
 
+        // System.out.println("Stack Offsets");
+        // functionToVarsToOffset.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
+
+        // System.out.println("");
         for(String data: dataSection) {
             System.out.println(data);
         }
@@ -180,122 +216,324 @@ public class NaiveAllocator {
         
     }
 
+    public String getVarType(String var) {
+        for(String function: functionToVarsToType.keySet()) {
+            if(functionToVarsToType.get(function).containsKey(var)) {
+                String type = functionToVarsToType.get(function).get(var);
+                return type;
+            }
+        }
+        System.out.println("NOTFOUND: " + var);
+        return "";
+    }
+
+    public String getAvailableRegister(String element) {
+        element = element.trim();
+        if(isNumeric(element)) {
+            if(element.contains(".")) {
+                String register = "$f" + String.valueOf(fRegistersInactive.poll());
+                fRegistersActive.add(register);
+                return register;
+            } else {
+                String register = "$t" + String.valueOf(tRegistersInactive.poll());
+                tRegistersActive.add(register);
+                return register;
+            }
+        } else {
+            String type = getVarType(element);
+            if(type.contains("int")) {
+                String register = "$t" + String.valueOf(tRegistersInactive.poll());
+                tRegistersActive.add(register);
+                return register;
+            } else if(type.contains("float")) {
+                String register = "$f" + String.valueOf(fRegistersInactive.poll());
+                fRegistersActive.add(register);
+                return register;
+            }
+        }
+        System.out.println("Error for variable: " + element);
+        return "error";
+    }
+
+    public void restoreRegister(String register) {
+        if(register.contains("$f")) {
+            fRegistersInactive.add(Integer.valueOf(register.substring(2)));
+        } else if(register.contains("$t")) {
+            tRegistersInactive.add(Integer.valueOf(register.substring(2)));
+        } else {
+            System.out.println("restore error");
+        }
+    }
+
+    public String getStackLocation(String var, String currentFunction) {
+        var = var.trim();
+        if(!isNumeric(var)) {
+            String offset = functionToVarsToOffset.get(currentFunction).get(var);
+            
+            // Global variable
+            if(offset == null) {
+                return var;
+            }
+
+            var = offset + "($sp)";
+        }
+        return var;
+    }
+
+
+
     public ArrayList<String> buildTextSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
         String line;
         ArrayList<String> mips = new ArrayList<>();
+        String currentFunction = "";
 
         mips.add(".text");
 
         while ((line = br.readLine()) != null) {
-            // System.out.println(line);
-            String[] lineElements = line.trim().split(",");
-            System.out.println(Arrays.toString(lineElements));
-            if (lineElements.length != 0) {
-                switch (lineElements[0]) {
-                    case "assign":
-                        if (lineElements.length == 3) {
-                            generateLoad(lineElements[2], "$t0", mips);
-                            mips.add("sw $t0, " + lineElements[1]);
-                        } else if (lineElements.length == 4) {
-                            mips.add("li $t2, 0");
-                            mips.add(lineElements[1] + "_init_start:");
+            // Comment
+            if(line.contains("#")) {
+                continue;
+            }
+            // Function header
+            else if(line.contains("(") && line.contains(")")) {
+                currentFunction = line.substring(line.indexOf(" ")+1, line.indexOf("("));
+                mips.add("");
+                mips.add(currentFunction + ":");
+                mips.add("sub $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
+                mips.add("sw $ra, 16($sp)");
+                tRegistersInactive = new PriorityQueue<Integer>();
+                fRegistersInactive = new PriorityQueue<Integer>();
+                for(int i=0; i<=7; i++) {
+                    tRegistersInactive.add(i);
+                }
+                for(int i=4; i<=10; i++) {
+                    fRegistersInactive.add(i);
+                }
+                tRegistersActive = new HashSet<String>();
+                fRegistersActive = new HashSet<String>();
+            }
+            // Regular statement
+            else if(line.contains(",")) {
 
-                            mips.add("la $t3, " + lineElements[1]);
-                            mips.add("add $t0, $t3, $t2");
-                            generateLoad(lineElements[3], "$t1", mips);
-                            mips.add("sw $t1, ($t0)");
+                String[] lineElements = line.trim().split(",");
 
-                            mips.add("addi $t2, 1");
-                            mips.add("ble $t2, " + lineElements[2] + ", " + lineElements[1] + "_init_start:");
-                        }
-                        break;
-                    
-                    case "array_store":
-                        mips.add("la $t0, " + lineElements[1]);
-                        generateLoad(lineElements[3], "$t1", mips);
-                        mips.add("sw $t1, " + lineElements[2] + "($t0)");
-                        break;
-                    
-                    case "array_load":
-                        mips.add("la $t0, " + lineElements[2]);
-                        mips.add("lw $t1, " + lineElements[3] + "($t0)");
-                        mips.add("sw $t1, " + lineElements[1]);
-                        break;
+                if (lineElements.length != 0) {
+                    switch (lineElements[0]) {
+                        case "assign":
+                            if (lineElements.length == 3) {
+                                String register = getAvailableRegister(lineElements[2]);
+                                generateLoad(lineElements[2], register, mips, currentFunction);
 
-                    case "add":
-                    case "sub":
-                    case "mult":
-                    case "div":
-                    case "and":
-                    case "or":
-                        generateLoad(lineElements[2], "$t0", mips);
-                        generateLoad(lineElements[3], "$t1", mips);
-                        if(lineElements[0].equals("mult")) {
-                            mips.add("mul $t2, $t0, $t1");
-                        } else {
-                            mips.add(lineElements[0] + " $t2, $t0, $t1");
-                        }
-                        mips.add("sw $t2, " + lineElements[1]);
-                        break;
-                    
-                    case "goto":
-                        mips.add("j " + lineElements[1]);
-                        break;
+                                mips.add("sw " + register + ", " + getStackLocation(lineElements[1], currentFunction));
+                                restoreRegister(register);
+                            } else if (lineElements.length == 4) {
+                                String loopCounterRegister = getAvailableRegister("0");
+                                mips.add("li " + loopCounterRegister + ", 0");
+                                mips.add(lineElements[1] + "_init_start:");
 
-                    case "breq":
-                    case "brneq":
-                    case "brlt":
-                    case "brgt":
-                    case "brgeq":
-                    case "brleq":
-                        generateLoad(lineElements[1], "$t0", mips);
-                        generateLoad(lineElements[2], "$t1", mips);
-                        lineElements[0] = lineElements[0].replace("breq", "beq");
-                        lineElements[0] = lineElements[0].replace("brneq", "bne");
-                        lineElements[0] = lineElements[0].replace("brlt", "blt");
-                        lineElements[0] = lineElements[0].replace("brgt", "bgt");
-                        lineElements[0] = lineElements[0].replace("brgeq", "bge");
-                        lineElements[0] = lineElements[0].replace("brleq", "ble");
-                        mips.add(lineElements[0] + " $t0, $t1, " + lineElements[3]);
-                        break;
+                                String arrayAddressRegister = getAvailableRegister("0");
+                                mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
 
-                    case "return":
-                        if(lineElements.length > 1) {
-                            generateLoad(lineElements[1], "$v0", mips);
+                                String wordMultiplierRegister = getAvailableRegister("4");
+                                mips.add("li " + wordMultiplierRegister + ", 4");
+
+                                String arrayOffsetRegister = getAvailableRegister("0");
+                                mips.add("mul " + arrayOffsetRegister + ", " + loopCounterRegister + ", " + wordMultiplierRegister);
+                                
+                                mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
+
+                                String storedValueRegister = getAvailableRegister(lineElements[3]);
+                                generateLoad(lineElements[3],storedValueRegister, mips, currentFunction);
+                                mips.add("sw " + storedValueRegister + ", " + "(" + arrayAddressRegister + ")");
+
+
+                                mips.add("addi " + loopCounterRegister + ", 1");
+                                mips.add("ble " + loopCounterRegister + ", " + lineElements[2] + ", " + lineElements[1] + "_init_start:");
+                                
+                                restoreRegister(loopCounterRegister);
+                                restoreRegister(arrayAddressRegister);
+                                restoreRegister(wordMultiplierRegister);
+                                restoreRegister(arrayOffsetRegister);
+                                restoreRegister(storedValueRegister);
+                            }
+                            break;
+                        
+                        case "array_store":
+                            String arrayAddressRegister = getAvailableRegister("0");
+                            mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
+                            // mips.add("la $t0, " + lineElements[1]);
+
+                            String arrayOffsetRegister = getAvailableRegister("0");
+                            generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
+
+                            mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
+
+                            String valueRegister = getAvailableRegister(lineElements[3]);
+                            generateLoad(lineElements[3], valueRegister, mips, currentFunction);
+                            // generateLoad(lineElements[3], "$t1", mips, currentFunction);
+
+                            mips.add("sw " + valueRegister + ", (" + arrayAddressRegister + ")");
+                            // mips.add("sw $t1, " + lineElements[2] + "($t0)");
+                            restoreRegister(arrayAddressRegister);
+                            restoreRegister(valueRegister);
+                            restoreRegister(arrayOffsetRegister);
+                            break;
+                        
+                        case "array_load":
+                            String arrayAddressRegister2 = getAvailableRegister("0");
+                            mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
+                            // mips.add("la $t0, " + lineElements[2]);
+
+                            String arrayOffsetRegister2 = getAvailableRegister("0");
+                            generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
+
+                            mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
+
+                            String valueRegister2 = getAvailableRegister(lineElements[1]);
+                            mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+                            // mips.add("lw $t1, " + lineElements[3] + "($t0)");
+
+                            mips.add("sw " + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
+                            // mips.add("sw $t1, " + lineElements[1]);
+
+                            restoreRegister(arrayAddressRegister2);
+                            restoreRegister(valueRegister2);
+                            restoreRegister(arrayOffsetRegister2);
+                            break;
+
+                        case "add":
+                        case "sub":
+                        case "mult":
+                        case "div":
+                        case "and":
+                        case "or":
+                            String operandRegister1 = getAvailableRegister(lineElements[1]);
+                            generateLoad(lineElements[1], operandRegister1, mips, currentFunction);
+                            // generateLoad(lineElements[1], "$t0", mips, currentFunction);
+
+                            String operandRegister2 = getAvailableRegister(lineElements[2]);
+                            generateLoad(lineElements[2], operandRegister2, mips, currentFunction);
+                            // generateLoad(lineElements[2], "$t1", mips, currentFunction);
+                            
+                            String resultRegister = "";
+                            if(operandRegister1.contains("$f") || operandRegister2.contains("$f")) {
+                                resultRegister = getAvailableRegister("0.0");
+                            } else {
+                                resultRegister = getAvailableRegister("0");
+                            }
+
+                            if(lineElements[0].equals("mult")) {
+                                mips.add("mul " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+                            } else {
+                                mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+                            }
+                            // if(lineElements[0].equals("mult")) {
+                            //     mips.add("mul $t2, $t0, $t1");
+                            // } else {
+                            //     mips.add(lineElements[0] + " $t2, $t0, $t1");
+                            // }
+
+                            mips.add("sw " + resultRegister + ", " + getStackLocation(lineElements[1], currentFunction));
+                            // mips.add("sw $t2, " + lineElements[1]);
+
+
+                            restoreRegister(operandRegister1);
+                            restoreRegister(operandRegister2);
+                            restoreRegister(resultRegister);
+                            break;
+                        
+                        case "goto":
+                            mips.add("j " + lineElements[1]);
+                            break;
+
+                        case "breq":
+                        case "brneq":
+                        case "brlt":
+                        case "brgt":
+                        case "brgeq":
+                        case "brleq":
+                            String firstRegister = getAvailableRegister(lineElements[1]);
+                            generateLoad(lineElements[1], firstRegister, mips, currentFunction);
+                            String secondRegister = getAvailableRegister(lineElements[2]);
+                            generateLoad(lineElements[2], secondRegister, mips, currentFunction);
+                            lineElements[0] = lineElements[0].replace("breq", "beq");
+                            lineElements[0] = lineElements[0].replace("brneq", "bne");
+                            lineElements[0] = lineElements[0].replace("brlt", "blt");
+                            lineElements[0] = lineElements[0].replace("brgt", "bgt");
+                            lineElements[0] = lineElements[0].replace("brgeq", "bge");
+                            lineElements[0] = lineElements[0].replace("brleq", "ble");
+                            mips.add(lineElements[0] + " " + firstRegister + ", " + secondRegister + ", " + lineElements[3]);
+
+                            restoreRegister(firstRegister);
+                            restoreRegister(secondRegister);
+                            break;
+
+                        case "return":
+                            if(lineElements.length > 1 && lineElements[1].trim().length() > 0) {
+                                String element = lineElements[1];
+                                if(isNumeric(element)) {
+                                    if(element.contains(".")) {
+                                        generateLoad(lineElements[1], "$f0", mips, currentFunction);
+                                    } else {
+                                        generateLoad(lineElements[1], "$v0", mips, currentFunction);
+                                    }
+                                } else {
+                                    String type = getVarType(element);
+                                    if(type.equals("float")) {
+                                        generateLoad(lineElements[1], "$f0", mips, currentFunction);
+                                    } else {
+                                        generateLoad(lineElements[1], "$v0", mips, currentFunction);
+                                    }
+                                }
+                            }
+                            mips.add("lw $ra, 16($sp)");
+                            mips.add("addi $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
                             mips.add("jr $ra");
-                        } else {
-                            mips.add("jr $ra");
-                        }
-                        break;
+                            
+                            break;
 
-                    // TODO: Figure out what to do for function calls
-                    case "callr":
-                        // TODO: Figure stack for function calls
-                        for(int i = 0; i < lineElements.length - 3; i++) {
-                            generateLoad(lineElements[i + 3], "$a" + i, mips);
-                        }
-                        // TODO: Add return address from stack
-                        mips.add("j " + lineElements[2]);
-                        mips.add("sw " + lineElements[1] + ", " + "$v0");
-                        break;
+                        case "callr":
+                            int argCounter = 0;
+                            for(int i = 3; i < lineElements.length; i++) {
+                                generateLoad(lineElements[i], "$a" + argCounter, mips, currentFunction);
+                                argCounter++;
+                            }
+                            mips.add("jal " + lineElements[2]);
+                            String type = getVarType(lineElements[1]);
+                            if(type.equals("int")) {
+                                mips.add("sw " + "$v0" + ", " + getStackLocation(lineElements[1], currentFunction));
+                            } else {
+                                mips.add("sw " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
+                            }
+                            break;
 
-                    case "call":
-                        // TODO: Figure stack for function calls
-                        for(int i = 0; i < lineElements.length - 2; i++) {
-                            generateLoad(lineElements[i + 2], "$a" + i, mips);
-                        }
-                        mips.add("j " + lineElements[1]);
-                        break;
-                    default: {
-                        if (lineElements[0].length() > 0 
-                            && lineElements[0].charAt(lineElements[0].length() - 1) == ':'
-                            && !lineElements[0].equals("int-list:")
-                            && !lineElements[0].equals("float-list:")) {
-                            mips.add(lineElements[0]);
-                        }
-                        continue;
+                        case "call":
+                            int argCounter2 = 0;
+                            for(int i = 2; i < lineElements.length; i++) {
+                                generateLoad(lineElements[i], "$a" + argCounter2, mips, currentFunction);
+                                argCounter2++;
+                            }
+                            if(lineElements[1].contains("printi")) {
+                                mips.add("li $v0, 1");
+                                mips.add("syscall");
+                            } else {
+                                mips.add("jal " + lineElements[1]);
+                            }
+                            break;
                     }
+                }
+            }
+            // Label
+            else {
+                if (line.length() > 0 
+                    && line.contains(":")
+                    && !line.contains("int-list:")
+                    && !line.contains("float-list:")) {
+                        String rawLabel = line.substring(0, line.indexOf(":")).trim();
+                        if(!functionToVarsToType.keySet().contains(rawLabel)) {
+                            mips.add(line);
+                        }
                 }
             }
         }
@@ -305,11 +543,11 @@ public class NaiveAllocator {
         return mips;
     }
 
-    private void generateLoad(String element, String register, ArrayList<String> mips) {
+    private void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
         if (isNumeric(element)) {
             mips.add("li " + register + ", " + element);
         } else {
-            mips.add("lw " + register + ", " + element);
+            mips.add("lw " + register + ", " + getStackLocation(element, currentFunction));
         }
     }
 
