@@ -193,21 +193,21 @@ public class NaiveAllocator {
         }
         dataSection.add("");
 
-        System.out.println("Function To Vars");
-        functionToVarsToType.entrySet().forEach(entry->{
-            System.out.println(entry.getKey() + " " + entry.getValue());  
-        });
-        System.out.println("Global Vars");
-        globalVars.entrySet().forEach(entry->{
-            System.out.println(entry.getKey() + " " + entry.getValue());  
-        });
+        // System.out.println("Function To Vars");
+        // functionToVarsToType.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
+        // System.out.println("Global Vars");
+        // globalVars.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
 
-        System.out.println("Stack Offsets");
-        functionToVarsToOffset.entrySet().forEach(entry->{
-            System.out.println(entry.getKey() + " " + entry.getValue());  
-        });
+        // System.out.println("Stack Offsets");
+        // functionToVarsToOffset.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
 
-        System.out.println("");
+        // System.out.println("");
         for(String data: dataSection) {
             System.out.println(data);
         }
