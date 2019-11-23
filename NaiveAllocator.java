@@ -105,8 +105,7 @@ public class NaiveAllocator {
             else if (!line.contains(":") && !isMain) {
                 String[] lineElements = line.replace(" ", "").split(",");
                 
-                // System.out.println(Arrays.toString(lineElements));
-                switch (lineElements[0]) {
+                switch (lineElements[0].trim()) {
                     case "assign":
                         for(int i=1; i<lineElements.length; i++) {
                             lineElements[i] = lineElements[i].trim();
@@ -534,7 +533,7 @@ public class NaiveAllocator {
                             break;
 
                         case "callr":
-                            int argCounter = 0;
+                            int argCounter = -1;
                             for(int i = 3; i < lineElements.length; i++) {
                                 argCounter++;
                                 if(globalVars.containsKey(lineElements[i].trim())) {
@@ -552,7 +551,7 @@ public class NaiveAllocator {
                             break;
 
                         case "call":
-                            int argCounter2 = 0;
+                            int argCounter2 = -1;
                             for(int i = 2; i < lineElements.length; i++) {
                                 argCounter2++;
                                 if(globalVars.containsKey(lineElements[i].trim())) {
@@ -619,10 +618,10 @@ public class NaiveAllocator {
     }
 
     public static void main(String[] args) throws IOException{
-        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/sort.ir", true);
+        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/factorial.ir", true);
         // ArrayList<String> ir = naiveAllocator.generatemips();
         naiveAllocator.buildDataSection();
         naiveAllocator.buildTextSection();
-        naiveAllocator.createFile("Testing/testSort.s");
+        naiveAllocator.createFile("Testing/testFactorial.s");
     }
 }
