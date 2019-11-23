@@ -296,6 +296,19 @@ public class NaiveAllocator {
                 mips.add(currentFunction + ":");
                 mips.add("sub $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
                 mips.add("sw $ra, 16($sp)");
+
+                String params = line.substring(line.indexOf("(")+1, line.indexOf(")"));
+                String[] paramsList = params.split(",");
+
+                if (paramsList[0].length() > 0) {
+                    for(int i=0; i<paramsList.length; i++) {
+                        String[] paramNameType = paramsList[i].split(" ");
+                        String actualParam = paramNameType[1].trim();
+                        String argOffset = functionToVarsToOffset.get(currentFunction).get(actualParam);
+                        mips.add("sw $a" + i + ", " + argOffset + "($sp)");
+                    }
+                }
+
                 tRegistersInactive = new PriorityQueue<Integer>();
                 fRegistersInactive = new PriorityQueue<Integer>();
                 for(int i=0; i<=7; i++) {
