@@ -423,14 +423,8 @@ public class NaiveAllocator {
                             } else {
                                 mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
                             }
-                            // if(lineElements[0].equals("mult")) {
-                            //     mips.add("mul $t2, $t0, $t1");
-                            // } else {
-                            //     mips.add(lineElements[0] + " $t2, $t0, $t1");
-                            // }
 
-                            mips.add("sw " + resultRegister + ", " + getStackLocation(lineElements[1], currentFunction));
-                            // mips.add("sw $t2, " + lineElements[1]);
+                            mips.add("sw " + resultRegister + ", " + getStackLocation(lineElements[3], currentFunction));
 
 
                             restoreRegister(operandRegister1);
@@ -568,10 +562,10 @@ public class NaiveAllocator {
     }
 
     public static void main(String[] args) throws IOException{
-        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/test1.ir", true);
+        NaiveAllocator naiveAllocator = new NaiveAllocator("Phase2Solutions/factorial.ir", true);
         // ArrayList<String> ir = naiveAllocator.generatemips();
         naiveAllocator.buildDataSection();
         naiveAllocator.buildTextSection();
-        naiveAllocator.createFile("Testing/test1.s");
+        naiveAllocator.createFile("Testing/testFactorial.s");
     }
 }
