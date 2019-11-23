@@ -492,9 +492,17 @@ public class NaiveAllocator {
                             }
 
                             if(lineElements[0].equals("mult")) {
-                                mips.add("mul " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+                                if(resultRegister.contains("$f")) {
+                                    mips.add("mul.s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+                                } else {
+                                    mips.add("mul " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+                                }
                             } else {
-                                mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+                                if(resultRegister.contains("$f")) {
+                                    mips.add(lineElements[0] + ".s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+                                } else {
+                                    mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+                                }
                             }
 
                             if(resultRegister.contains("$f")) {
