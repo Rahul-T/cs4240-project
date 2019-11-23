@@ -95,7 +95,7 @@ public class NaiveAllocator {
             }
             // Regular statements
             else if (!line.contains(":") && !isMain) {
-                String[] lineElements = line.trim().split(",");
+                String[] lineElements = line.replace(" ", "").split(",");
                 
                 // System.out.println(Arrays.toString(lineElements));
                 switch (lineElements[0]) {
@@ -140,6 +140,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
+                                // System.out.println(Arrays.toString(lineElements));
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -575,10 +576,10 @@ public class NaiveAllocator {
     }
 
     public static void main(String[] args) throws IOException{
-        NaiveAllocator naiveAllocator = new NaiveAllocator("Phase2Solutions/factorial.ir", true);
+        NaiveAllocator naiveAllocator = new NaiveAllocator("", true);
         // ArrayList<String> ir = naiveAllocator.generatemips();
         naiveAllocator.buildDataSection();
         naiveAllocator.buildTextSection();
-        naiveAllocator.createFile("Testing/testFactorial.s");
+        naiveAllocator.createFile("Testing/.s");
     }
 }
