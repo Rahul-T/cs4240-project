@@ -29,6 +29,7 @@ public class NaiveAllocator {
         String line;
         String currentFunction = "";
         boolean isMain = false;
+        HashSet<String> globals = new HashSet<>();
 
         while ((line = br.readLine()) != null) {
             // Comment
@@ -47,10 +48,17 @@ public class NaiveAllocator {
                 HashMap<String, String> declaredVarsToOffset = new HashMap<String, String>();
                 functionToVarsToOffset.put(currentFunction, declaredVarsToOffset);
 
+                globals = new HashSet<>();
                 String[] paramsList = line.substring(line.indexOf("(")+1, line.indexOf(")")).split(",");
                 for(String param: paramsList) {
                     if(param.length() == 0) {
                         break;
+                    }
+                    if(param.contains("[")) {
+                        String[] typeAndNamearr = param.trim().split(" ");
+                        String name = typeAndNamearr[1];
+                        globals.add(name);
+                        continue;
                     }
                     String[] typeAndName = param.trim().split(" ");
                     declaredVarsToType.put(typeAndName[1], typeAndName[0]);
@@ -101,10 +109,12 @@ public class NaiveAllocator {
                 switch (lineElements[0]) {
                     case "assign":
                         for(int i=1; i<lineElements.length; i++) {
+                            lineElements[i] = lineElements[i].trim();
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
+                                && !globals.contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -120,11 +130,12 @@ public class NaiveAllocator {
                     case "array_store":
                     case "array_load":
                         for(int i=1; i<lineElements.length; i++) {
+                            lineElements[i] = lineElements[i].trim();
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
-                                // System.out.println(lineElements[i]);
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
+                                && !globals.contains(lineElements[i])) {
                                 globalVars.put(lineElements[i], "");
                             }
                         }
@@ -136,10 +147,12 @@ public class NaiveAllocator {
                     case "brgeq":
                     case "brleq":
                         for(int i=1; i<lineElements.length-1; i++) {
+                            lineElements[i] = lineElements[i].trim();
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
+                            && !globals.contains(lineElements[i])) {
                                 // System.out.println(Arrays.toString(lineElements));
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
@@ -148,10 +161,12 @@ public class NaiveAllocator {
                         break;
                     case "call":
                         for(int i=2; i<lineElements.length; i++) {
+                            lineElements[i] = lineElements[i].trim();
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
+                            && !globals.contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -166,10 +181,12 @@ public class NaiveAllocator {
                             globalVars.put(lineElements[1], "");
                         }
                         for(int i=3; i<lineElements.length; i++) {
+                            lineElements[i] = lineElements[i].trim();
                             if(isNumeric(lineElements[i])) {
                                 continue;
                             }
-                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])) {
+                            if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
+                            && !globals.contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -182,6 +199,21 @@ public class NaiveAllocator {
         for (String globalVar: globalVars.keySet()) {
             globalVars.put(globalVar, functionToVarsToType.get("main").get(globalVar));
         }
+        
+
+        // System.out.println("Function To Vars");
+        // functionToVarsToType.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
+        // System.out.println("Global Vars");
+        // globalVars.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
+
+        // System.out.println("Stack Offsets");
+        // functionToVarsToOffset.entrySet().forEach(entry->{
+        //     System.out.println(entry.getKey() + " " + entry.getValue());  
+        // });
 
         mips.add(".data");
         for(String globalVar: globalVars.keySet()) {
@@ -208,7 +240,7 @@ public class NaiveAllocator {
         //     System.out.println(entry.getKey() + " " + entry.getValue());  
         // });
 
-        // System.out.println("");
+        System.out.println("");
         
     }
 
@@ -504,8 +536,11 @@ public class NaiveAllocator {
                         case "callr":
                             int argCounter = 0;
                             for(int i = 3; i < lineElements.length; i++) {
-                                generateLoad(lineElements[i], "$a" + argCounter, mips, currentFunction);
                                 argCounter++;
+                                if(globalVars.containsKey(lineElements[i].trim())) {
+                                    continue;
+                                }
+                                generateLoad(lineElements[i], "$a" + argCounter, mips, currentFunction);
                             }
                             mips.add("jal " + lineElements[2]);
                             String type = getVarType(lineElements[1].trim());
@@ -519,8 +554,11 @@ public class NaiveAllocator {
                         case "call":
                             int argCounter2 = 0;
                             for(int i = 2; i < lineElements.length; i++) {
-                                generateLoad(lineElements[i], "$a" + argCounter2, mips, currentFunction);
                                 argCounter2++;
+                                if(globalVars.containsKey(lineElements[i].trim())) {
+                                    continue;
+                                }
+                                generateLoad(lineElements[i], "$a" + argCounter2, mips, currentFunction);
                             }
                             if(lineElements[1].contains("printi")) {
                                 mips.add("li $v0, 1");
@@ -581,10 +619,10 @@ public class NaiveAllocator {
     }
 
     public static void main(String[] args) throws IOException{
-        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/quicksort.ir", true);
+        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/sort.ir", true);
         // ArrayList<String> ir = naiveAllocator.generatemips();
         naiveAllocator.buildDataSection();
         naiveAllocator.buildTextSection();
-        naiveAllocator.createFile("Testing/testQuicksort.s");
+        naiveAllocator.createFile("Testing/testSort.s");
     }
 }
