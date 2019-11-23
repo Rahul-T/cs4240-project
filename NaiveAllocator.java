@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class NaiveAllocator {
@@ -15,15 +12,19 @@ public class NaiveAllocator {
     
     int stackOffsetStart = 20;
     HashMap<String, HashMap<String, String>> functionToVarsToOffset;
+    ArrayList<String> mips;
+    boolean verbose;
 
-    public NaiveAllocator(String irFile) {
+    public NaiveAllocator(String irFile, boolean isVerbose) {
         this.irFile = irFile;
         globalVars = new HashMap<String, String>();
         functionToVarsToType = new HashMap<String, HashMap<String, String>>();
-        functionToVarsToOffset = new HashMap<String, HashMap<String, String>>(); 
+        functionToVarsToOffset = new HashMap<String, HashMap<String, String>>();
+        mips = new ArrayList<String>();
+        verbose = isVerbose;
     }
 
-    public ArrayList<String> buildDataSection() throws IOException {
+    public void buildDataSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
         String line;
         String currentFunction = "";
@@ -181,17 +182,16 @@ public class NaiveAllocator {
             globalVars.put(globalVar, functionToVarsToType.get("main").get(globalVar));
         }
 
-        ArrayList<String> dataSection = new ArrayList<String>();
-        dataSection.add(".data");
+        mips.add(".data");
         for(String globalVar: globalVars.keySet()) {
             if(globalVars.get(globalVar).contains("array")) {
                 int arraySpace = Integer.valueOf(globalVar.substring(globalVar.indexOf("[")+1, globalVar.indexOf("]"))) * 4;
-                dataSection.add(globalVar.substring(0, globalVar.indexOf("[")) + ": .space " + arraySpace);
+                mips.add(globalVar.substring(0, globalVar.indexOf("[")) + ": .space " + arraySpace);
             } else {
-                dataSection.add(globalVar + ": .space 4");
+                mips.add(globalVar + ": .space 4");
             }
         }
-        dataSection.add("");
+        mips.add("");
 
         // System.out.println("Function To Vars");
         // functionToVarsToType.entrySet().forEach(entry->{
@@ -208,11 +208,6 @@ public class NaiveAllocator {
         // });
 
         // System.out.println("");
-        for(String data: dataSection) {
-            System.out.println(data);
-        }
-
-        return dataSection;
         
     }
 
@@ -282,10 +277,9 @@ public class NaiveAllocator {
 
 
 
-    public ArrayList<String> buildTextSection() throws IOException {
+    public void buildTextSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
         String line;
-        ArrayList<String> mips = new ArrayList<>();
         String currentFunction = "";
 
         mips.add(".text");
@@ -318,6 +312,7 @@ public class NaiveAllocator {
 
                 String[] lineElements = line.trim().split(",");
 
+
                 if (lineElements.length != 0) {
                     switch (lineElements[0]) {
                         case "assign":
@@ -330,7 +325,7 @@ public class NaiveAllocator {
                             } else if (lineElements.length == 4) {
                                 String loopCounterRegister = getAvailableRegister("0");
                                 mips.add("li " + loopCounterRegister + ", 0");
-                                mips.add(lineElements[1] + "_init_start:");
+                                mips.add(lineElements[1].trim() + "_init_start:");
 
                                 String arrayAddressRegister = getAvailableRegister("0");
                                 mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
@@ -349,7 +344,7 @@ public class NaiveAllocator {
 
 
                                 mips.add("addi " + loopCounterRegister + ", 1");
-                                mips.add("ble " + loopCounterRegister + ", " + lineElements[2] + ", " + lineElements[1] + "_init_start:");
+                                mips.add("ble " + loopCounterRegister + ", " + lineElements[2] + ", " + lineElements[1] + "_init_start");
                                 
                                 restoreRegister(loopCounterRegister);
                                 restoreRegister(arrayAddressRegister);
@@ -366,7 +361,7 @@ public class NaiveAllocator {
 
                             String arrayOffsetRegister = getAvailableRegister("0");
                             generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
-
+                            mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
                             mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
 
                             String valueRegister = getAvailableRegister(lineElements[3]);
@@ -387,7 +382,7 @@ public class NaiveAllocator {
 
                             String arrayOffsetRegister2 = getAvailableRegister("0");
                             generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
-
+                            mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
                             mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
 
                             String valueRegister2 = getAvailableRegister(lineElements[1]);
@@ -537,10 +532,22 @@ public class NaiveAllocator {
                 }
             }
         }
-        for(String instr: mips) {
-            System.out.println(instr);
+    }
+
+    public void createFile(String fileName) {
+        PrintWriter fileWriter;
+        try {
+            fileWriter = new PrintWriter(new FileWriter(fileName));
+            for (String line : this.mips) {
+                System.out.println(line);
+                if (this.verbose) {
+                    fileWriter.println(line);
+                }
+            }
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return mips;
     }
 
     private void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
@@ -561,9 +568,10 @@ public class NaiveAllocator {
     }
 
     public static void main(String[] args) throws IOException{
-        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/test1.ir");
+        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/test1.ir", true);
         // ArrayList<String> ir = naiveAllocator.generatemips();
-        ArrayList<String> dataSection = naiveAllocator.buildDataSection();
-        ArrayList<String> textSection = naiveAllocator.buildTextSection();
+        naiveAllocator.buildDataSection();
+        naiveAllocator.buildTextSection();
+        naiveAllocator.createFile("Testing/test1.s");
     }
 }
