@@ -303,9 +303,14 @@ public class NaiveAllocator {
 
                 if (paramsList[0].length() > 0) {
                     for(int i=0; i<paramsList.length; i++) {
-                        String[] paramNameType = paramsList[i].split(" ");
+                        String[] paramNameType = paramsList[i].trim().split(" ");
                         String actualParam = paramNameType[1].trim();
+                        // System.out.println(Arrays.toString(paramsList));
+                        // System.out.println(actualParam);
                         String argOffset = functionToVarsToOffset.get(currentFunction).get(actualParam);
+                        if(paramNameType[0].contains("[")) {
+                            continue;
+                        }
                         mips.add("sw $a" + i + ", " + argOffset + "($sp)");
                     }
                 }
@@ -474,7 +479,7 @@ public class NaiveAllocator {
 
                         case "return":
                             if(lineElements.length > 1 && lineElements[1].trim().length() > 0) {
-                                String element = lineElements[1];
+                                String element = lineElements[1].trim();
                                 if(isNumeric(element)) {
                                     if(element.contains(".")) {
                                         generateLoad(lineElements[1], "$f0", mips, currentFunction);
@@ -503,7 +508,7 @@ public class NaiveAllocator {
                                 argCounter++;
                             }
                             mips.add("jal " + lineElements[2]);
-                            String type = getVarType(lineElements[1]);
+                            String type = getVarType(lineElements[1].trim());
                             if(type.equals("int")) {
                                 mips.add("sw " + "$v0" + ", " + getStackLocation(lineElements[1], currentFunction));
                             } else {
@@ -576,10 +581,10 @@ public class NaiveAllocator {
     }
 
     public static void main(String[] args) throws IOException{
-        NaiveAllocator naiveAllocator = new NaiveAllocator("", true);
+        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/quicksort.ir", true);
         // ArrayList<String> ir = naiveAllocator.generatemips();
         naiveAllocator.buildDataSection();
         naiveAllocator.buildTextSection();
-        naiveAllocator.createFile("Testing/.s");
+        naiveAllocator.createFile("Testing/testQuicksort.s");
     }
 }
