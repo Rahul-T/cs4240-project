@@ -5,21 +5,32 @@ import java.util.Collection;
 public class BasicBlock {
     private HashSet<BasicBlock> predecessors;
     private HashSet<BasicBlock> successors;
-    private ArrayList<String> lines;
+    private ArrayList<Instruction> lines;
     private String blockName;
+
+
+    // in and out sets are public to minimize function calls and set passing.
+    public HashSet<String> inSet;
+    public HashSet<String> outSet;
 
     public BasicBlock(String blockName) {
         this.predecessors = new HashSet<BasicBlock>();
         this.successors = new HashSet<BasicBlock>();
-        this.lines = new ArrayList<String>();
+        this.inSet = new HashSet<String>();
+        this.outSet = new HashSet<String>();
+        this.lines = new ArrayList<Instruction>();
         this.blockName = blockName;
     }
 
-    public void addLine(String line) {
+    public void addLine(Instruction line) {
         this.lines.add(line);
     }
 
-    public void addLines(ArrayList<String> lines) {
+    public void addLine(String line) {
+        this.lines.add(new Instruction(line.trim()));
+    }
+
+    public void addLines(ArrayList<Instruction> lines) {
         this.lines.addAll(lines);
     }
 
@@ -39,7 +50,7 @@ public class BasicBlock {
         this.predecessors.addAll(collection);
     }
 
-    public ArrayList<String> getLines() {
+    public ArrayList<Instruction> getLines() {
         return this.lines;
     }
 
@@ -59,7 +70,7 @@ public class BasicBlock {
     public String toString() {
         String retString = "===== START BASIC BLOCK " + this.blockName + " =====\n\t--LINES--\n";
         for (int i = 0; i < this.lines.size(); i++) {
-            retString += String.format("\t\t%1$2d. ", i) + lines.get(i) + "\n";
+            retString += String.format("\t\t%1$2d. ", i) + lines.get(i).toString() + "\n";
         }
         
         retString += "\t--PREDECESSORS--\n";
