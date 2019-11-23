@@ -11,7 +11,9 @@ public class CFGGenerator {
     private HashMap<String, BasicBlock> functionBlocks;
     private HashSet<BasicBlock> blocks;
     private HashMap<String, BasicBlock> labelMap;
+    private HashMap<String, HashSet<LiveRange>> webs;
     private String sourceFile;
+    private String[] intList, floatList;
 
     private static final String[] opArr = {"add", "sub", "mult", "div", "and", "or"};
     private static final String[] brArr = {"breq", "brneq", "brlt", "brgt", "brgeq", "brleq"};
@@ -21,6 +23,7 @@ public class CFGGenerator {
     public CFGGenerator(String sourceFile) {
         this.sourceFile = sourceFile;
         this.functionBlocks = new HashMap<String, BasicBlock>();
+        this.webs = new HashMap<String, HashSet<LiveRange>>();
         this.blocks = new HashSet<BasicBlock>();
         this.labelMap = new HashMap<String, BasicBlock>();
         this.entryBlock = null;
@@ -47,8 +50,31 @@ public class CFGGenerator {
         fileBuff.readLine();
         lastLine = fileBuff.readLine();
         tokLastLine = lastLine.split(" ");
-        currentLine = fileBuff.readLine();
-        nextLine = fileBuff.readLine();
+        currentLine = fileBuff.readLine(); // int list line
+        nextLine = fileBuff.readLine(); // float list line
+
+        // clean up intList and floatList lines
+        String arrayPattern = "\\[\\d+\\]";
+        String intListLine = currentLine.replace("int-list:", "").replaceAll(arrayPattern, "").trim();
+        String floatListLine = nextLine.replace("float-list:", "").trim();
+
+        if (intListLine.length() > 1 && intListLine.charAt(intListLine.length() - 1) == ',')
+            intListLine = intListLine.substring(0, intListLine.length() - 2);
+
+        if (floatListLine.length() > 1 && floatListLine.charAt(floatListLine.length() - 1) == ',')
+            floatListLine = floatListLine.substring(0, floatListLine.length() - 2);
+        
+        this.intList = intListLine.split(", ");
+        this.floatList = floatListLine.split(", ");
+
+        // catch case where there are no variables;
+        if (this.intList.length == 1 && this.intList[0].length() == 0) {
+            this.intList = new String[0];
+        }
+
+        if (this.floatList.length == 1 && this.floatList[0].length() == 0) {
+            this.floatList = new String[0];
+        }
 
         // process the file
         while (currentLine != null) {
@@ -187,9 +213,9 @@ public class CFGGenerator {
                 def.add(tokenizedLine[1]);
                 addIfNotNumeric(tokenizedLine[tokenizedLine.length - 1], use);
             } else if (binOps.contains(currOp)) { // handle binary ops
-                def.add(tokenizedLine[1]);
+                def.add(tokenizedLine[3]);
+                addIfNotNumeric(tokenizedLine[1], use);
                 addIfNotNumeric(tokenizedLine[2], use);
-                addIfNotNumeric(tokenizedLine[3], use);
             } else if (branches.contains(currOp)) { // handle branches
                 addIfNotNumeric(tokenizedLine[1], use);
                 addIfNotNumeric(tokenizedLine[2], use);
@@ -222,6 +248,8 @@ public class CFGGenerator {
             tempInstIn.addAll(use);
             currLine.inSet = tempInstIn;
             currLine.outSet = tempInstOut;
+            currLine.defs = def;
+            currLine.uses = use;
 
             // System.out.println(String.format("LINE: %s | IN: %s | OUT: %s | DEF: %s | USE: %s", currLine.getText(), currLine.inSet, currLine.outSet, def, use));
         }
@@ -237,18 +265,61 @@ public class CFGGenerator {
         return changed;
     }
 
-    // private boolean treeRecurser(BasicBlock leafNode, HashSet<BasicBlock> visited, boolean val) {
-    //     if (leafNode.getPredecessors().isEmpty()) return updateInOutSet(leafNode);
+    public void createLiveRanges() {
+        Instruction lastUse;
+        HashSet<Instruction> incInstrs = new HashSet<Instruction>();
+        HashMap<String, Integer> visits = new HashMap<String, Integer>();
 
-    //     for (BasicBlock pred : leafNode.getPredecessors()) {
-    //         if (!visited.contains(pred)) {
-    //             visited.add(pred);
-    //             val = val || updateInOutSet(pred);
-    //             treeRecurser(pred, visited, val);
-    //         }
-    //     }
-    //     return val;
-    // }
+        for (String var : intList) {
+            this.webs.put(var, new HashSet<LiveRange>());
+            
+        }
+
+        for (String var : floatList) {
+            this.webs.put(var, new HashSet<LiveRange>());
+            
+        }
+
+        for (String var : this.webs.keySet()) {
+            incInstrs.clear();
+            for (BasicBlock block : blocks) {
+                visits.put(block.getBlockName(), 0);
+            }
+            lastUse = null;
+            traverseCFG(this.entryBlock, new LiveRange(var), lastUse, incInstrs, visits);
+        }
+
+
+
+    }
+
+
+    private void traverseCFG(BasicBlock root, LiveRange range, 
+        Instruction lastUse, HashSet<Instruction> incInstrs, 
+        HashMap<String, Integer> visits) {
+
+        String var = range.getVarName();
+        
+        // iterate through the block's instructions
+        for (Instruction inst : root.getLines()) {
+            if (inst.inSet.contains(var)) range.instructions.add(inst);
+            if (inst.defs.contains(var)) {
+                range = new LiveRange(var);
+                range.instructions.add(inst);
+                this.webs.get(var).add(range);
+            }
+        }
+
+        // recursively traverse
+        if (root.getSuccessors().isEmpty() 
+        || visits.get(root.getBlockName()) > 1) return;
+
+        visits.put(root.getBlockName(), visits.get(root.getBlockName()) + 1);
+
+        for (BasicBlock b : root.getSuccessors()) {
+            traverseCFG(b, range, lastUse, incInstrs, visits);
+        }
+    }
 
     public BasicBlock getEntryBlock() {
         return this.entryBlock;
@@ -260,6 +331,10 @@ public class CFGGenerator {
 
     public HashSet<BasicBlock> getBlocks() {
         return this.blocks;
+    }
+
+    public HashMap<String, HashSet<LiveRange>> getWebs() {
+        return this.webs;
     }
 
     private BasicBlock genBasicBlock(String name) {
