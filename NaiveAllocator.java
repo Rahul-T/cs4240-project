@@ -369,8 +369,11 @@ public class NaiveAllocator {
                             if (lineElements.length == 3) {
                                 String register = getAvailableRegister(lineElements[2]);
                                 generateLoad(lineElements[2], register, mips, currentFunction);
-
-                                mips.add("sw " + register + ", " + getStackLocation(lineElements[1], currentFunction));
+                                if(register.contains("$f")) {
+                                    mips.add("s.s " + register + ", " + getStackLocation(lineElements[1], currentFunction));
+                                } else {
+                                    mips.add("sw " + register + ", " + getStackLocation(lineElements[1], currentFunction));
+                                }
                                 restoreRegister(register);
                             } else if (lineElements.length == 4) {
                                 String loopCounterRegister = getAvailableRegister("0");
@@ -390,7 +393,12 @@ public class NaiveAllocator {
 
                                 String storedValueRegister = getAvailableRegister(lineElements[3]);
                                 generateLoad(lineElements[3],storedValueRegister, mips, currentFunction);
-                                mips.add("sw " + storedValueRegister + ", " + "(" + arrayAddressRegister + ")");
+
+                                if(storedValueRegister.contains("$f")) {
+                                    mips.add("s.s " + storedValueRegister + ", " + "(" + arrayAddressRegister + ")");
+                                } else {
+                                    mips.add("sw " + storedValueRegister + ", " + "(" + arrayAddressRegister + ")");
+                                }
 
 
                                 mips.add("addi " + loopCounterRegister + ", 1");
@@ -418,7 +426,11 @@ public class NaiveAllocator {
                             generateLoad(lineElements[3], valueRegister, mips, currentFunction);
                             // generateLoad(lineElements[3], "$t1", mips, currentFunction);
 
-                            mips.add("sw " + valueRegister + ", (" + arrayAddressRegister + ")");
+                            if(valueRegister.contains("$f")) {
+                                mips.add("s.s " + valueRegister + ", (" + arrayAddressRegister + ")");
+                            } else {
+                                mips.add("sw " + valueRegister + ", (" + arrayAddressRegister + ")");
+                            }
                             // mips.add("sw $t1, " + lineElements[2] + "($t0)");
                             restoreRegister(arrayAddressRegister);
                             restoreRegister(valueRegister);
@@ -436,10 +448,21 @@ public class NaiveAllocator {
                             mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
 
                             String valueRegister2 = getAvailableRegister(lineElements[1]);
-                            mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+
+                            if(valueRegister2.contains("$f")) {
+                                mips.add("l.s " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+                            } else {
+                                mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+                            }
+                           
                             // mips.add("lw $t1, " + lineElements[3] + "($t0)");
 
-                            mips.add("sw " + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
+                            if(valueRegister2.contains("$f")) {
+                                mips.add("s.s " + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
+                            } else {
+                                mips.add("sw " + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
+
+                            }
                             // mips.add("sw $t1, " + lineElements[1]);
 
                             restoreRegister(arrayAddressRegister2);
@@ -474,7 +497,11 @@ public class NaiveAllocator {
                                 mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
                             }
 
-                            mips.add("sw " + resultRegister + ", " + getStackLocation(lineElements[3], currentFunction));
+                            if(resultRegister.contains("$f")) {
+                                mips.add("s.s " + resultRegister + ", " + getStackLocation(lineElements[3], currentFunction));
+                            } else {
+                                mips.add("sw " + resultRegister + ", " + getStackLocation(lineElements[3], currentFunction));
+                            }
 
 
                             restoreRegister(operandRegister1);
@@ -546,7 +573,7 @@ public class NaiveAllocator {
                             if(type.equals("int")) {
                                 mips.add("sw " + "$v0" + ", " + getStackLocation(lineElements[1], currentFunction));
                             } else {
-                                mips.add("sw " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
+                                mips.add("s.s " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
                             }
                             break;
 
@@ -602,9 +629,17 @@ public class NaiveAllocator {
 
     private void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
         if (isNumeric(element)) {
-            mips.add("li " + register + ", " + element);
+            if(element.contains(".")) {
+                mips.add("li.s " + register + ", " + element);
+            } else {
+                mips.add("li " + register + ", " + element);
+            }
         } else {
-            mips.add("lw " + register + ", " + getStackLocation(element, currentFunction));
+            if(register.contains("$f")) {
+                mips.add("l.s " + register + ", " + getStackLocation(element, currentFunction));
+            } else {
+                mips.add("lw " + register + ", " + getStackLocation(element, currentFunction));
+            }
         }
     }
 
@@ -618,10 +653,10 @@ public class NaiveAllocator {
     }
 
     public static void main(String[] args) throws IOException{
-        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/factorial.ir", true);
+        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/sort.ir", true);
         // ArrayList<String> ir = naiveAllocator.generatemips();
         naiveAllocator.buildDataSection();
         naiveAllocator.buildTextSection();
-        naiveAllocator.createFile("Testing/testFactorial.s");
+        naiveAllocator.createFile("Testing/testSort.s");
     }
 }
