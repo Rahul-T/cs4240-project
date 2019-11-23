@@ -10,6 +10,7 @@ public class TigerBackend {
         CFGGenerator generator = new CFGGenerator(sourceFile);
         
         generator.generateBlocks();
+        LiveRange.mapInstructions(generator.getEntryBlock());
 
         // System.out.println("ENTRY:");
         // System.out.println(generator.getEntryBlock());
@@ -20,9 +21,18 @@ public class TigerBackend {
         // }
 
         generator.generateInOutSets();
-
-        for (BasicBlock b : generator.getBlocks()) {
-            System.out.println(String.format("BLOCK: %s | IN: %s | OUT: %s", b.getBlockName(), b.inSet, b.outSet));
+        generator.createLiveRanges();
+        
+        HashMap<String, HashSet<LiveRange>> webs = generator.getWebs();
+        for (String s : webs.keySet()) {
+            for (LiveRange range : webs.get(s)) {
+                System.out.println(range);
+            }
         }
+
+
+        // for (BasicBlock b : generator.getBlocks()) {
+        //     System.out.println(String.format("BLOCK: %s | IN: %s | OUT: %s", b.getBlockName(), b.inSet, b.outSet));
+        // }
     }
 }
