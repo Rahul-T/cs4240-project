@@ -3,9 +3,9 @@ import java.util.*;
 
 public class TigerBackend {
     public static void main(String[] args) throws IOException, InterruptedException {
-        String sourceFile = args[0];
+        String sourceFile = args[1];
 
-        CFGGenerator generator = new CFGGenerator(sourceFile);
+        CFGGenerator generator = new CFGGenerator("P2Testing/" + sourceFile);
         
         generator.generateBlocks();
         generator.generateInOutSets();
