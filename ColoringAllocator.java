@@ -7,6 +7,8 @@ public class ColoringAllocator extends Allocator {
         super(irFile, isVerbose);
     }
 
+    // Register Section
+
     @Override
     public String getAvailableRegister(String element) {
         return "";
@@ -21,6 +23,8 @@ public class ColoringAllocator extends Allocator {
     public void registersToAndFromStack(String currentFunction, String instr) {
         
     }
+
+    // Instruction Section
 
     @Override
     public void regularAssignInstr(String[] lineElements, String currentFunction) {
@@ -50,6 +54,8 @@ public class ColoringAllocator extends Allocator {
     public void callrInstr(String[] lineElements, String currentFunction) {
 
     }
+
+    // Main Section
 
     @Override
     public void buildTextSection() throws IOException {

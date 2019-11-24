@@ -11,6 +11,8 @@ public class NaiveAllocator extends Allocator {
         super(irFile, isVerbose);
     }
 
+    // Register Section
+
     public String getIntRegister() {
         String register = "$s" + String.valueOf(sRegistersInactive.poll());
         sRegistersActive.add(register);
@@ -85,6 +87,8 @@ public class NaiveAllocator extends Allocator {
         sRegistersActive = new LinkedHashSet<String>();
         fRegistersActive = new LinkedHashSet<String>();
     }
+
+    // Instruction Section
 
     @Override
     public void regularAssignInstr(String[] lineElements, String currentFunction) {
@@ -211,6 +215,8 @@ public class NaiveAllocator extends Allocator {
         registersToAndFromStack(currentFunction, "lw ");
     }
 
+    // Main Section
+    
     @Override
     public void buildTextSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
