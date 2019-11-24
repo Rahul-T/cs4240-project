@@ -3,7 +3,14 @@ import java.util.*;
 
 public class TigerBackend {
     public static void main(String[] args) throws IOException, InterruptedException {
-        String sourceFile = args[1];
+        String sourceFile;
+        // Args: -t file_name
+        if (args[0].equals("-t")) {
+            sourceFile = args[1];
+        } else {
+            sourceFile = args[0];
+        }
+
 
         CFGGenerator generator = new CFGGenerator("P2Testing/" + sourceFile);
         
