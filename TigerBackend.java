@@ -1,7 +1,5 @@
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 public class TigerBackend {
     public static void main(String[] args) throws IOException {
@@ -17,6 +15,9 @@ public class TigerBackend {
 
         intGraph.color();
         HashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
+        map.entrySet().forEach(entry->{
+            System.out.println(entry.getKey() + " " + entry.getValue());  
+        });
         // for (Instruction i : map.keySet()) {
         //     System.out.println(String.format("%s | %s", i.toString(), map.get(i).toString()));
         // }

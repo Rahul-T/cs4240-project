@@ -1,9 +1,5 @@
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.SortedMap;
-import java.util.Stack;
+import java.util.*;
 
 public class InterferenceGraph {
     private HashSet<InterferenceGraphNode> nodes;
