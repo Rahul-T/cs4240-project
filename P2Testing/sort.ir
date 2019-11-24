@@ -1,0 +1,63 @@
+#start_function quicksort
+int quicksort(int lo, int hi):
+int-list: mid, pivot, i, j, ti, tj, x, j1, lo, hi
+float-list:
+    assign, i, 0,
+    assign, j, 0,
+    brgeq, lo, hi, end_sort
+    add, lo, hi, mid
+    div, mid, 2, mid
+    array_load, pivot, A, mid
+    sub, lo, 1, i
+    add, hi, 1, j
+loop0_sort:
+loop1_sort:
+    add, i, 1, i
+    array_load, x, A, i
+    assign, ti, x,
+    brlt, ti, pivot, loop1_sort
+loop2_sort:
+    sub, j, 1, j
+    array_load, x, A, j
+    assign, tj, x,
+    brgt, tj, pivot, loop2_sort
+    brgeq, i, j, exit0_sort
+    array_store, A, j, ti
+    array_store, A, i, tj
+    goto, loop0_sort
+exit0_sort:
+    add, j, 1, j1
+    call, quicksort, lo, j
+    add, j, 1, j
+    call, quicksort, j, hi
+end_sort:
+    return, 1, ,
+#end_function quicksort
+#start_function main
+void main():
+int-list: A[10], n, i, t
+float-list:
+    assign, t, 0,
+    assign, n, 10,
+    array_store, A, 0, 10
+    array_store, A, 1, 9
+    array_store, A, 2, 8
+    array_store, A, 3, 7
+    array_store, A, 4, 6
+    array_store, A, 5, 5
+    array_store, A, 6, 4
+    array_store, A, 7, 3
+    array_store, A, 8, 2
+    array_store, A, 9, 1
+    callr, t, quicksort, 0, n
+    assign, i, 0,
+loop1:
+    brgt, i, n, exit1
+    array_load, t, A, i
+    call, printi, t
+    add, i, 1, i
+    goto, loop1
+exit1:
+return:
+    return, , ,
+#end_function main
