@@ -44,15 +44,17 @@ public class CFGGenerator {
         String lastLine=null, currentLine=null, nextLine=null, label=null;
         String[] tokCurrentLine = null, tokLastLine=null;
         BasicBlock targetBlock, newBlock;
-        BasicBlock currentBlock = genBasicBlock("main");
-
-        this.entryBlock = currentBlock;
-        this.functionBlocks.put("main", this.entryBlock);
-
 
         // read header lines and fill the line pipeline
 
-        fileBuff.readLine();
+        String firstFunctionName = fileBuff.readLine().split(" ")[1];
+        BasicBlock currentBlock = genBasicBlock(firstFunctionName);
+        if (firstFunctionName.equals("main")) {
+            this.entryBlock = currentBlock;
+        }
+
+        this.functionBlocks.put(firstFunctionName, currentBlock);
+
         lastLine = fileBuff.readLine();
         tokLastLine = lastLine.split(" ");
         currentLine = fileBuff.readLine(); // int list line
@@ -71,7 +73,6 @@ public class CFGGenerator {
         
         this.intList = intListLine.split(", ");
         this.floatList = floatListLine.split(", ");
-        System.out.println(Arrays.toString(this.intList));
 
         // catch case where there are no variables;
         if (this.intList.length == 1 && this.intList[0].length() == 0) {
@@ -85,7 +86,6 @@ public class CFGGenerator {
         // process the file
         while (currentLine != null) {
             tokCurrentLine = currentLine.trim().split(" ");
-            
             // catch labels
             if (tokCurrentLine[0].length() == 0) {
                 String[] temp = new String[tokCurrentLine.length - 1];
@@ -114,6 +114,9 @@ public class CFGGenerator {
 
                 if (tokCurrentLine[0].equals("#start_function")) {
                     currentBlock = genBasicBlock(tokCurrentLine[1]);
+                    if (tokCurrentLine[1].equals("main")) {
+                        this.entryBlock = currentBlock;
+                    }
                     this.functionBlocks.put(currentBlock.getBlockName(), currentBlock);
                     lastLine = nextLine;                 // skip declaration line
                     currentLine = fileBuff.readLine();   // put args line
@@ -271,7 +274,10 @@ public class CFGGenerator {
         }
 
         // System.out.println(block.getBlockName() + ": " + lines);
-        tempBlockIn = lines.get(0).inSet;
+        if (lines.size() > 0) {
+            tempBlockIn = lines.get(0).inSet;
+        }
+
         
         changed = (!tempBlockIn.equals(block.inSet)) || (!tempBlockOut.equals(block.outSet));
         
