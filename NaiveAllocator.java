@@ -660,11 +660,14 @@ public class NaiveAllocator {
         return true;
     }
 
-    public static void main(String[] args) throws IOException{
-        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/sort.ir", true);
+    public static void main(String[] args) throws IOException {
+        Scanner input = new Scanner(System.in);
+        String fileName = input.next();
+        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/" + fileName + ".ir", true);
         // ArrayList<String> ir = naiveAllocator.generatemips();
         naiveAllocator.buildDataSection();
         naiveAllocator.buildTextSection();
-        naiveAllocator.createFile("Testing/testSort.s");
+        naiveAllocator.createFile("P2Output/" + fileName + ".s");
+        System.out.println("DONE!");
     }
 }
