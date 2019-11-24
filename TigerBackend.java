@@ -25,8 +25,8 @@ public class TigerBackend {
         // intGraph.printNodes();
 
 
-        // for (BasicBlock b : generator.getBlocks()) {
-        //     System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
-        // }
+//         for (BasicBlock b : generator.getBlocks()) {
+//             System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
+//         }
     }
 }

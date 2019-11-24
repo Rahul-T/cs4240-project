@@ -1,0 +1,27 @@
+#start is_sqrt function
+int is_sqrt(float n):
+int-list: i, res, t1
+float-list: n
+assign, i, 1
+assign, res, 0
+begin_loop:
+mult, i, i, t1
+bgt t1, n, exit_loop
+beq t1, n, is_true
+add, i, 1, i
+goto, begin_loop
+is_true:
+assign, res, 1
+exit_loop:
+return, res
+
+
+#end is_sqrt function
+#start main_function
+void main():
+int-list: i, X
+float-list: Y
+assing, Y, 36
+callr, X, is_sqrt, Y
+call, printi, X
+#end main_function

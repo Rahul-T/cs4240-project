@@ -765,7 +765,7 @@ public class NaiveAllocator {
                     }
                 }
                 System.out.println(stats);
-                int i = pr.waitFor();
+                pr.waitFor();
             }
         }
     }
