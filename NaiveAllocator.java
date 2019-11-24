@@ -11,6 +11,8 @@ public class NaiveAllocator extends Allocator {
         super(irFile, isVerbose);
     }
 
+    // Register Section
+
     public String getIntRegister() {
         String register = "$s" + String.valueOf(sRegistersInactive.poll());
         sRegistersActive.add(register);
@@ -86,6 +88,135 @@ public class NaiveAllocator extends Allocator {
         fRegistersActive = new LinkedHashSet<String>();
     }
 
+    // Instruction Section
+
+    @Override
+    public void regularAssignInstr(String[] lineElements, String currentFunction) {
+        String register = getAvailableRegister(lineElements[2]);
+        generateLoad(lineElements[2], register, mips, currentFunction);
+        mips.add(getStoreInstrType(register) + register + ", " + getStackLocation(lineElements[1], currentFunction));
+        restoreRegisters(new String[] {register});
+    }
+
+    @Override
+    public void arraystoreInstr(String[] lineElements, String currentFunction) {
+        String arrayAddressRegister = "$t0";
+        mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
+
+        String arrayOffsetRegister = getAvailableRegister("0");
+        generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
+        mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
+        mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
+
+        String valueRegister = getAvailableRegister(lineElements[3]);
+        generateLoad(lineElements[3], valueRegister, mips, currentFunction);
+
+        mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
+        
+        restoreRegisters(new String[] {valueRegister, arrayOffsetRegister});
+    }
+
+    @Override
+    public void arrayloadInstr(String[] lineElements, String currentFunction) {
+        String arrayAddressRegister2 = "$t0";
+        mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
+
+        String arrayOffsetRegister2 = getAvailableRegister("0");
+        generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
+        mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
+        mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
+
+        String valueRegister2 = getAvailableRegister(lineElements[1]);
+
+        if(valueRegister2.contains("$f")) {
+            mips.add("l.s " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+        } else {
+            mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+        }
+        
+        mips.add(getStoreInstrType(valueRegister2) + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
+        
+        restoreRegisters(new String[] {valueRegister2, arrayOffsetRegister2});
+    }
+
+    @Override
+    public void opInstr(String[] lineElements, String currentFunction) {
+        String operandRegister1 = getAvailableRegister(lineElements[1]);
+        generateLoad(lineElements[1], operandRegister1, mips, currentFunction);
+
+        String operandRegister2 = getAvailableRegister(lineElements[2]);
+        generateLoad(lineElements[2], operandRegister2, mips, currentFunction);
+        
+        String resultRegister = "";
+        if(operandRegister1.contains("$f") || operandRegister2.contains("$f")) {
+            resultRegister = getAvailableRegister("0.0");
+        } else {
+            resultRegister = getAvailableRegister("0");
+        }
+
+        if(lineElements[0].equals("mult")) {
+            if(resultRegister.contains("$f")) {
+                mips.add("mul.s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+            } else {
+                mips.add("mul " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+            }
+        } else {
+            if(resultRegister.contains("$f")) {
+                mips.add(lineElements[0] + ".s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+            } else {
+                mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+            }
+        }
+
+        mips.add(getStoreInstrType(resultRegister) + resultRegister + ", " + getStackLocation(lineElements[3], currentFunction));
+        
+
+        restoreRegisters(new String[] {operandRegister1, operandRegister2, resultRegister});
+    }
+
+    @Override
+    public void branchInstr(String[] lineElements, String currentFunction) {
+        String firstRegister = getAvailableRegister(lineElements[1]);
+        generateLoad(lineElements[1], firstRegister, mips, currentFunction);
+        String secondRegister = getAvailableRegister(lineElements[2]);
+        generateLoad(lineElements[2], secondRegister, mips, currentFunction);
+        lineElements[0] = lineElements[0].replace("breq", "beq");
+        lineElements[0] = lineElements[0].replace("brneq", "bne");
+        lineElements[0] = lineElements[0].replace("brlt", "blt");
+        lineElements[0] = lineElements[0].replace("brgt", "bgt");
+        lineElements[0] = lineElements[0].replace("brgeq", "bge");
+        lineElements[0] = lineElements[0].replace("brleq", "ble");
+        mips.add(lineElements[0] + " " + firstRegister + ", " + secondRegister + ", " + lineElements[3]);
+
+        restoreRegisters(new String[] {firstRegister, secondRegister});
+    }
+
+    @Override
+    public void callrInstr(String[] lineElements, String currentFunction) {
+        int argCounter = -1;
+        for(int i = 3; i < lineElements.length; i++) {
+            argCounter++;
+            if(globalVars.containsKey(lineElements[i].trim())) {
+                continue;
+            }
+            generateLoad(lineElements[i], "$a" + argCounter, mips, currentFunction);
+        }
+        
+        registersToAndFromStack(currentFunction, "sw ");
+
+        mips.add("jal " + lineElements[2]);
+        String type = getVarType(lineElements[1].trim());
+        if(type.equals("int")) {
+            mips.add("sw " + "$v0" + ", " + getStackLocation(lineElements[1], currentFunction));
+        } else {
+            mips.add("s.s " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
+        }
+        
+        registersToAndFromStack(currentFunction, "lw ");
+    }
+
+    // Main Section
+    
     @Override
     public void buildTextSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
