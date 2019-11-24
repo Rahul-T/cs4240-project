@@ -438,7 +438,8 @@ public class NaiveAllocator {
     }
 
     public void arraystoreInstr(String[] lineElements, String currentFunction) {
-        String arrayAddressRegister = getAvailableRegister("0");
+        String arrayAddressRegister = "$t0";
+        // String arrayAddressRegister = getAvailableRegister("0");
         mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
 
         String arrayOffsetRegister = getAvailableRegister("0");
@@ -451,11 +452,12 @@ public class NaiveAllocator {
 
         mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
         
-        restoreRegisters(new String[] {arrayAddressRegister, valueRegister, arrayOffsetRegister});
+        restoreRegisters(new String[] {valueRegister, arrayOffsetRegister});
     }
 
     public void arrayloadInstr(String[] lineElements, String currentFunction) {
-        String arrayAddressRegister2 = getAvailableRegister("0");
+        String arrayAddressRegister2 = "$t0";
+        // String arrayAddressRegister2 = getAvailableRegister("0");
         mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
 
         String arrayOffsetRegister2 = getAvailableRegister("0");
@@ -473,7 +475,7 @@ public class NaiveAllocator {
         
         mips.add(getStoreInstrType(valueRegister2) + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
         
-        restoreRegisters(new String[] {arrayAddressRegister2, valueRegister2, arrayOffsetRegister2});
+        restoreRegisters(new String[] {valueRegister2, arrayOffsetRegister2});
     }
 
     public void opInstr(String[] lineElements, String currentFunction) {
@@ -715,9 +717,6 @@ public class NaiveAllocator {
                 mips.set(i, replacementInstr);
             }
         }
-        maxAdditionalOffset.entrySet().forEach(entry->{
-            System.out.println(entry.getKey() + " " + entry.getValue());  
-         });
     }
 
     public void createFile(String fileName) {
