@@ -29,7 +29,7 @@ public class NaiveAllocator {
         String line;
         String currentFunction = "";
         boolean isMain = false;
-        HashSet<String> globals = new HashSet<>();
+        HashSet<String> globalArrays = new HashSet<>();
 
         while ((line = br.readLine()) != null) {
             // Comment
@@ -48,7 +48,7 @@ public class NaiveAllocator {
                 HashMap<String, String> declaredVarsToOffset = new HashMap<String, String>();
                 functionToVarsToOffset.put(currentFunction, declaredVarsToOffset);
 
-                globals = new HashSet<>();
+                // globalArrays = new HashSet<>();
                 String[] paramsList = line.substring(line.indexOf("(")+1, line.indexOf(")")).split(",");
                 for(String param: paramsList) {
                     if(param.length() == 0) {
@@ -57,7 +57,7 @@ public class NaiveAllocator {
                     if(param.contains("[")) {
                         String[] typeAndNamearr = param.trim().split(" ");
                         String name = typeAndNamearr[1];
-                        globals.add(name);
+                        globalArrays.add(name);
                         continue;
                     }
                     String[] typeAndName = param.trim().split(" ");
@@ -113,7 +113,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
-                                && !globals.contains(lineElements[i])) {
+                                && !globalArrays.contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -134,7 +134,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
-                                && !globals.contains(lineElements[i])) {
+                                && !globalArrays.contains(lineElements[i])) {
                                 globalVars.put(lineElements[i], "");
                             }
                         }
@@ -151,7 +151,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
-                            && !globals.contains(lineElements[i])) {
+                            && !globalArrays.contains(lineElements[i])) {
                                 // System.out.println(Arrays.toString(lineElements));
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
@@ -165,7 +165,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
-                            && !globals.contains(lineElements[i])) {
+                            && !globalArrays.contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -185,7 +185,7 @@ public class NaiveAllocator {
                                 continue;
                             }
                             if(!functionToVarsToType.get(currentFunction).keySet().contains(lineElements[i])
-                            && !globals.contains(lineElements[i])) {
+                            && !globalArrays.contains(lineElements[i])) {
                                 // System.out.println(lineElements[i]);
                                 globalVars.put(lineElements[i], "");
                             }
@@ -195,8 +195,16 @@ public class NaiveAllocator {
                 }
             }
         }
+
+        HashSet<String> trackDuplicates = new HashSet<String>();
         for (String globalVar: globalVars.keySet()) {
+            if(globalVar.contains("[")) {
+                trackDuplicates.add(globalVar.substring(0, globalVar.indexOf("[")));
+            }
             globalVars.put(globalVar, functionToVarsToType.get("main").get(globalVar));
+        }
+        for(String duplicate: trackDuplicates) {
+            globalVars.remove(duplicate);
         }
         
 
