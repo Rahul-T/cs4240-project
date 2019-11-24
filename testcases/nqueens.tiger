@@ -9,12 +9,14 @@ let
     var diag2 : intArray2 := 0;
     var X : int := 0;
     var r : int := 0;
+    var res : int := 0;
 
     function try(c:int) : int
     begin
         for r := 0 to 7 do 
            if (row[r]==0 & diag1[r+c]==0 & diag2[r+7-c]==0)
-	       then 
+	       then
+	        res := res + 1;
             row[r]:=1; 
             diag1[r+c]:=1; 
             diag2[r+7-c]:=1;
@@ -25,7 +27,7 @@ let
             diag2[r+7-c]:=0;
            endif;
         enddo;
-       return 0;
+       return res;
     end;
  in
 begin
