@@ -5,10 +5,10 @@ public class NaiveAllocator {
     private String irFile;
     HashMap<String, HashMap<String, String>> functionToVarsToType;
     HashMap<String, String> globalVars;
-    PriorityQueue<Integer> tRegistersInactive;
+    PriorityQueue<Integer> sRegistersInactive;
     PriorityQueue<Integer> fRegistersInactive;
-    HashSet<String> tRegistersActive;
-    HashSet<String> fRegistersActive;
+    LinkedHashSet<String> sRegistersActive;
+    LinkedHashSet<String> fRegistersActive;
     
     int stackOffsetStart = 20;
     HashMap<String, HashMap<String, String>> functionToVarsToOffset;
@@ -264,8 +264,8 @@ public class NaiveAllocator {
     }
 
     public String getIntRegister() {
-        String register = "$t" + String.valueOf(tRegistersInactive.poll());
-        tRegistersActive.add(register);
+        String register = "$s" + String.valueOf(sRegistersInactive.poll());
+        sRegistersActive.add(register);
         return register;
     }
 
@@ -299,8 +299,8 @@ public class NaiveAllocator {
         for(String register: registers) {
             if(register.contains("$f")) {
                 fRegistersInactive.add(Integer.valueOf(register.substring(2)));
-            } else if(register.contains("$t")) {
-                tRegistersInactive.add(Integer.valueOf(register.substring(2)));
+            } else if(register.contains("$s")) {
+                sRegistersInactive.add(Integer.valueOf(register.substring(2)));
             } else {
                 System.out.println("restore error");
             }
@@ -325,7 +325,8 @@ public class NaiveAllocator {
     public void setupFunction(String currentFunction) {
         mips.add("");
         mips.add(currentFunction + ":");
-        mips.add("sub $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
+        mips.add("@ " + currentFunction + " sub");
+        // mips.add("sub $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
         mips.add("sw $ra, 16($sp)");
     }
 
@@ -347,16 +348,16 @@ public class NaiveAllocator {
     }
 
     public void setAllRegistersToInactive() {
-        tRegistersInactive = new PriorityQueue<Integer>();
+        sRegistersInactive = new PriorityQueue<Integer>();
         fRegistersInactive = new PriorityQueue<Integer>();
         for(int i=0; i<=7; i++) {
-            tRegistersInactive.add(i);
+            sRegistersInactive.add(i);
         }
-        for(int i=4; i<=10; i++) {
+        for(int i=20; i<=31; i++) {
             fRegistersInactive.add(i);
         }
-        tRegistersActive = new HashSet<String>();
-        fRegistersActive = new HashSet<String>();
+        sRegistersActive = new LinkedHashSet<String>();
+        fRegistersActive = new LinkedHashSet<String>();
     }
 
     private void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
@@ -401,22 +402,29 @@ public class NaiveAllocator {
             
             restoreRegisters(new String[] {register});
         } else if (lineElements.length == 4) {
-            String loopCounterRegister = getAvailableRegister("0");
+            // String loopCounterRegister = getAvailableRegister("0");
+            String loopCounterRegister = "$t0";
+
             mips.add("li " + loopCounterRegister + ", 0");
             mips.add(lineElements[1].trim() + "_init_start:");
 
-            String arrayAddressRegister = getAvailableRegister("0");
+            // String arrayAddressRegister = getAvailableRegister("0");
+            String arrayAddressRegister = "$t1";
             mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
 
-            String wordMultiplierRegister = getAvailableRegister("4");
+            // String wordMultiplierRegister = getAvailableRegister("4");
+            String wordMultiplierRegister = "$t2";
             mips.add("li " + wordMultiplierRegister + ", 4");
 
-            String arrayOffsetRegister = getAvailableRegister("0");
+            // String arrayOffsetRegister = getAvailableRegister("0");
+            String arrayOffsetRegister = "$t3";
             mips.add("mul " + arrayOffsetRegister + ", " + loopCounterRegister + ", " + wordMultiplierRegister);
             
             mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
 
-            String storedValueRegister = getAvailableRegister(lineElements[3]);
+            // String storedValueRegister = getAvailableRegister(lineElements[3]);
+            String storedValueRegister = lineElements[3].contains(".") ? "$f4" : "$t4";
+
             generateLoad(lineElements[3],storedValueRegister, mips, currentFunction);
 
             mips.add(getStoreInstrType(storedValueRegister) + storedValueRegister + ", " + "(" + arrayAddressRegister + ")");
@@ -424,8 +432,8 @@ public class NaiveAllocator {
             mips.add("addi " + loopCounterRegister + ", 1");
             mips.add("ble " + loopCounterRegister + ", " + lineElements[2] + ", " + lineElements[1] + "_init_start");
             
-            restoreRegisters(new String[] {loopCounterRegister,arrayAddressRegister,
-                wordMultiplierRegister, arrayOffsetRegister, storedValueRegister});
+            // restoreRegisters(new String[] {loopCounterRegister,arrayAddressRegister,
+            //     wordMultiplierRegister, arrayOffsetRegister, storedValueRegister});
         }
     }
 
@@ -537,8 +545,25 @@ public class NaiveAllocator {
             }
         }
         mips.add("lw $ra, 16($sp)");
-        mips.add("addi $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
+        // mips.add("addi $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
+        mips.add("@ " + currentFunction + " addi");
+        
         mips.add("jr $ra");
+    }
+
+    public void registersToAndFromStack(String currentFunction, String instr) {
+        int baseOffset = Integer.valueOf(functionToVarsToOffset.get(currentFunction).get("#total#"));
+        int offset = 4;
+        for(String reg: sRegistersActive) {
+            int totalOffset = baseOffset + offset;
+            mips.add(instr + reg + ", " + totalOffset + "($sp)");
+            offset += 4;
+        }
+        for(String reg: fRegistersActive) {
+            int totalOffset = baseOffset + offset;
+            mips.add(instr + reg + ", " + totalOffset + "($sp)");
+            offset += 4;
+        }
     }
 
     public void callrInstr(String[] lineElements, String currentFunction) {
@@ -550,6 +575,9 @@ public class NaiveAllocator {
             }
             generateLoad(lineElements[i], "$a" + argCounter, mips, currentFunction);
         }
+        
+        registersToAndFromStack(currentFunction, "sw ");
+
         mips.add("jal " + lineElements[2]);
         String type = getVarType(lineElements[1].trim());
         if(type.equals("int")) {
@@ -557,9 +585,11 @@ public class NaiveAllocator {
         } else {
             mips.add("s.s " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
         }
+        
+        registersToAndFromStack(currentFunction, "lw ");
     }
 
-    public void callInstr(String[] lineElements, String currentFunction) {
+    public void callInstr(String[] lineElements, String currentFunction, int totalsize2, HashMap<String, Integer> maxAdditionalOffset) {
         int argCounter2 = -1;
         for(int i = 2; i < lineElements.length; i++) {
             argCounter2++;
@@ -572,7 +602,10 @@ public class NaiveAllocator {
             mips.add("li $v0, 1");
             mips.add("syscall");
         } else {
+            registersToAndFromStack(currentFunction, "sw ");
             mips.add("jal " + lineElements[1]);
+            registersToAndFromStack(currentFunction, "lw ");
+            maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize2));
         }
     }
 
@@ -580,6 +613,7 @@ public class NaiveAllocator {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));
         String line;
         String currentFunction = "";
+        HashMap<String, Integer> maxAdditionalOffset = new HashMap<String, Integer>();
 
         mips.add(".text");
 
@@ -591,6 +625,7 @@ public class NaiveAllocator {
             // Function header
             else if(line.contains("(") && line.contains(")")) {
                 currentFunction = line.substring(line.indexOf(" ")+1, line.indexOf("("));
+                maxAdditionalOffset.put(currentFunction, 0);
                 setupFunction(currentFunction);
                 getParamsFromRegisters(line, currentFunction);
                 setAllRegistersToInactive();
@@ -644,11 +679,14 @@ public class NaiveAllocator {
                         break;
 
                     case "callr":
+                        int totalsize = sRegistersActive.size() + fRegistersActive.size();
+                        maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize));
                         callrInstr(lineElements, currentFunction);
                         break;
 
                     case "call":
-                        callInstr(lineElements, currentFunction);
+                        int totalsize2 = sRegistersActive.size() + fRegistersActive.size();
+                        callInstr(lineElements, currentFunction, totalsize2, maxAdditionalOffset);
                         break;
                 }
             }
@@ -665,6 +703,21 @@ public class NaiveAllocator {
                 }
             }
         }
+
+        for(int i=0; i<mips.size(); i++) {
+            String[] instr = mips.get(i).split(" ");
+            if(instr.length > 0 && instr[0].equals("@")) {
+                String function = instr[1];
+                String addiOrSub = instr[2];
+                int oldOffset = Integer.valueOf(functionToVarsToOffset.get(function).get("#total#"));
+                int newOffset = oldOffset + Integer.valueOf(maxAdditionalOffset.get(function)) * 4;
+                String replacementInstr = addiOrSub + " $sp, $sp, " + newOffset;
+                mips.set(i, replacementInstr);
+            }
+        }
+        maxAdditionalOffset.entrySet().forEach(entry->{
+            System.out.println(entry.getKey() + " " + entry.getValue());  
+         });
     }
 
     public void createFile(String fileName) {
