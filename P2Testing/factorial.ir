@@ -32,7 +32,7 @@ int-list: $temp0, $temp1, $temp2, r_st_1_0
 float-list:
 	assign, r_st_1_0, 1,
 main:
-	assign, $temp0, 5,
+	assign, $temp0,5,
 	callr, $temp1, fact_st_1_0, $temp0
 	assign, r_st_1_0, $temp1,
 	assign, $temp2, r_st_1_0,
