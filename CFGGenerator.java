@@ -10,6 +10,7 @@ public class CFGGenerator {
     private BasicBlock entryBlock;
     private HashMap<String, BasicBlock> functionBlocks;
     private HashSet<BasicBlock> blocks;
+    private HashSet<BasicBlock> loopBlocks;
     private HashMap<String, BasicBlock> labelMap;
     private HashMap<String, HashSet<LiveRange>> webs;
     private String sourceFile;
@@ -20,13 +21,17 @@ public class CFGGenerator {
     private static final HashSet<String> binOps = new HashSet<String>(Arrays.asList(opArr));
     private static final HashSet<String> branches = new HashSet<String>(Arrays.asList(brArr));
 
+    private HashMap<Instruction, String> instructionMap;
+
     public CFGGenerator(String sourceFile) {
         this.sourceFile = sourceFile;
         this.functionBlocks = new HashMap<String, BasicBlock>();
         this.webs = new HashMap<String, HashSet<LiveRange>>();
         this.blocks = new HashSet<BasicBlock>();
+        this.loopBlocks = new HashSet<BasicBlock>();
         this.labelMap = new HashMap<String, BasicBlock>();
         this.entryBlock = null;
+        this.instructionMap = null;
     }
 
     public void generateBlocks() throws IOException {
@@ -59,10 +64,10 @@ public class CFGGenerator {
         String floatListLine = nextLine.replace("float-list:", "").trim();
 
         if (intListLine.length() > 1 && intListLine.charAt(intListLine.length() - 1) == ',')
-            intListLine = intListLine.substring(0, intListLine.length() - 2);
+            intListLine = intListLine.substring(0, intListLine.length() - 1);
 
         if (floatListLine.length() > 1 && floatListLine.charAt(floatListLine.length() - 1) == ',')
-            floatListLine = floatListLine.substring(0, floatListLine.length() - 2);
+            floatListLine = floatListLine.substring(0, floatListLine.length() - 1);
         
         this.intList = intListLine.split(", ");
         this.floatList = floatListLine.split(", ");
@@ -156,6 +161,16 @@ public class CFGGenerator {
         }
 
         fileBuff.close();
+        mapInstructions(this.entryBlock);
+
+        for (BasicBlock block : this.blocks) {
+            if (block.getPredecessors().size() == 1 && block.getSuccessors().size() == 1 
+                && ((BasicBlock)block.getSuccessors().toArray()[0]).getSuccessors().contains(block)) {
+                // this block has only one successor, which also has this block as a successor...aka a loop!
+                this.loopBlocks.add(block);
+                this.loopBlocks.addAll(block.getSuccessors());
+            }
+        }
     }
 
     public void generateInOutSets() {
@@ -169,7 +184,7 @@ public class CFGGenerator {
         do {
             temp = false;
             for (BasicBlock b : blocks) {
-                // temp = temp || treeRecurser(b, new HashSet<BasicBlock>(), temp);
+
                 temp = temp || updateInOutSet(b);
             }
         } while (temp);
@@ -288,9 +303,6 @@ public class CFGGenerator {
             lastUse = null;
             traverseCFG(this.entryBlock, new LiveRange(var), lastUse, incInstrs, visits);
         }
-
-
-
     }
 
 
@@ -312,7 +324,9 @@ public class CFGGenerator {
 
         // recursively traverse
         if (root.getSuccessors().isEmpty() 
-        || visits.get(root.getBlockName()) > 1) return;
+        || visits.get(root.getBlockName()) > 1) {
+            return;
+        }
 
         visits.put(root.getBlockName(), visits.get(root.getBlockName()) + 1);
 
@@ -333,8 +347,20 @@ public class CFGGenerator {
         return this.blocks;
     }
 
+    public HashSet<BasicBlock> getLoopBlocks() {
+        return this.loopBlocks;
+    }
+
     public HashMap<String, HashSet<LiveRange>> getWebs() {
         return this.webs;
+    }
+
+    public String[] getIntList() {
+        return this.intList;
+    }
+
+    public String[] getFloatList() {
+        return this.floatList;
     }
 
     private BasicBlock genBasicBlock(String name) {
@@ -348,6 +374,39 @@ public class CFGGenerator {
             Double.parseDouble(str);
         } catch (NumberFormatException e) {
             set.add(str);
+        }
+    }
+
+    private void mapInstructions(BasicBlock entry) {
+        instructionMap = new HashMap<Instruction, String>();
+        HashSet<BasicBlock> visited = new HashSet<BasicBlock>();
+        mapHelper(entry, visited);
+    }
+
+    private void mapHelper(BasicBlock block, HashSet<BasicBlock> visited) {
+        if (visited.contains(block)) return;
+
+        ArrayList<Instruction> lines = block.getLines();
+        String bName = block.getBlockName();
+        visited.add(block);
+
+        for (int i = 0; i < lines.size(); i++) {
+            instructionMap.put(lines.get(i), String.format("\t%-15s:%d\t%s", bName, i, lines.get(i).getText()));
+        }
+
+        for (BasicBlock succ : block.getSuccessors()) {
+            mapHelper(succ, visited);
+        }
+    }
+
+    public String lookupMappedInstruction(Instruction instr) {
+        return this.instructionMap.get(instr);
+    }
+
+    public void printWebs() {
+        for (String s : this.webs.keySet()) {
+            System.out.println(s + ":");
+            System.out.println(this.webs.get(s));
         }
     }
 }

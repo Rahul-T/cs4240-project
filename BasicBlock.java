@@ -27,7 +27,7 @@ public class BasicBlock {
     }
 
     public void addLine(String line) {
-        this.lines.add(new Instruction(line.trim()));
+        this.lines.add(new Instruction(line.trim(), this.blockName, this.lines.size()));
     }
 
     public void addLines(ArrayList<Instruction> lines) {
@@ -68,24 +68,24 @@ public class BasicBlock {
 
     @Override
     public String toString() {
-        String retString = "===== START BASIC BLOCK " + this.blockName + " =====\n\t--LINES--\n";
-        for (int i = 0; i < this.lines.size(); i++) {
-            retString += String.format("\t\t%1$2d. ", i) + lines.get(i).toString() + "\n";
-        }
+        // String retString = "===== START BASIC BLOCK " + this.blockName + " =====\n\t--LINES--\n";
+        // for (int i = 0; i < this.lines.size(); i++) {
+        //     retString += String.format("\t\t%1$2d. ", i) + lines.get(i).toString() + "\n";
+        // }
         
-        retString += "\t--PREDECESSORS--\n";
-        for (BasicBlock current : this.predecessors) {
-            retString += "\t\t Block " + current.blockName + "\n";
-        }
+        // retString += "\t--PREDECESSORS--\n";
+        // for (BasicBlock current : this.predecessors) {
+        //     retString += "\t\t Block " + current.blockName + "\n";
+        // }
 
-        retString += "\t--SUCCESSORS--\n";
-        for (BasicBlock current : this.successors) {
-            retString += "\t\t Block " + current.blockName + "\n";
-        }
+        // retString += "\t--SUCCESSORS--\n";
+        // for (BasicBlock current : this.successors) {
+        //     retString += "\t\t Block " + current.blockName + "\n";
+        // }
 
-        retString += "===== END BASIC BLOCK " + this.blockName + " =====";
-        return retString;
+        // retString += "===== END BASIC BLOCK " + this.blockName + " =====";
+        // return retString;
 
-        // return this.getBlockName();
+        return this.getBlockName();
     }
 }
