@@ -5,10 +5,6 @@ public abstract class Allocator {
     public String irFile;
     HashMap<String, HashMap<String, String>> functionToVarsToType;
     HashMap<String, String> globalVars;
-    PriorityQueue<Integer> sRegistersInactive;
-    PriorityQueue<Integer> fRegistersInactive;
-    LinkedHashSet<String> sRegistersActive;
-    LinkedHashSet<String> fRegistersActive;
     
     int stackOffsetStart = 20;
     HashMap<String, HashMap<String, String>> functionToVarsToOffset;

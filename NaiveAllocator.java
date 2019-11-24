@@ -2,6 +2,11 @@ import java.io.*;
 import java.util.*;
 
 public class NaiveAllocator extends Allocator {
+    PriorityQueue<Integer> sRegistersInactive;
+    PriorityQueue<Integer> fRegistersInactive;
+    LinkedHashSet<String> sRegistersActive;
+    LinkedHashSet<String> fRegistersActive;
+    
     public NaiveAllocator(String irFile, boolean isVerbose) {
         super(irFile, isVerbose);
     }
