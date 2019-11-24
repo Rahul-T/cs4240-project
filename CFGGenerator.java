@@ -113,7 +113,7 @@ public class CFGGenerator {
             else if (tokCurrentLine[0].contains("#")) {
 
                 if (tokCurrentLine[0].equals("#start_function")) {
-                    currentBlock = genBasicBlock(tokCurrentLine[2]);
+                    currentBlock = genBasicBlock(tokCurrentLine[1]);
                     this.functionBlocks.put(currentBlock.getBlockName(), currentBlock);
                     lastLine = nextLine;                 // skip declaration line
                     currentLine = fileBuff.readLine();   // put args line
