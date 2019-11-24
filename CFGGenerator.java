@@ -59,7 +59,7 @@ public class CFGGenerator {
         nextLine = fileBuff.readLine(); // float list line
 
         // clean up intList and floatList lines
-        String arrayPattern = "\\[\\d+\\]";
+        String arrayPattern = ",.+\\[\\d+\\]";
         String intListLine = currentLine.replace("int-list:", "").replaceAll(arrayPattern, "").trim();
         String floatListLine = nextLine.replace("float-list:", "").trim();
 
@@ -71,6 +71,7 @@ public class CFGGenerator {
         
         this.intList = intListLine.split(", ");
         this.floatList = floatListLine.split(", ");
+        System.out.println(Arrays.toString(this.intList));
 
         // catch case where there are no variables;
         if (this.intList.length == 1 && this.intList[0].length() == 0) {
