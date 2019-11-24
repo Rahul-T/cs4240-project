@@ -10,21 +10,11 @@ public class TigerBackend {
         CFGGenerator generator = new CFGGenerator(sourceFile);
         
         generator.generateBlocks();
-
-
-        // System.out.println("ENTRY:");
-        // System.out.println(generator.getEntryBlock());
-
-        // System.out.println("\n\nBLOCKS");
-        // for (BasicBlock block : generator.getBlocks()) {
-        //     System.out.println(block + "\n");
-        // }
-
         generator.generateInOutSets();
         generator.createLiveRanges();
         
         InterferenceGraph intGraph = new InterferenceGraph(generator);
-        // generator.printWebs();
+
         intGraph.color();
         HashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
         // for (Instruction i : map.keySet()) {
@@ -35,7 +25,7 @@ public class TigerBackend {
 
 
         // for (BasicBlock b : generator.getBlocks()) {
-        //     System.out.println(String.format("BLOCK: %s | IN: %s | OUT: %s", b.getBlockName(), b.inSet, b.outSet));
+        //     System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
         // }
     }
 }

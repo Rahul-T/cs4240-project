@@ -100,7 +100,7 @@ public class CFGGenerator {
                     this.labelMap.put(label, genBasicBlock(label));
                 }
                 targetBlock = this.labelMap.get(label);
-                if (!lastLine.split(" ")[0].equals("goto")) {
+                if (!lastLine.split(" ")[0].equals("goto,")) {
                     currentBlock.addSuccessor(targetBlock);
                     targetBlock.addPredecessor(currentBlock);
                 }
@@ -269,6 +269,7 @@ public class CFGGenerator {
             // System.out.println(String.format("LINE: %s | IN: %s | OUT: %s | DEF: %s | USE: %s", currLine.getText(), currLine.inSet, currLine.outSet, def, use));
         }
 
+        // System.out.println(block.getBlockName() + ": " + lines);
         tempBlockIn = lines.get(0).inSet;
         
         changed = (!tempBlockIn.equals(block.inSet)) || (!tempBlockOut.equals(block.outSet));

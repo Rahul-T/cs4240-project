@@ -1,14 +1,19 @@
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.SortedMap;
 import java.util.Stack;
 
 public class InterferenceGraph {
     private HashSet<InterferenceGraphNode> nodes;
     private HashSet<InterferenceGraphNode> visibleNodes;
     private CFGGenerator generator;
+    private HashSet<Instruction> loopInstrs;
     
     private static String[] intList, floatList;
+
+    private static final int LOOP_COST = 10;
 
     private static final String[] floatRegArr = {"$f20", "$f21", "$f22", "$f23", "$f24", "$f25", "$f26", "$f27", "$f28", "$f29", "$f30", "$f31"};
     private static final String[] intRegArr = {"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7"};
@@ -19,6 +24,11 @@ public class InterferenceGraph {
         this.visibleNodes = new HashSet<InterferenceGraphNode>();
         InterferenceGraph.intList = generator.getIntList();
         InterferenceGraph.floatList = generator.getFloatList();
+        this.loopInstrs = new HashSet<Instruction>();
+
+        for (BasicBlock block: this.generator.getLoopBlocks()) {
+            this.loopInstrs.addAll(block.getLines());
+        }
 
         HashMap<String, HashSet<LiveRange>> webs = this.generator.getWebs();
 
@@ -53,27 +63,43 @@ public class InterferenceGraph {
     public void color() {
         Stack<InterferenceGraphNode> nodeStack = new Stack<>();
         HashSet<InterferenceGraphNode> nodeCopy = new HashSet<>();
+        HashSet<InterferenceGraphNode> spillNodes = new HashSet<>();
         
         boolean changed;
-        
-        do {
-            // System.out.println("looping!");
-            changed = false;
-            nodeCopy.clear();
-            nodeCopy.addAll(this.visibleNodes);
-            // System.out.println("!" + this.nodes);
-            for (InterferenceGraphNode node : nodeCopy) {
-                // System.out.println(node.edges);
-                if ((node.isInt && node.getVisibleEdges().size() < intRegArr.length) 
-                    || (!node.isInt && node.getVisibleEdges().size() < floatRegArr.length)) {
-                    changed = true;
-                    this.hideNode(node);
-                    nodeStack.push(node);
+        while (nodeStack.size() < this.nodes.size()) {
+            do {
+                // System.out.println("looping!");
+                changed = false;
+                nodeCopy.clear();
+                nodeCopy.addAll(this.visibleNodes);
+                // System.out.println("!" + this.nodes);
+                for (InterferenceGraphNode node : nodeCopy) {
+                    // System.out.println(node.edges);
+                    if ((node.isInt && node.getVisibleEdges().size() < intRegArr.length) 
+                        || (!node.isInt && node.getVisibleEdges().size() < floatRegArr.length)) {
+                        changed = true;
+                        this.hideNode(node);
+                        nodeStack.push(node);
+                    }
                 }
+            } while (changed);
+            if (nodeStack.size() != this.nodes.size()) {
+                int minCost = Integer.MAX_VALUE;
+                int temp;
+                InterferenceGraphNode minCostNode = null;
+
+                for (InterferenceGraphNode node : this.visibleNodes) {
+                    temp = calcCost(node);
+                    if (temp < minCost) {
+                        minCost = temp;
+                        minCostNode = node;
+                    }
+                }
+
+                this.hideNode(minCostNode);
+                spillNodes.add(minCostNode);
+                nodeStack.push(minCostNode);
             }
-        } while (changed);
-        if (nodeStack.size() != this.nodes.size()) {
-            throw new RuntimeException("Spill needed but not yet implemented!");
         }
 
         int i;
@@ -81,7 +107,9 @@ public class InterferenceGraph {
         while (!nodeStack.isEmpty()) {
             InterferenceGraphNode currentNode = nodeStack.pop();
             currentNode.updateAdjColors();
-            if (currentNode.isInt) {
+            if (spillNodes.contains(currentNode)) {
+                currentNode.setColor("SPILL");
+            } else if (currentNode.isInt) {
                 for (i = 0; i < InterferenceGraph.intRegArr.length; i++) {
                     // System.out.println(currentNode.adjColors);
                     if (!currentNode.adjColors.contains(InterferenceGraph.intRegArr[i])) {
@@ -116,8 +144,12 @@ public class InterferenceGraph {
         return map;
     }
 
-    // spill variable from named register
-    private void spill(InterferenceGraphNode spillNode) {
+    private int calcCost(InterferenceGraphNode node) {
+        HashSet<Instruction> temp = new HashSet<>();
+        temp.addAll(node.lines);
+        temp.removeAll(this.loopInstrs);
+
+        return temp.size() + InterferenceGraph.LOOP_COST * (node.lines.size() - temp.size());
 
     }
 

@@ -44,7 +44,7 @@ public class LiveRange {
     public int hashCode() {
         int code = 0;
         for (Instruction inst : this.instructions) {
-            code += inst.hashCode();
+            code = (code + inst.hashCode()) % Integer.MAX_VALUE;
         }
         return code;
     }

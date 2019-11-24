@@ -1,0 +1,155 @@
+BasicBlock:
+    Represents a single basic block in the CFG.
+
+    Public Variables:
+        public HashSet<String> inSet;
+        public HashSet<String> outSet;
+
+    Methods:
+        public void addLine(Instruction line)
+        public void addLine(String line)
+        public void addLines(ArrayList<Instruction> lines)
+        public void addSuccessor(BasicBlock successor)
+        public void addSuccessors(Collection<BasicBlock> collection)
+        public void addPredecessor(BasicBlock predecessor)
+        public void addPredecessors(Collection<BasicBlock> collection)
+        public ArrayList<Instruction> getLines()
+        public HashSet<BasicBlock> getPredecessors()
+        public HashSet<BasicBlock> getSuccessors()
+        public String getBlockName()
+        public String toString()
+
+CFGGenerator:
+    Generates and manages the control flow graph.
+
+    Public Variables:
+    
+    Methods:
+        public void generateBlocks() throws IOException
+        public void generateInOutSets()
+            Public method to generate all the in and out sets for the lines and blocks.
+        private boolean updateInOutSet(BasicBlock block)
+            Private recurisve helper method to traverse the CFG
+        public void createLiveRanges()
+            Creates live ranges from the in and out sets
+        private void traverseCFG(BasicBlock root, LiveRange range, Instruction lastUse, HashSet<Instruction> incInstrs, HashMap<String, Integer> visits)
+            Helper method used to recursively travers the CFG for live range creation
+        public BasicBlock getEntryBlock()
+            Gets the entry point of the program
+        public HashMap<String,BasicBlock> getFunctionBlocks()
+            Gets all of the blocks that start functions
+        public HashSet<BasicBlock> getBlocks()
+            Gets all of the blocks in the graph
+        public HashSet<BasicBlock> getLoopBlocks()
+            Gets all of the blocks that are part of loops
+        public HashMap<String, HashSet<LiveRange>> getWebs()
+            Gets the webs for each variable as a hashmap mapping a variable name
+            to a set of live ranges whose union is the web.
+        public String[] getIntList()
+            Gets the list of integer variable names
+        public String[] getFloatList()
+            Gets the list of float variable names
+        private BasicBlock genBasicBlock(String name)
+            Creates a new basic block for the CFG to use.
+        private void addIfNotNumeric(String str, HashSet<String> set)
+            Adds a variable name to the passed in set if the name isn't numeric.
+            Used to calculate def and use sets.
+        private void mapInstructions(BasicBlock entry)
+            Maps instructions to block names and line numbers (I used this
+            before I added those as fields within the instructions)
+        private void mapHelper(BasicBlock block, HashSet<BasicBlock> visited)
+            Helper to map instructions.
+        public String lookupMappedInstruction(Instruction instr)
+            Gets the block name, line number, and instruction text for a given
+            instruction.
+        public void printWebs()
+            Outputs all the webs to STDOUT.
+
+Instruction:
+    Represents a single Instruction. Also tracks which block and line number the
+    instruction corresponds to.
+
+    Public Variables:
+        public HashSet<String> inSet;
+        public HashSet<String> outSet;
+        public HashSet<String> defs;
+        public HashSet<String> uses;
+
+    Methods:
+        public String getText()
+        public String toString()
+        public boolean equals(Object o)
+            Two instructions are equal if they have the same block name, line
+            number, and instruction text.
+        public int hashCode()
+            XOR of the hashcodes for block name, instruction text, and line number.
+
+InterferenceGraph:
+    Represents the interference graph for the given CFG
+
+    Public Variables:
+    
+    Methods:
+        public InterferenceGraph(CFGGenerator generator)
+        public void color()
+            Colors the whole graph and spills nodes if necessary.
+        public HashMap<Instruction, HashMap<String, String>> generateRegisterMap()
+            Generates a map of the registers allocated to each variable in each
+            instruction. You can lookup entries by instruction and then get the
+            register name by looking up the variable name in the instruction's
+            entry. Register name is "SPILL" if the variable has been spilled.
+        private int calcCost(InterferenceGraphNode node)
+            Calculates the spill cost for a given node.
+        private void removeNode(InterferenceGraphNode node)
+        private void hideNode(InterferenceGraphNode node)
+            Hides node, used for coloring.
+        public void printGraph()
+        public void printNodes()
+
+InterferenceGraphNode (private class):
+    Private class that maintains a single node in the interference graph.
+
+    Public Variables:
+
+    Methods:
+        public void addEdge(InterferenceGraphNode node)
+        public void removeEdge(InterferenceGraphNode node)
+        public void hideEdge(InterferenceGraphNode node)
+            "Hides" an edge from the graph, used in coloring.
+        public void updateAdjColors()
+            Updates set of adjacent node colors.
+        public void setColor(String color)
+        public HashSet<InterferenceGraphNode> getEdges()
+        public HashSet<InterferenceGraphNode> getVisibleEdges()
+            Gets all edeges that aren't hidden.
+        public String getColor()
+        public String getName()
+        public String toString()
+
+LiveRange:
+    Represents a single live range for a variable.
+
+    Public Variables:
+        public HashSet<Instruction> instructions;
+    
+    Methods:
+        public void addInstruction(Instruction inst)
+        public void addInstructions(Collection<Instruction> coll)
+        public String getVarName()
+        public LiveRange duplicate()
+            Returns a new live range with the same set of instructions and name.
+            Creates a new instance of the set and adds all the instructions.
+        public String toString()
+        public int hashCode()
+            Sum of the hashcodes of all instructions mod Integer.MAX_VALUE
+        public boolean equals(Object o)
+            Live ranges are equal if their set of instructions is the same.
+
+TigerBackend:
+    File I've been using to test and run things. Has the proper order for method 
+    calls to do all of register coloring.
+
+    Public Variables:
+    
+    Methods:
+        public static void main(String[] args) throws IOException

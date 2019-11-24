@@ -35,6 +35,7 @@ public class BasicBlock {
     }
 
     public void addSuccessor(BasicBlock successor) {
+        // System.out.println("Adding successor " + successor.blockName + " to " + this.blockName);
         this.successors.add(successor);
     }
 
@@ -43,6 +44,7 @@ public class BasicBlock {
     }
 
     public void addPredecessor(BasicBlock predecessor) {
+        // System.out.println("Adding predecessor " + predecessor.blockName + " to " + this.blockName);
         this.predecessors.add(predecessor);
     }
 
@@ -70,7 +72,7 @@ public class BasicBlock {
     public String toString() {
         // String retString = "===== START BASIC BLOCK " + this.blockName + " =====\n\t--LINES--\n";
         // for (int i = 0; i < this.lines.size(); i++) {
-        //     retString += String.format("\t\t%1$2d. ", i) + lines.get(i).toString() + "\n";
+        //     retString += lines.get(i).toString() + "\n";
         // }
         
         // retString += "\t--PREDECESSORS--\n";
