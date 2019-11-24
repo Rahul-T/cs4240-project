@@ -225,6 +225,8 @@ public class NaiveAllocator {
             globalVars.remove(duplicate);
         }
 
+//         printTables();
+
         mips.add(".data");
         for(String globalVar: globalVars.keySet()) {
             if(globalVars.get(globalVar).contains("array")) {
@@ -237,8 +239,6 @@ public class NaiveAllocator {
         mips.add("");
 
         // printTables();
-
-        System.out.println("");
         
     }
 
@@ -725,9 +725,9 @@ public class NaiveAllocator {
         try {
             fileWriter = new PrintWriter(new FileWriter(fileName));
             for (String line : this.mips) {
-                System.out.println(line);
+                fileWriter.println(line);
                 if (this.verbose) {
-                    fileWriter.println(line);
+                    System.out.println(line);
                 }
             }
             fileWriter.close();
@@ -736,13 +736,38 @@ public class NaiveAllocator {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        Scanner input = new Scanner(System.in);
-        String fileName = input.next();
-        NaiveAllocator naiveAllocator = new NaiveAllocator("Testing/" + fileName + ".ir", true);
-        naiveAllocator.buildDataSection();
-        naiveAllocator.buildTextSection();
-        naiveAllocator.createFile("P2Output/" + fileName + ".s");
-        System.out.println("DONE!");
+    public static void main(String[] args) throws IOException, InterruptedException {
+        for (String fileName : args) {
+            if (fileName.equals("-t"))
+                continue;
+            NaiveAllocator naiveAllocator = new NaiveAllocator("P2Testing/" + fileName + ".ir", false);
+            naiveAllocator.buildDataSection();
+            naiveAllocator.buildTextSection();
+            naiveAllocator.createFile("P2Output/" + fileName + ".s");
+        }
+
+        if(args[0].equals("-t")) {
+            for (int j = 1; j < args.length; j++) {
+                Runtime rt = Runtime.getRuntime();
+                System.out.println("=================" + args[j] + "=================");
+                Process pr = rt.exec("spim -keepstats -f P2Output/" + args[j] + ".s");
+                BufferedReader stdInput = new BufferedReader(new
+                        InputStreamReader(pr.getInputStream()));
+                String s = null;
+                String stats = "";
+                while ((s = stdInput.readLine()) != null) {
+                    if (s.contains("Stats")) {
+                        String[] temp = s.split("Stats");
+                        System.out.println("Result: " + temp[0]);
+                        stats += "\nStats" + temp[1];
+
+                    } else {
+                        stats += s;
+                    }
+                }
+                System.out.println(stats);
+                int i = pr.waitFor();
+            }
+        }
     }
 }
