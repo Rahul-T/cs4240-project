@@ -70,7 +70,7 @@ sub $sp, $sp, 36
 sw $ra, 16($sp)
 li $s0,  1
 sw $s0, 32($sp)
-li $s0, 5
+li $s0,  5
 sw $s0, 20($sp)
 lw $a0, 20($sp)
 sw $s0, 36($sp)

@@ -12,6 +12,8 @@ public class BasicBlock {
     // in and out sets are public to minimize function calls and set passing.
     public HashSet<String> inSet;
     public HashSet<String> outSet;
+    public String[] floats;
+    public String[] ints;
 
     public BasicBlock(String blockName) {
         this.predecessors = new HashSet<BasicBlock>();
@@ -70,24 +72,24 @@ public class BasicBlock {
 
     @Override
     public String toString() {
-        // String retString = "===== START BASIC BLOCK " + this.blockName + " =====\n\t--LINES--\n";
-        // for (int i = 0; i < this.lines.size(); i++) {
-        //     retString += lines.get(i).toString() + "\n";
-        // }
+        String retString = "===== START BASIC BLOCK " + this.blockName + " =====\n\t--LINES--\n";
+        for (int i = 0; i < this.lines.size(); i++) {
+            retString += "\t\t" + lines.get(i).toString() + "\n";
+        }
         
-        // retString += "\t--PREDECESSORS--\n";
-        // for (BasicBlock current : this.predecessors) {
-        //     retString += "\t\t Block " + current.blockName + "\n";
-        // }
+        retString += "\t--PREDECESSORS--\n";
+        for (BasicBlock current : this.predecessors) {
+            retString += "\t\t Block " + current.blockName + "\n";
+        }
 
-        // retString += "\t--SUCCESSORS--\n";
-        // for (BasicBlock current : this.successors) {
-        //     retString += "\t\t Block " + current.blockName + "\n";
-        // }
+        retString += "\t--SUCCESSORS--\n";
+        for (BasicBlock current : this.successors) {
+            retString += "\t\t Block " + current.blockName + "\n";
+        }
 
-        // retString += "===== END BASIC BLOCK " + this.blockName + " =====";
-        // return retString;
+        retString += "===== END BASIC BLOCK " + this.blockName + " =====";
+        return retString;
 
-        return this.getBlockName();
+        // return this.getBlockName();
     }
 }

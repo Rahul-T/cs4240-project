@@ -4,15 +4,23 @@ public class Instruction {
     private String text;
     private String block;
     private int line;
+    private int absoluteNumber;
     public HashSet<String> inSet;
     public HashSet<String> outSet;
     public HashSet<String> defs;
     public HashSet<String> uses;
 
+    private static int lineCounter = 0;
+
+    public static void resetLineCounter() {
+        Instruction.lineCounter = 0;
+    }
+
     public Instruction(String text, String block, int line) {
         this.text = text;
         this.block = block;
         this.line = line;
+        this.absoluteNumber = Instruction.lineCounter++;
         this.inSet = new HashSet<String>();
         this.outSet = new HashSet<String>();
         this.defs = new HashSet<String>();

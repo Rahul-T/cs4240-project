@@ -6,6 +6,7 @@ public class InterferenceGraph {
     private HashSet<InterferenceGraphNode> visibleNodes;
     private CFGGenerator generator;
     private HashSet<Instruction> loopInstrs;
+    private HashMap<String, HashSet<LiveRange>> webs;
     
     private static String[] intList, floatList;
 
@@ -14,19 +15,20 @@ public class InterferenceGraph {
     private static final String[] floatRegArr = {"$f20", "$f21", "$f22", "$f23", "$f24", "$f25", "$f26", "$f27", "$f28", "$f29", "$f30", "$f31"};
     private static final String[] intRegArr = {"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7"};
     
-    public InterferenceGraph(CFGGenerator generator) {
+    public InterferenceGraph(CFGGenerator generator, BasicBlock graphRoot) {
         this.generator = generator;
         this.nodes = new HashSet<InterferenceGraphNode>();
         this.visibleNodes = new HashSet<InterferenceGraphNode>();
-        InterferenceGraph.intList = generator.getIntList();
-        InterferenceGraph.floatList = generator.getFloatList();
+        InterferenceGraph.intList = graphRoot.ints;
+        InterferenceGraph.floatList = graphRoot.floats;
         this.loopInstrs = new HashSet<Instruction>();
+        
 
         for (BasicBlock block: this.generator.getLoopBlocks()) {
             this.loopInstrs.addAll(block.getLines());
         }
 
-        HashMap<String, HashSet<LiveRange>> webs = this.generator.getWebs();
+        HashMap<String, HashSet<LiveRange>> webs = this.generator.createLiveRanges(graphRoot);
 
         int count = 0;
         for (HashSet<LiveRange> set : webs.values()) {
