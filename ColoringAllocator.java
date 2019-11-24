@@ -18,12 +18,12 @@ public class ColoringAllocator extends Allocator {
     }
 
     @Override
-    public void buildTextSection() throws IOException {
-
+    public void registersToAndFromStack(String currentFunction, String instr) {
+        
     }
 
     @Override
-    public void registersToAndFromStack(String currentFunction, String instr) {
-        
+    public void buildTextSection() throws IOException {
+
     }
 }

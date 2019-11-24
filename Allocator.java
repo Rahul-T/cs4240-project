@@ -24,9 +24,9 @@ public abstract class Allocator {
 
     public abstract void restoreRegisters(String[] registers);
 
-    public abstract void buildTextSection() throws IOException;
-
     public abstract void registersToAndFromStack(String currentFunction, String instr);
+
+    public abstract void buildTextSection() throws IOException;
 
     // Building .data section
 
