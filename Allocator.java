@@ -28,6 +28,18 @@ public abstract class Allocator {
 
     public abstract void buildTextSection() throws IOException;
 
+    public abstract void regularAssignInstr(String[] lineElements, String currentFunction);
+
+    public abstract void arraystoreInstr(String[] lineElements, String currentFunction);
+
+    public abstract void arrayloadInstr(String[] lineElements, String currentFunction);
+
+    public abstract void opInstr(String[] lineElements, String currentFunction);
+
+    public abstract void branchInstr(String[] lineElements, String currentFunction);
+
+    public abstract void callrInstr(String[] lineElements, String currentFunction);
+
     // Building .data section
 
     public void printTables() {
@@ -70,7 +82,6 @@ public abstract class Allocator {
                 HashMap<String, String> declaredVarsToOffset = new HashMap<String, String>();
                 functionToVarsToOffset.put(currentFunction, declaredVarsToOffset);
 
-                // globalArrays = new HashSet<>();
                 String[] paramsList = line.substring(line.indexOf("(")+1, line.indexOf(")")).split(",");
                 for(String param: paramsList) {
                     if(param.length() == 0) {
@@ -279,7 +290,6 @@ public abstract class Allocator {
         mips.add("");
         mips.add(currentFunction + ":");
         mips.add("@ " + currentFunction + " sub");
-        // mips.add("sub $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
         mips.add("sw $ra, 16($sp)");
     }
 
@@ -326,137 +336,37 @@ public abstract class Allocator {
 
     public void assignInstr(String[] lineElements, String currentFunction) {
         if (lineElements.length == 3) {
-            String register = getAvailableRegister(lineElements[2]);
-            generateLoad(lineElements[2], register, mips, currentFunction);
-            
-            mips.add(getStoreInstrType(register) + register + ", " + getStackLocation(lineElements[1], currentFunction));
-            
-            restoreRegisters(new String[] {register});
+            regularAssignInstr(lineElements, currentFunction);
         } else if (lineElements.length == 4) {
-            // String loopCounterRegister = getAvailableRegister("0");
-            String loopCounterRegister = "$t0";
-
-            mips.add("li " + loopCounterRegister + ", 0");
-            mips.add(lineElements[1].trim() + "_init_start:");
-
-            // String arrayAddressRegister = getAvailableRegister("0");
-            String arrayAddressRegister = "$t1";
-            mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
-
-            // String wordMultiplierRegister = getAvailableRegister("4");
-            String wordMultiplierRegister = "$t2";
-            mips.add("li " + wordMultiplierRegister + ", 4");
-
-            // String arrayOffsetRegister = getAvailableRegister("0");
-            String arrayOffsetRegister = "$t3";
-            mips.add("mul " + arrayOffsetRegister + ", " + loopCounterRegister + ", " + wordMultiplierRegister);
-            
-            mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
-
-            // String storedValueRegister = getAvailableRegister(lineElements[3]);
-            String storedValueRegister = lineElements[3].contains(".") ? "$f4" : "$t4";
-
-            generateLoad(lineElements[3],storedValueRegister, mips, currentFunction);
-
-            mips.add(getStoreInstrType(storedValueRegister) + storedValueRegister + ", " + "(" + arrayAddressRegister + ")");
-
-            mips.add("addi " + loopCounterRegister + ", 1");
-            mips.add("ble " + loopCounterRegister + ", " + lineElements[2] + ", " + lineElements[1] + "_init_start");
-            
-            // restoreRegisters(new String[] {loopCounterRegister,arrayAddressRegister,
-            //     wordMultiplierRegister, arrayOffsetRegister, storedValueRegister});
+            arrayAssignInstr(lineElements, currentFunction);
         }
     }
 
-    public void arraystoreInstr(String[] lineElements, String currentFunction) {
-        String arrayAddressRegister = "$t0";
-        // String arrayAddressRegister = getAvailableRegister("0");
+    public void arrayAssignInstr(String[] lineElements, String currentFunction) {
+        String loopCounterRegister = "$t0";
+
+        mips.add("li " + loopCounterRegister + ", 0");
+        mips.add(lineElements[1].trim() + "_init_start:");
+
+        String arrayAddressRegister = "$t1";
         mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
 
-        String arrayOffsetRegister = getAvailableRegister("0");
-        generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
-        mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
+        String wordMultiplierRegister = "$t2";
+        mips.add("li " + wordMultiplierRegister + ", 4");
+
+        String arrayOffsetRegister = "$t3";
+        mips.add("mul " + arrayOffsetRegister + ", " + loopCounterRegister + ", " + wordMultiplierRegister);
+        
         mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
 
-        String valueRegister = getAvailableRegister(lineElements[3]);
-        generateLoad(lineElements[3], valueRegister, mips, currentFunction);
+        String storedValueRegister = lineElements[3].contains(".") ? "$f4" : "$t4";
 
-        mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
-        
-        restoreRegisters(new String[] {valueRegister, arrayOffsetRegister});
-    }
+        generateLoad(lineElements[3],storedValueRegister, mips, currentFunction);
 
-    public void arrayloadInstr(String[] lineElements, String currentFunction) {
-        String arrayAddressRegister2 = "$t0";
-        // String arrayAddressRegister2 = getAvailableRegister("0");
-        mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
+        mips.add(getStoreInstrType(storedValueRegister) + storedValueRegister + ", " + "(" + arrayAddressRegister + ")");
 
-        String arrayOffsetRegister2 = getAvailableRegister("0");
-        generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
-        mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
-        mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
-
-        String valueRegister2 = getAvailableRegister(lineElements[1]);
-
-        if(valueRegister2.contains("$f")) {
-            mips.add("l.s " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
-        } else {
-            mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
-        }
-        
-        mips.add(getStoreInstrType(valueRegister2) + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
-        
-        restoreRegisters(new String[] {valueRegister2, arrayOffsetRegister2});
-    }
-
-    public void opInstr(String[] lineElements, String currentFunction) {
-        String operandRegister1 = getAvailableRegister(lineElements[1]);
-        generateLoad(lineElements[1], operandRegister1, mips, currentFunction);
-
-        String operandRegister2 = getAvailableRegister(lineElements[2]);
-        generateLoad(lineElements[2], operandRegister2, mips, currentFunction);
-        
-        String resultRegister = "";
-        if(operandRegister1.contains("$f") || operandRegister2.contains("$f")) {
-            resultRegister = getAvailableRegister("0.0");
-        } else {
-            resultRegister = getAvailableRegister("0");
-        }
-
-        if(lineElements[0].equals("mult")) {
-            if(resultRegister.contains("$f")) {
-                mips.add("mul.s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
-            } else {
-                mips.add("mul " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
-            }
-        } else {
-            if(resultRegister.contains("$f")) {
-                mips.add(lineElements[0] + ".s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
-            } else {
-                mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
-            }
-        }
-
-        mips.add(getStoreInstrType(resultRegister) + resultRegister + ", " + getStackLocation(lineElements[3], currentFunction));
-        
-
-        restoreRegisters(new String[] {operandRegister1, operandRegister2, resultRegister});
-    }
-
-    public void branchInstr(String[] lineElements, String currentFunction) {
-        String firstRegister = getAvailableRegister(lineElements[1]);
-        generateLoad(lineElements[1], firstRegister, mips, currentFunction);
-        String secondRegister = getAvailableRegister(lineElements[2]);
-        generateLoad(lineElements[2], secondRegister, mips, currentFunction);
-        lineElements[0] = lineElements[0].replace("breq", "beq");
-        lineElements[0] = lineElements[0].replace("brneq", "bne");
-        lineElements[0] = lineElements[0].replace("brlt", "blt");
-        lineElements[0] = lineElements[0].replace("brgt", "bgt");
-        lineElements[0] = lineElements[0].replace("brgeq", "bge");
-        lineElements[0] = lineElements[0].replace("brleq", "ble");
-        mips.add(lineElements[0] + " " + firstRegister + ", " + secondRegister + ", " + lineElements[3]);
-
-        restoreRegisters(new String[] {firstRegister, secondRegister});
+        mips.add("addi " + loopCounterRegister + ", 1");
+        mips.add("ble " + loopCounterRegister + ", " + lineElements[2] + ", " + lineElements[1] + "_init_start");
     }
 
     public void returnInstr(String[] lineElements, String currentFunction) {
@@ -478,33 +388,8 @@ public abstract class Allocator {
             }
         }
         mips.add("lw $ra, 16($sp)");
-        // mips.add("addi $sp, $sp, " + functionToVarsToOffset.get(currentFunction).get("#total#"));
         mips.add("@ " + currentFunction + " addi");
-        
         mips.add("jr $ra");
-    }
-
-    public void callrInstr(String[] lineElements, String currentFunction) {
-        int argCounter = -1;
-        for(int i = 3; i < lineElements.length; i++) {
-            argCounter++;
-            if(globalVars.containsKey(lineElements[i].trim())) {
-                continue;
-            }
-            generateLoad(lineElements[i], "$a" + argCounter, mips, currentFunction);
-        }
-        
-        registersToAndFromStack(currentFunction, "sw ");
-
-        mips.add("jal " + lineElements[2]);
-        String type = getVarType(lineElements[1].trim());
-        if(type.equals("int")) {
-            mips.add("sw " + "$v0" + ", " + getStackLocation(lineElements[1], currentFunction));
-        } else {
-            mips.add("s.s " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
-        }
-        
-        registersToAndFromStack(currentFunction, "lw ");
     }
 
     public void callInstr(String[] lineElements, String currentFunction, int totalsize2, HashMap<String, Integer> maxAdditionalOffset) {

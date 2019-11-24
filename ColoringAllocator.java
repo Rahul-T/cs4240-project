@@ -23,6 +23,35 @@ public class ColoringAllocator extends Allocator {
     }
 
     @Override
+    public void regularAssignInstr(String[] lineElements, String currentFunction) {
+
+    }
+
+    @Override
+    public void arraystoreInstr(String[] lineElements, String currentFunction) {
+
+    }
+
+    @Override
+    public void arrayloadInstr(String[] lineElements, String currentFunction) {
+
+    }
+
+    @Override
+    public void opInstr(String[] lineElements, String currentFunction) {
+
+    }
+
+    @Override
+    public void branchInstr(String[] lineElements, String currentFunction) {
+    }
+
+    @Override
+    public void callrInstr(String[] lineElements, String currentFunction) {
+
+    }
+
+    @Override
     public void buildTextSection() throws IOException {
 
     }
