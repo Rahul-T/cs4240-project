@@ -46,7 +46,7 @@ public class CFGGenerator {
         String[] tokCurrentLine = null, tokLastLine=null;
         BasicBlock targetBlock, newBlock, currentBlock=null;
 
-        String arrayPattern = "\\[\\d+\\]";
+        String arrayPattern = ",.+\\[\\d+\\]";
 
         currentLine = fileBuff.readLine();
         nextLine = fileBuff.readLine();
