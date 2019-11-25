@@ -41,7 +41,7 @@ public abstract class Allocator {
 
     public abstract void branchInstr(String[] lineElements, String currentFunction);
 
-    public abstract void callrInstr(String[] lineElements, String currentFunction);
+    public abstract void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction);
 
     // Building .data section
 
@@ -313,22 +313,6 @@ public abstract class Allocator {
         }
     }
 
-    public void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
-        if (isNumeric(element)) {
-            if(element.contains(".")) {
-                mips.add("li.s " + register + ", " + element);
-            } else {
-                mips.add("li " + register + ", " + element);
-            }
-        } else {
-            if(register.contains("$f")) {
-                mips.add("l.s " + register + ", " + getStackLocation(element, currentFunction));
-            } else {
-                mips.add("lw " + register + ", " + getStackLocation(element, currentFunction));
-            }
-        }
-    }
-
     public String getStoreInstrType(String register) {
         if(register.contains("$f")) {
             return "s.s ";
@@ -402,7 +386,7 @@ public abstract class Allocator {
             if(globalVars.containsKey(lineElements[i].trim())) {
                 continue;
             }
-            generateLoad(lineElements[i], "$a" + argCounter2, mips, currentFunction);
+            generateLoad(lineElements[i].trim(), "$a" + argCounter2, mips, currentFunction);
         }
         if(lineElements[1].contains("printi")) {
             mips.add("li $v0, 1");
@@ -413,6 +397,29 @@ public abstract class Allocator {
             registersToAndFromStack(currentFunction, "lw ");
             maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize2));
         }
+    }
+
+    public void callrInstr(String[] lineElements, String currentFunction) {
+        int argCounter = -1;
+        for(int i = 3; i < lineElements.length; i++) {
+            argCounter++;
+            if(globalVars.containsKey(lineElements[i].trim())) {
+                continue;
+            }
+            generateLoad(lineElements[i].trim(), "$a" + argCounter, mips, currentFunction);
+        }
+        
+        registersToAndFromStack(currentFunction, "sw ");
+
+        mips.add("jal " + lineElements[2]);
+        String type = getVarType(lineElements[1].trim());
+        if(type.equals("int")) {
+            mips.add("sw " + "$v0" + ", " + getStackLocation(lineElements[1], currentFunction));
+        } else {
+            mips.add("s.s " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
+        }
+        
+        registersToAndFromStack(currentFunction, "lw ");
     }
 
     public static void generateMips(String[] args, LinkedHashMap<Instruction, HashMap<String, String>> instrToVarRegs) throws IOException, InterruptedException {

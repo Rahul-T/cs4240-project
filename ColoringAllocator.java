@@ -13,7 +13,12 @@ public class ColoringAllocator extends Allocator {
 
     @Override
     public String getAvailableRegister(String element) {
-        return "";
+        // Todo : Fix for spills
+
+        if(isNumeric(element)) {
+            return element;
+        }
+        return instrToVarRegs.get(currentInstruction).get(element);
     }
 
     @Override
@@ -23,37 +28,122 @@ public class ColoringAllocator extends Allocator {
 
     @Override
     public void registersToAndFromStack(String currentFunction, String instr) {
-        
+        int baseOffset = Integer.valueOf(functionToVarsToOffset.get(currentFunction).get("#total#"));
+        int offset = 4;
+        for(String reg: instrToVarRegs.get(currentInstruction).values()) {
+            int totalOffset = baseOffset + offset;
+            mips.add(instr + reg + ", " + totalOffset + "($sp)");
+            offset += 4;
+        }
     }
 
     // Instruction Section
 
+    public String[] getInstrArray() {
+        return currentInstruction.getText().replaceAll(" ", "").split(",");
+    }
+
+    @Override
+    public void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
+        if (isNumeric(element)) {
+            if(element.contains(".")) {
+                mips.add("li.s " + register + ", " + element);
+            } else {
+                mips.add("li " + register + ", " + element);
+            }
+        } else {
+            if(register.contains("$f")) {
+                mips.add("l.s " + register + ", " + getAvailableRegister(element));
+            } else {
+                mips.add("move " + register + ", " + getAvailableRegister(element));
+            }
+        }
+    }
+
     @Override
     public void regularAssignInstr(String[] lineElements, String currentFunction) {
+        String[] instr = getInstrArray();
+        String register = getAvailableRegister(instr[1]);
+        generateLoad(instr[2], register, mips, currentFunction);
     }
 
     @Override
     public void arraystoreInstr(String[] lineElements, String currentFunction) {
+        // String arrayAddressRegister = "$t0";
+        // mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
 
+        // String arrayOffsetRegister = getAvailableRegister("0");
+        // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
+        // mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
+        // mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
+
+        // String valueRegister = getAvailableRegister(lineElements[3]);
+        // generateLoad(lineElements[3], valueRegister, mips, currentFunction);
+
+        // mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
+        
+        // restoreRegisters(new String[] {valueRegister, arrayOffsetRegister});
     }
 
     @Override
     public void arrayloadInstr(String[] lineElements, String currentFunction) {
+        // String arrayAddressRegister2 = "$t0";
+        // mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
 
+        // String arrayOffsetRegister2 = getAvailableRegister("0");
+        // generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
+        // mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
+        // mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
+
+        // String valueRegister2 = getAvailableRegister(lineElements[1]);
+
+        // if(valueRegister2.contains("$f")) {
+        //     mips.add("l.s " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+        // } else {
+        //     mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+        // }
+        
+        // mips.add(getStoreInstrType(valueRegister2) + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
+        
+        // restoreRegisters(new String[] {valueRegister2, arrayOffsetRegister2});
     }
 
     @Override
     public void opInstr(String[] lineElements, String currentFunction) {
+        String[] instr = getInstrArray();
+        String operandRegister1 = getAvailableRegister(instr[1]);
+        String operandRegister2 = getAvailableRegister(instr[2]);
+        String resultRegister = getAvailableRegister(instr[3]);
 
+        if(lineElements[0].equals("mult")) {
+            if(resultRegister.contains("$f")) {
+                mips.add("mul.s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+            } else {
+                mips.add("mul " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+            }
+        } else {
+            if(resultRegister.contains("$f")) {
+                mips.add(lineElements[0] + ".s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+            } else {
+                mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
+            }
+        }        
     }
 
     @Override
     public void branchInstr(String[] lineElements, String currentFunction) {
-    }
+        String[] instr = getInstrArray();
+        String firstRegister = getAvailableRegister(instr[1]);
+        String secondRegister = getAvailableRegister(instr[2]);
 
-    @Override
-    public void callrInstr(String[] lineElements, String currentFunction) {
+        lineElements[0] = lineElements[0].replace("breq", "beq");
+        lineElements[0] = lineElements[0].replace("brneq", "bne");
+        lineElements[0] = lineElements[0].replace("brlt", "blt");
+        lineElements[0] = lineElements[0].replace("brgt", "bgt");
+        lineElements[0] = lineElements[0].replace("brgeq", "bge");
+        lineElements[0] = lineElements[0].replace("brleq", "ble");
 
+        mips.add(lineElements[0] + " " + firstRegister + ", " + secondRegister + ", " + lineElements[3]);
     }
 
     public Instruction getNextInstruction() {
@@ -159,17 +249,18 @@ public class ColoringAllocator extends Allocator {
                         // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
                         // System.out.println(currentInstruction.getText());
-                        // int totalsize = sRegistersActive.size() + fRegistersActive.size();
-                        // maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize));
+                        int totalsize = instrToVarRegs.get(currentInstruction).size();
+                        maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize));
                         callrInstr(lineElements, currentFunction);
                         break;
 
                     case "call":
                         // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
+                        // System.out.println(instrToVarRegs.get(currentInstruction));
                         // System.out.println(currentInstruction.getText());
-                        // int totalsize2 = sRegistersActive.size() + fRegistersActive.size();
-                        // callInstr(lineElements, currentFunction, totalsize2, maxAdditionalOffset);
+                        int totalsize2 = instrToVarRegs.get(currentInstruction).size();
+                        callInstr(lineElements, currentFunction, totalsize2, maxAdditionalOffset);
                         break;
                 }
             }

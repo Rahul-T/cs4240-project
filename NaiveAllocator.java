@@ -91,6 +91,23 @@ public class NaiveAllocator extends Allocator {
     // Instruction Section
 
     @Override
+    public void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
+        if (isNumeric(element)) {
+            if(element.contains(".")) {
+                mips.add("li.s " + register + ", " + element);
+            } else {
+                mips.add("li " + register + ", " + element);
+            }
+        } else {
+            if(register.contains("$f")) {
+                mips.add("l.s " + register + ", " + getStackLocation(element, currentFunction));
+            } else {
+                mips.add("lw " + register + ", " + getStackLocation(element, currentFunction));
+            }
+        }
+    }
+
+    @Override
     public void regularAssignInstr(String[] lineElements, String currentFunction) {
         String register = getAvailableRegister(lineElements[2]);
         generateLoad(lineElements[2], register, mips, currentFunction);
@@ -189,30 +206,6 @@ public class NaiveAllocator extends Allocator {
         mips.add(lineElements[0] + " " + firstRegister + ", " + secondRegister + ", " + lineElements[3]);
 
         restoreRegisters(new String[] {firstRegister, secondRegister});
-    }
-
-    @Override
-    public void callrInstr(String[] lineElements, String currentFunction) {
-        int argCounter = -1;
-        for(int i = 3; i < lineElements.length; i++) {
-            argCounter++;
-            if(globalVars.containsKey(lineElements[i].trim())) {
-                continue;
-            }
-            generateLoad(lineElements[i], "$a" + argCounter, mips, currentFunction);
-        }
-        
-        registersToAndFromStack(currentFunction, "sw ");
-
-        mips.add("jal " + lineElements[2]);
-        String type = getVarType(lineElements[1].trim());
-        if(type.equals("int")) {
-            mips.add("sw " + "$v0" + ", " + getStackLocation(lineElements[1], currentFunction));
-        } else {
-            mips.add("s.s " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
-        }
-        
-        registersToAndFromStack(currentFunction, "lw ");
     }
 
     // Main Section
