@@ -57,6 +57,7 @@ public class CFGGenerator {
             // System.out.println("\"" + currentLine + "\""+ " | " + tokCurrentLine.length);
             // System.out.println(tokCurrentLine[0]);
             // catch labels
+
             if (tokCurrentLine[0].length() == 0) {
                 String[] temp = new String[tokCurrentLine.length - 1];
                 for (int i = 1; i < tokCurrentLine.length; i++) {

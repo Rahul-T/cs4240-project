@@ -24,17 +24,31 @@ public class TigerBackend {
 
         HashMap<String, BasicBlock> funcs = generator.getFunctionBlocks();
 
+        LinkedHashMap<Instruction, HashMap<String, String>> combinedMap = new LinkedHashMap<Instruction, HashMap<String, String>>();
+
         for (BasicBlock func : funcs.values()) {
             InterferenceGraph intGraph = new InterferenceGraph(generator, func);
 
             intGraph.color();
-            LinkedHashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
+            HashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
             map.entrySet().forEach(entry->{
-                System.out.println("Key: " + entry.getKey() + "Value: " + entry.getValue());  
+                combinedMap.put(entry.getKey(), entry.getValue());
+                // System.out.println(entry.getKey() + " : " + entry.getValue());
             });
-            System.out.println("\n\n\n\n");
+
+            // Janky fix to add "return, , ," instruction at end of main
+            for(Instruction i: map.keySet()) {
+                if(i.block.equals("main_FUNCTION")) {
+                    combinedMap.put(new Instruction("return,,,", "", 0), new HashMap<String, String>());
+                    break;
+                }
+            }
         }
         
+        combinedMap.entrySet().forEach(entry->{
+            System.out.println("Key: " + entry.getKey().getText() + " Value: " + entry.getValue());  
+        });
+
         // for (Instruction i : map.keySet()) {
         //     System.out.println(String.format("%s | %s", i.toString(), map.get(i).toString()));
         // }
@@ -46,6 +60,6 @@ public class TigerBackend {
         //     System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
         // }
 
-        Allocator.generateMips(args);
+        Allocator.generateMips(args, combinedMap);
     }
 }

@@ -11,13 +11,16 @@ public abstract class Allocator {
     ArrayList<String> mips;
     boolean verbose;
 
-    public Allocator(String irFile, boolean isVerbose) {
+    LinkedHashMap<Instruction, HashMap<String, String>> instrToVarRegs;
+
+    public Allocator(String irFile, boolean isVerbose, LinkedHashMap<Instruction, HashMap<String, String>> combinedMap) {
         this.irFile = irFile;
         globalVars = new HashMap<String, String>();
         functionToVarsToType = new HashMap<String, HashMap<String, String>>();
         functionToVarsToOffset = new HashMap<String, HashMap<String, String>>();
         mips = new ArrayList<String>();
         verbose = isVerbose;
+        instrToVarRegs = combinedMap;
     }
 
     public abstract String getAvailableRegister(String element);
@@ -412,15 +415,21 @@ public abstract class Allocator {
         }
     }
 
-    public static void generateMips(String[] args) throws IOException, InterruptedException {
+    public static void generateMips(String[] args, LinkedHashMap<Instruction, HashMap<String, String>> instrToVarRegs) throws IOException, InterruptedException {
         for (String fileName : args) {
             if (fileName.equals("-t"))
                 continue;
-            Allocator allocator = new NaiveAllocator("P2Testing/" + fileName, false);
-            allocator.buildDataSection();
-            allocator.buildTextSection();
-            fileName = fileName.replace(".ir", ".s");
-            allocator.createFile("P2Output/" + fileName);
+            Allocator naiveAllocator = new NaiveAllocator("P2Testing/" + fileName, false);
+            naiveAllocator.buildDataSection();
+            naiveAllocator.buildTextSection();
+            String naivefileName = fileName.replace(".ir", "_naive.s");
+            naiveAllocator.createFile("P2Output/" + naivefileName);
+
+            Allocator coloringAllocator = new ColoringAllocator("P2Testing/" + fileName, true, instrToVarRegs);
+            coloringAllocator.buildDataSection();
+            coloringAllocator.buildTextSection();
+            String coloringFileName = fileName.replace(".ir", "_colored.s");
+            coloringAllocator.createFile("P2Output/" + coloringFileName);
         }
 
         if(args[0].equals("-t")) {

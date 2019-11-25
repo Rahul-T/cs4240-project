@@ -8,7 +8,7 @@ public class NaiveAllocator extends Allocator {
     LinkedHashSet<String> fRegistersActive;
     
     public NaiveAllocator(String irFile, boolean isVerbose) {
-        super(irFile, isVerbose);
+        super(irFile, isVerbose, null);
     }
 
     // Register Section
@@ -216,7 +216,7 @@ public class NaiveAllocator extends Allocator {
     }
 
     // Main Section
-    
+
     @Override
     public void buildTextSection() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.irFile));

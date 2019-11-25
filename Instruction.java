@@ -2,7 +2,7 @@ import java.util.HashSet;
 
 public class Instruction {
     private String text;
-    private String block;
+    public String block;
     private int line;
     public int absoluteNumber;
     public HashSet<String> inSet;
