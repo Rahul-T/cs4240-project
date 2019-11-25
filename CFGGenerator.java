@@ -54,7 +54,6 @@ public class CFGGenerator {
         while (currentLine != null) {
             currentLine = currentLine.trim();
             tokCurrentLine = currentLine.replace(",", ", ").trim().split("\\s+");
-            // System.out.println("\"" + currentLine + "\""+ " | " + tokCurrentLine.length);
             // System.out.println(tokCurrentLine[0]);
             // catch labels
 
@@ -104,7 +103,7 @@ public class CFGGenerator {
                 this.functionBlocks.put(currentBlock.getBlockName(), currentBlock);
                 lastLine = currentLine;                 
                 currentLine = nextLine;              
-                nextLine = fileBuff.readLine();    
+                nextLine = fileBuff.readLine();
                 
                 // System.out.println(String.format("l: %s | c: %s | n: %s", lastLine, currentLine, nextLine));
             } else if (tokCurrentLine[0].equals("#end_function")) {

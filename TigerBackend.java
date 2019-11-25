@@ -33,21 +33,22 @@ public class TigerBackend {
             HashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
             map.entrySet().forEach(entry->{
                 combinedMap.put(entry.getKey(), entry.getValue());
-                // System.out.println(entry.getKey() + " : " + entry.getValue());
+                System.out.println(entry.getKey() + " : " + entry.getValue());
             });
+            System.out.println("\n\n\n");
 
             // Janky fix to add "return, , ," instruction at end of main
-            for(Instruction i: map.keySet()) {
-                if(i.block.equals("main_FUNCTION")) {
-                    combinedMap.put(new Instruction("return,,,", "", 0), new HashMap<String, String>());
-                    break;
-                }
-            }
+            // for(Instruction i: map.keySet()) {
+            //     if(i.block.equals("main_FUNCTION")) {
+            //         combinedMap.put(new Instruction("return,,,", "", 0), new HashMap<String, String>());
+            //         break;
+            //     }
+            // }
         }
         
-        combinedMap.entrySet().forEach(entry->{
-            System.out.println("Key: " + entry.getKey().getText() + " Value: " + entry.getValue());  
-        });
+        // combinedMap.entrySet().forEach(entry->{
+        //     System.out.println("Key: " + entry.getKey().getText() + " Value: " + entry.getValue());  
+        // });
 
         // for (Instruction i : map.keySet()) {
         //     System.out.println(String.format("%s | %s", i.toString(), map.get(i).toString()));
