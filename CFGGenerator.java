@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -25,7 +26,7 @@ public class CFGGenerator {
 
     public CFGGenerator(String sourceFile) {
         this.sourceFile = sourceFile;
-        this.functionBlocks = new HashMap<String, BasicBlock>();
+        this.functionBlocks = new LinkedHashMap<String, BasicBlock>();
         this.blocks = new HashSet<BasicBlock>();
         this.loopBlocks = new HashSet<BasicBlock>();
         this.labelMap = new HashMap<String, BasicBlock>();

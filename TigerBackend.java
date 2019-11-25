@@ -29,10 +29,10 @@ public class TigerBackend {
 
             intGraph.color();
             LinkedHashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
-            // map.entrySet().forEach(entry->{
-            //     System.out.println("Key: " + entry.getKey() + "Value: " + entry.getValue());  
-            // });
-            // System.out.println("\n\n\n\n");
+            map.entrySet().forEach(entry->{
+                System.out.println("Key: " + entry.getKey() + "Value: " + entry.getValue());  
+            });
+            System.out.println("\n\n\n\n");
         }
         
         // for (Instruction i : map.keySet()) {
