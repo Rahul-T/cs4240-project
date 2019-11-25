@@ -5,6 +5,7 @@ public class InterferenceGraph {
     private HashSet<InterferenceGraphNode> nodes;
     private HashSet<InterferenceGraphNode> visibleNodes;
     private CFGGenerator generator;
+    private BasicBlock graphRoot;
     private HashSet<Instruction> loopInstrs;
     private HashMap<String, HashSet<LiveRange>> webs;
     
@@ -17,12 +18,12 @@ public class InterferenceGraph {
     
     public InterferenceGraph(CFGGenerator generator, BasicBlock graphRoot) {
         this.generator = generator;
+        this.graphRoot = graphRoot;
         this.nodes = new HashSet<InterferenceGraphNode>();
         this.visibleNodes = new HashSet<InterferenceGraphNode>();
         InterferenceGraph.intList = graphRoot.ints;
         InterferenceGraph.floatList = graphRoot.floats;
         this.loopInstrs = new HashSet<Instruction>();
-        
 
         for (BasicBlock block: this.generator.getLoopBlocks()) {
             this.loopInstrs.addAll(block.getLines());
@@ -134,18 +135,15 @@ public class InterferenceGraph {
         LinkedHashMap<Instruction, HashMap<String, String>> map = new LinkedHashMap<>();
         HashMap<Integer, Instruction> tempOrdering = new HashMap<>();
 
-        for (InterferenceGraphNode node : this.nodes) {
-            for (Instruction instr : node.lines) {
-                tempOrdering.put(instr.absoluteNumber, instr);
-            }
+        int[] startEnd = generator.getFunctionMap().get(this.graphRoot.getBlockName());
+
+        for (int i = startEnd[0]; i < startEnd[1]; i++) {
+            map.put(Instruction.absoluteMap.get(i), new HashMap<String, String>());
         }
 
-        for (int i = 0; i < Instruction.getLineCounter(); i++) {
-            if (tempOrdering.keySet().contains(i)) {
-                map.put(tempOrdering.get(i), new HashMap<String, String>());
-            }
-        }
-
+        // for (Instruction inst : map.keySet()) {
+        //     System.out.println(String.format("%s : %s", inst.getText(), map.get(inst).toString()));
+        // }
         
         for (InterferenceGraphNode node : this.nodes) {
             for (Instruction instr : node.lines) {

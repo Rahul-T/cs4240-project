@@ -10,8 +10,10 @@ import java.io.BufferedReader;
 public class CFGGenerator {
     private BasicBlock entryBlock;
     private HashMap<String, BasicBlock> functionBlocks;
+    private HashMap<String, int[]> functionMap;
     private HashSet<BasicBlock> blocks;
     private HashSet<BasicBlock> loopBlocks;
+    private HashSet<Instruction> allInstructions; 
     private HashMap<String, BasicBlock> labelMap;
     private HashMap<String, HashSet<LiveRange>> webs;
     private String sourceFile;
@@ -27,8 +29,10 @@ public class CFGGenerator {
     public CFGGenerator(String sourceFile) {
         this.sourceFile = sourceFile;
         this.functionBlocks = new LinkedHashMap<String, BasicBlock>();
+        this.functionMap = new HashMap<String, int[]>();
         this.blocks = new HashSet<BasicBlock>();
         this.loopBlocks = new HashSet<BasicBlock>();
+        this.allInstructions = new HashSet<Instruction>();
         this.labelMap = new HashMap<String, BasicBlock>();
         this.entryBlock = null;
         this.instructionMap = null;
@@ -101,14 +105,18 @@ public class CFGGenerator {
                 // System.out.println(String.format("l: %s | c: %s | n: %s", lastLine, currentLine, nextLine));
                 functionBlock = currentBlock;
                 this.functionBlocks.put(currentBlock.getBlockName(), currentBlock);
-                lastLine = currentLine;                 
-                currentLine = nextLine;              
-                nextLine = fileBuff.readLine();
+                int[] arr = {Instruction.getLineCounter(), -1};
+                this.functionMap.put(currentBlock.getBlockName(), arr);
+                // lastLine = currentLine;                 
+                // currentLine = nextLine;              
+                // nextLine = fileBuff.readLine();    
                 
                 // System.out.println(String.format("l: %s | c: %s | n: %s", lastLine, currentLine, nextLine));
             } else if (tokCurrentLine[0].equals("#end_function")) {
+                int[] newArr = this.functionMap.get(tokCurrentLine[1] + "_FUNCTION");
+                newArr[1] = Instruction.getLineCounter();
                 // skip this line
-            }
+            } 
 
             // catch branches and gotos
             else if (tokCurrentLine[0].contains("goto")) {
@@ -207,6 +215,7 @@ public class CFGGenerator {
 
         lines = block.getLines();
         for (i = lines.size()-1; i >= 0; i--) {
+            // boolean printLn = false;
             HashSet<String> tempInstIn = new HashSet<String>();
             HashSet<String> tempInstOut = new HashSet<String>();
             HashSet<String> def = new HashSet<String>();
@@ -222,7 +231,20 @@ public class CFGGenerator {
                 tempInstOut.addAll(lines.get(i+1).inSet);
             }
 
-            if (currOp.equals("assign")) { // handle assigns
+            if (currLine.getText().contains("(")) { // function header
+                String[] declArr = currLine.getText().replaceAll("\\):", "").split("\\(");
+                if (declArr.length > 1) {
+                    String[] argsAndTypeArr = declArr[1].split(",\\s*");
+                    String[] argsArr = new String[argsAndTypeArr.length];
+                    for (int k = 0; k < argsAndTypeArr.length; k++) {
+                        argsArr[k] = argsAndTypeArr[k].split(" ")[1];
+                    }
+                    for (String s : argsArr) {
+                        addIfNotNumeric(s, def);
+                    }
+                }
+                // printLn = true;
+            } else if (currOp.equals("assign")) { // handle assigns
                 def.add(tokenizedLine[1]);
                 addIfNotNumeric(tokenizedLine[tokenizedLine.length - 1], use);
             } else if (binOps.contains(currOp)) { // handle binary ops
@@ -264,7 +286,7 @@ public class CFGGenerator {
             currLine.defs = def;
             currLine.uses = use;
 
-            // System.out.println(String.format("LINE: %s | IN: %s | OUT: %s | DEF: %s | USE: %s", currLine.getText(), currLine.inSet, currLine.outSet, def, use));
+            // if (printLn) System.out.println(String.format("LINE: %s | IN: %s | OUT: %s | DEF: %s | USE: %s", currLine.getText(), currLine.inSet, currLine.outSet, def, use));
         }
 
         // System.out.println(block.getBlockName() + ": " + lines);
@@ -396,5 +418,9 @@ public class CFGGenerator {
 
     public String lookupMappedInstruction(Instruction instr) {
         return this.instructionMap.get(instr);
+    }
+
+    public HashMap<String, int[]> getFunctionMap() {
+        return this.functionMap;
     }
 }

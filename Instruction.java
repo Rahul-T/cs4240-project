@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class Instruction {
@@ -11,6 +12,7 @@ public class Instruction {
     public HashSet<String> uses;
 
     private static int lineCounter = 0;
+    public static HashMap<Integer, Instruction> absoluteMap = null;
 
     public static void resetLineCounter() {
         Instruction.lineCounter = 0;
@@ -18,6 +20,10 @@ public class Instruction {
 
     public static int getLineCounter() {
         return lineCounter;
+    }
+
+    public static void resetAbsoluteMap() {
+        absoluteMap = new HashMap<Integer, Instruction>();
     }
 
     public Instruction(String text, String block, int line) {
@@ -29,6 +35,8 @@ public class Instruction {
         this.outSet = new HashSet<String>();
         this.defs = new HashSet<String>();
         this.uses = new HashSet<String>();
+        if (Instruction.absoluteMap == null) Instruction.resetAbsoluteMap();
+        Instruction.absoluteMap.put(this.absoluteNumber, this);
     }
 
     public String getText() {return this.text;}
