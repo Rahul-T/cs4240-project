@@ -4,7 +4,7 @@ public class Instruction {
     private String text;
     private String block;
     private int line;
-    private int absoluteNumber;
+    public int absoluteNumber;
     public HashSet<String> inSet;
     public HashSet<String> outSet;
     public HashSet<String> defs;
@@ -14,6 +14,10 @@ public class Instruction {
 
     public static void resetLineCounter() {
         Instruction.lineCounter = 0;
+    }
+
+    public static int getLineCounter() {
+        return lineCounter;
     }
 
     public Instruction(String text, String block, int line) {

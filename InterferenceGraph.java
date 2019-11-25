@@ -130,12 +130,25 @@ public class InterferenceGraph {
 
     }
 
-    public HashMap<Instruction, HashMap<String, String>> generateRegisterMap() {
-        HashMap<Instruction, HashMap<String, String>> map = new HashMap<>();
+    public LinkedHashMap<Instruction, HashMap<String, String>> generateRegisterMap() {
+        LinkedHashMap<Instruction, HashMap<String, String>> map = new LinkedHashMap<>();
+        HashMap<Integer, Instruction> tempOrdering = new HashMap<>();
+
+        for (InterferenceGraphNode node : this.nodes) {
+            for (Instruction instr : node.lines) {
+                tempOrdering.put(instr.absoluteNumber, instr);
+            }
+        }
+
+        for (int i = 0; i < Instruction.getLineCounter(); i++) {
+            if (tempOrdering.keySet().contains(i)) {
+                map.put(tempOrdering.get(i), new HashMap<String, String>());
+            }
+        }
+
         
         for (InterferenceGraphNode node : this.nodes) {
             for (Instruction instr : node.lines) {
-                if (!map.containsKey(instr)) map.put(instr, new HashMap<String, String>());
                 map.get(instr).put(node.varname, node.color);
             }
         }

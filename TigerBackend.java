@@ -28,7 +28,7 @@ public class TigerBackend {
             InterferenceGraph intGraph = new InterferenceGraph(generator, func);
 
             intGraph.color();
-            HashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
+            LinkedHashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
             // map.entrySet().forEach(entry->{
             //     System.out.println("Key: " + entry.getKey() + "Value: " + entry.getValue());  
             // });
