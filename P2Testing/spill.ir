@@ -22,7 +22,7 @@ main:
     add, i, k, j
 loop_label0:
     brgt, 0i, 20, loop_label1
-    mult i, i, i
+    mult, i, i, i
     add, 0i, 1, 0i
     goto, loop_label0, ,
 loop_label1:
