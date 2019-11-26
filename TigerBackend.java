@@ -46,9 +46,9 @@ public class TigerBackend {
             // }
         }
         
-        combinedMap.entrySet().forEach(entry->{
-            System.out.println("Key: " + entry.getKey().getText() + " Value: " + entry.getValue());  
-        });
+        // combinedMap.entrySet().forEach(entry->{
+        //     System.out.println("Key: " + entry.getKey().getText() + " Value: " + entry.getValue());  
+        // });
 
         // for (Instruction i : map.keySet()) {
         //     System.out.println(String.format("%s | %s", i.toString(), map.get(i).toString()));

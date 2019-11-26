@@ -66,7 +66,7 @@ public class ColoringAllocator extends Allocator {
                 //     mips.add("NUMERIC: " + register);
                 // }
                 String newReg = "";
-                if(getVarType(register.substring(1)).equals("int") || isStringInt(register)) {
+                if(isStringInt(register) || getVarType(register.substring(1)).equals("int")) {
                     int regNum = 7 - i;
                     newReg = "$t" + regNum;
                 } else {
@@ -230,8 +230,8 @@ public class ColoringAllocator extends Allocator {
         // String arrayOffsetRegister = getAvailableRegister("0");
         // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
 
-        mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
-        mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
+        mips.add("mulo " + "$t1" + ", " + arrayOffsetRegister + ", " + 4);
+        mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + "$t1");
 
         generateLoad(instr[3], valueRegister, mips, currentFunction);
         // String valueRegister = getAvailableRegister(lineElements[3]);
@@ -267,8 +267,8 @@ public class ColoringAllocator extends Allocator {
         // String arrayOffsetRegister2 = getAvailableRegister("0");
         // generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
 
-        mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
-        mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
+        mips.add("mulo " + "$t1" + ", " + arrayOffsetRegister2 + ", " + 4);
+        mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + "$t1");
 
         
         // String valueRegister2 = getAvailableRegister(lineElements[1]);
@@ -453,6 +453,18 @@ public class ColoringAllocator extends Allocator {
                         int totalsize = instrToVarRegs.get(currentInstruction).size();
                         maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize));
                         callrInstr(lineElements, currentFunction);
+
+                        String reg = getAvailableRegister(lineElements[1].trim());
+
+                        String[] originalRegs = new String[] {reg};
+
+                        String[] newRegs = checkSpills(originalRegs, currentFunction);
+                        String finalReg = newRegs[0];
+                        if(finalReg.contains("$f")) {
+                            mips.add("l.s " + finalReg + ", " + getStackLocation(lineElements[1].trim(), currentFunction));
+                        } else {
+                            mips.add("lw " + finalReg + ", " + getStackLocation(lineElements[1].trim(), currentFunction));
+                        }
                         break;
 
                     case "call":
