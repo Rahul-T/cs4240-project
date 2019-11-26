@@ -22,6 +22,9 @@ public class ColoringAllocator extends Allocator {
         if(register == null) {
             return "#" + element;
         }
+        if(register.equals("SPILL")) {
+            return "%" + element;
+        }
         return register;
     }
 
@@ -41,13 +44,54 @@ public class ColoringAllocator extends Allocator {
         }
     }
 
+    public String[] checkSpills(String[] registers, String currentFunction) {
+        String[] newRegs = new String[registers.length];
+        for(int i=0; i<registers.length; i++) {
+            String register = registers[i];
+            if(register.contains("%")) {
+                String elem = register.substring(1);
+                String newReg = "";
+                if(getVarType(elem).equals("int")) {
+                    int regNum = 7 - i;
+                    newReg = "$t" + regNum;
+                } else {
+                    int regNum = 10 - i;
+                    newReg = "$f" + regNum;
+                }
+                naiveLoader(getStackLocation(elem, currentFunction), newReg, mips);
+                newRegs[i] = newReg;
+            } else {
+                newRegs[i] = register;
+            }
+        }
+        return newRegs;
+    }
+
+    public void restoreSpills(String[] registers, String currentFunction) {
+        for(int i=0; i<registers.length; i++) {
+            String register = registers[i];
+            if(register.contains("%")) {
+                String elem = register.substring(1);
+                String newReg = "";
+                if(getVarType(elem).equals("int")) {
+                    int regNum = 7 - i;
+                    newReg = "$t" + regNum;
+                } else {
+                    int regNum = 10 - i;
+                    newReg = "$f" + regNum;
+                }
+                mips.add(getStoreInstrType(newReg) + newReg + ", " + getStackLocation(elem, currentFunction));
+            }
+        }
+    }
+
     // Instruction Section
 
     public String[] getInstrArray() {
         return currentInstruction.getText().replaceAll(" ", "").split(",");
     }
 
-    public void naiveLoader(String element, String register, ArrayList<String> mips, String currentFunction) {
+    public void naiveLoader(String element, String register, ArrayList<String> mips) {
         if (isNumeric(element)) {
             if(element.contains(".")) {
                 mips.add("li.s " + register + ", " + element);
@@ -72,8 +116,12 @@ public class ColoringAllocator extends Allocator {
                 mips.add("li " + register + ", " + element);
             }
         } else if (!register.contains("#")){
-            String reg2 = getAvailableRegister(element);
+            String r2 = getAvailableRegister(element);
 
+            String[] originalRegs = new String[] {r2};
+
+            String[] newRegs = checkSpills(originalRegs, currentFunction);
+            String reg2 = newRegs[0];
             
             if(!reg2.contains("#")) {
                 if(register.contains("$f")) {
@@ -92,10 +140,17 @@ public class ColoringAllocator extends Allocator {
             
         } else {
             // Store global var
+            String r = getAvailableRegister(element);
+
+            String[] originalRegs = new String[] {r};
+
+            String[] newRegs = checkSpills(originalRegs, currentFunction);
+            String reg = newRegs[0];
+
             if(getVarType(element).equals("float")) {
-                mips.add("s.s " + getAvailableRegister(element) + ", " + register.substring(1));
+                mips.add("s.s " + reg + ", " + register.substring(1));
             } else {
-                mips.add("sw " + getAvailableRegister(element) + ", " + register.substring(1));
+                mips.add("sw " + reg + ", " + register.substring(1));
             }
         }
     }
@@ -103,8 +158,16 @@ public class ColoringAllocator extends Allocator {
     @Override
     public void regularAssignInstr(String[] lineElements, String currentFunction) {
         String[] instr = getInstrArray();
-        String register = getAvailableRegister(instr[1]);
+        String reg = getAvailableRegister(instr[1]);
+
+        String[] originalRegs = new String[] {reg};
+
+        String[] newRegs = checkSpills(originalRegs, currentFunction);
+        String register = newRegs[0];
+
         generateLoad(instr[2], register, mips, currentFunction);
+
+        restoreSpills(originalRegs, currentFunction); 
     }
 
     @Override
@@ -116,7 +179,15 @@ public class ColoringAllocator extends Allocator {
         String arrayAddressRegister = "$t0";
         mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
 
-        String arrayOffsetRegister = getAvailableRegister(instr[2]);
+        String arrayOffReg = getAvailableRegister(instr[2]);
+        String valueReg = getAvailableRegister(instr[3]);
+
+        String[] originalRegs = new String[] {arrayOffReg, valueReg};
+
+        String[] newRegs = checkSpills(originalRegs, currentFunction);
+        String arrayOffsetRegister = newRegs[0];
+        String valueRegister = newRegs[1];
+
         // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
         // String arrayOffsetRegister = getAvailableRegister("0");
         // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
@@ -124,7 +195,6 @@ public class ColoringAllocator extends Allocator {
         mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
         mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
 
-        String valueRegister = getAvailableRegister(instr[3]);
         generateLoad(instr[3], valueRegister, mips, currentFunction);
         // String valueRegister = getAvailableRegister(lineElements[3]);
         // generateLoad(lineElements[3], valueRegister, mips, currentFunction);
@@ -132,6 +202,7 @@ public class ColoringAllocator extends Allocator {
         mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
         
         // restoreRegisters(new String[] {valueRegister, arrayOffsetRegister});
+        restoreSpills(originalRegs, currentFunction); 
     }
 
     @Override
@@ -143,14 +214,22 @@ public class ColoringAllocator extends Allocator {
         String arrayAddressRegister2 = "$t0";
         mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
 
-        String arrayOffsetRegister2 = getAvailableRegister(instr[3]);
+        String arrayOffReg2 = getAvailableRegister(instr[3]);
+        String valueReg2 = getAvailableRegister(instr[1]);
+
+        String[] originalRegs = new String[] {arrayOffReg2, valueReg2};
+
+        String[] newRegs = checkSpills(originalRegs, currentFunction);
+        String arrayOffsetRegister2 = newRegs[0];
+        String valueRegister2 = newRegs[1];
+
         // String arrayOffsetRegister2 = getAvailableRegister("0");
         // generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
 
         mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
         mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
 
-        String valueRegister2 = getAvailableRegister(instr[1]);
+        
         // String valueRegister2 = getAvailableRegister(lineElements[1]);
 
         if(valueRegister2.contains("$f")) {
@@ -158,7 +237,8 @@ public class ColoringAllocator extends Allocator {
         } else {
             mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
         }
-        
+
+        restoreSpills(originalRegs, currentFunction); 
         // mips.add(getStoreInstrType(valueRegister2) + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
         
         // restoreRegisters(new String[] {valueRegister2, arrayOffsetRegister2});
@@ -167,9 +247,15 @@ public class ColoringAllocator extends Allocator {
     @Override
     public void opInstr(String[] lineElements, String currentFunction) {
         String[] instr = getInstrArray();
-        String operandRegister1 = getAvailableRegister(instr[1]);
-        String operandRegister2 = getAvailableRegister(instr[2]);
-        String resultRegister = getAvailableRegister(instr[3]);
+        String opReg1 = getAvailableRegister(instr[1]);
+        String opReg2 = getAvailableRegister(instr[2]);
+        String resReg = getAvailableRegister(instr[3]);
+        String[] originalRegs = new String[] {opReg1, opReg2, resReg};
+
+        String[] newRegs = checkSpills(originalRegs, currentFunction);
+        String operandRegister1 = newRegs[0];
+        String operandRegister2 = newRegs[1];
+        String resultRegister = newRegs[2];
 
         if(lineElements[0].equals("mult")) {
             if(resultRegister.contains("$f")) {
@@ -183,14 +269,21 @@ public class ColoringAllocator extends Allocator {
             } else {
                 mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
             }
-        }        
+        }
+        restoreSpills(originalRegs, currentFunction);        
     }
 
     @Override
     public void branchInstr(String[] lineElements, String currentFunction) {
         String[] instr = getInstrArray();
-        String firstRegister = getAvailableRegister(instr[1]);
-        String secondRegister = getAvailableRegister(instr[2]);
+        String firstReg= getAvailableRegister(instr[1]);
+        String secondReg = getAvailableRegister(instr[2]);
+
+        String[] originalRegs = new String[] {firstReg, secondReg};
+
+        String[] newRegs = checkSpills(originalRegs, currentFunction);
+        String firstRegister = newRegs[0];
+        String secondRegister = newRegs[1];
 
         lineElements[0] = lineElements[0].replace("breq", "beq");
         lineElements[0] = lineElements[0].replace("brneq", "bne");
@@ -200,6 +293,8 @@ public class ColoringAllocator extends Allocator {
         lineElements[0] = lineElements[0].replace("brleq", "ble");
 
         mips.add(lineElements[0] + " " + firstRegister + ", " + secondRegister + ", " + lineElements[3]);
+
+        restoreSpills(originalRegs, currentFunction);
     }
 
     public Instruction getNextInstruction() {
@@ -245,23 +340,23 @@ public class ColoringAllocator extends Allocator {
                 
                 switch (lineElements[0]) {
                     case "assign":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         assignInstr(lineElements, currentFunction);
                         break;
                     
                     case "array_store":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         arraystoreInstr(lineElements, currentFunction);
                         break;
                     
                     case "array_load":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         arrayloadInstr(lineElements, currentFunction);
                         break;
 
@@ -271,16 +366,16 @@ public class ColoringAllocator extends Allocator {
                     case "div":
                     case "and":
                     case "or":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         opInstr(lineElements, currentFunction);
                         break;
                     
                     case "goto":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         mips.add("j " + lineElements[1]);
                         break;
 
@@ -290,33 +385,33 @@ public class ColoringAllocator extends Allocator {
                     case "brgt":
                     case "brgeq":
                     case "brleq":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         branchInstr(lineElements, currentFunction);
                         break;
 
                     case "return":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         returnInstr(lineElements, currentFunction);
                         break;
 
                     case "callr":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         int totalsize = instrToVarRegs.get(currentInstruction).size();
                         maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize));
                         callrInstr(lineElements, currentFunction);
                         break;
 
                     case "call":
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(instrToVarRegs.get(currentInstruction));
-                        System.out.println(currentInstruction.getText());
+                        // // System.out.println(instrToVarRegs.get(currentInstruction));
+                        // System.out.println(currentInstruction.getText());
                         int totalsize2 = instrToVarRegs.get(currentInstruction).size();
                         callInstr(lineElements, currentFunction, totalsize2, maxAdditionalOffset);
                         break;
@@ -328,10 +423,10 @@ public class ColoringAllocator extends Allocator {
                     && line.contains(":")
                     && !line.contains("int-list:")
                     && !line.contains("float-list:")) {
-                        System.out.println("Line: " + line);
+                        // System.out.println("Line: " + line);
                         String rawLabel = line.substring(0, line.indexOf(":")).trim();
                         currentInstruction = getNextInstruction();
-                        System.out.println(currentInstruction.getText());
+                        // System.out.println(currentInstruction.getText());
                         if(!functionToVarsToType.keySet().contains(rawLabel)) {
                             mips.add(line);
                         }

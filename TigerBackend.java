@@ -33,9 +33,9 @@ public class TigerBackend {
             HashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
             map.entrySet().forEach(entry->{
                 combinedMap.put(entry.getKey(), entry.getValue());
-                System.out.println(entry.getKey() + " : " + entry.getValue());
+                // System.out.println(entry.getKey() + " : " + entry.getValue());
             });
-            System.out.println("\n\n\n");
+            // System.out.println("\n\n\n");
 
             // Janky fix to add "return, , ," instruction at end of main
             // for(Instruction i: map.keySet()) {
