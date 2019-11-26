@@ -296,14 +296,16 @@ public abstract class Allocator {
         mips.add("sw $ra, 16($sp)");
     }
 
-    public void getParamsFromRegisters(String line, String currentFunction) {
+    public HashSet<String> getParamsFromRegisters(String line, String currentFunction) {
         String params = line.substring(line.indexOf("(")+1, line.indexOf(")"));
         String[] paramsList = params.split(",");
+        HashSet<String> allParams = new HashSet<String>();
 
         if (paramsList[0].length() > 0) {
             for(int i=0; i<paramsList.length; i++) {
                 String[] paramNameType = paramsList[i].trim().split(" ");
                 String actualParam = paramNameType[1].trim();
+                allParams.add(actualParam);
                 String argOffset = functionToVarsToOffset.get(currentFunction).get(actualParam);
                 if(paramNameType[0].contains("[")) {
                     continue;
@@ -311,6 +313,8 @@ public abstract class Allocator {
                 mips.add("sw $a" + i + ", " + argOffset + "($sp)");
             }
         }
+        // mips.add(allParams.toString());
+        return allParams;
     }
 
     public String getStoreInstrType(String register) {

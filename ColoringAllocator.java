@@ -4,6 +4,7 @@ import java.util.*;
 public class ColoringAllocator extends Allocator {
     Iterator instrIterator = instrToVarRegs.entrySet().iterator(); 
     Instruction currentInstruction = new Instruction("", "", 0);
+    HashSet<String> currentParams;
 
     public ColoringAllocator(String irFile, boolean isVerbose, LinkedHashMap<Instruction, HashMap<String, String>> instrToVarRegs) {
         super(irFile, isVerbose, instrToVarRegs);
@@ -18,13 +19,15 @@ public class ColoringAllocator extends Allocator {
         if(isNumeric(element)) {
             return element;
         }
+        
         String register = instrToVarRegs.get(currentInstruction).get(element);
         if(register == null) {
-            return "#" + element;
+            register = "#" + element;
         }
         if(register.equals("SPILL")) {
-            return "%" + element;
+            register = "%" + element;
         }
+        
         return register;
     }
 
@@ -44,19 +47,35 @@ public class ColoringAllocator extends Allocator {
         }
     }
 
+    public boolean isStringInt(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException ex)
+        {
+            return false;
+        }
+    }
+
     public String[] checkSpills(String[] registers, String currentFunction) {
         String[] newRegs = new String[registers.length];
         for(int i=0; i<registers.length; i++) {
             String register = registers[i];
-            if(register.contains("%")) {
-                String elem = register.substring(1);
+            if(register.contains("%") || isNumeric(register)) {
+                // if(isNumeric(register)) {
+                //     mips.add("NUMERIC: " + register);
+                // }
                 String newReg = "";
-                if(getVarType(elem).equals("int")) {
+                if(getVarType(register.substring(1)).equals("int") || isStringInt(register)) {
                     int regNum = 7 - i;
                     newReg = "$t" + regNum;
                 } else {
                     int regNum = 10 - i;
                     newReg = "$f" + regNum;
+                }
+                String elem = register;
+                if(register.charAt(0) == '%') {
+                    elem = register.substring(1);
                 }
                 naiveLoader(getStackLocation(elem, currentFunction), newReg, mips);
                 newRegs[i] = newReg;
@@ -82,6 +101,18 @@ public class ColoringAllocator extends Allocator {
                 }
                 mips.add(getStoreInstrType(newReg) + newReg + ", " + getStackLocation(elem, currentFunction));
             }
+        }
+    }
+
+    public void paramInitialLoadCheck(String element, String register, String currentFunction) {
+        if(currentParams.contains(element)) {
+            // mips.add("LOAD PARAM HERE INTO REGISTER " + register);
+            if(getVarType(element).equals("int")) {
+                mips.add("lw " + register + ", " + getStackLocation(element, currentFunction));
+            } else {
+                mips.add("l.s " + register + ", " + getStackLocation(element, currentFunction));
+            }
+            currentParams.remove(element);
         }
     }
 
@@ -122,6 +153,8 @@ public class ColoringAllocator extends Allocator {
 
             String[] newRegs = checkSpills(originalRegs, currentFunction);
             String reg2 = newRegs[0];
+
+            paramInitialLoadCheck(element, reg2, currentFunction);
             
             if(!reg2.contains("#")) {
                 if(register.contains("$f")) {
@@ -146,6 +179,8 @@ public class ColoringAllocator extends Allocator {
 
             String[] newRegs = checkSpills(originalRegs, currentFunction);
             String reg = newRegs[0];
+
+            paramInitialLoadCheck(element, reg, currentFunction);
 
             if(getVarType(element).equals("float")) {
                 mips.add("s.s " + reg + ", " + register.substring(1));
@@ -188,6 +223,9 @@ public class ColoringAllocator extends Allocator {
         String arrayOffsetRegister = newRegs[0];
         String valueRegister = newRegs[1];
 
+        paramInitialLoadCheck(instr[2], arrayOffsetRegister, currentFunction);
+        paramInitialLoadCheck(instr[3], valueRegister, currentFunction);
+
         // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
         // String arrayOffsetRegister = getAvailableRegister("0");
         // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
@@ -223,6 +261,9 @@ public class ColoringAllocator extends Allocator {
         String arrayOffsetRegister2 = newRegs[0];
         String valueRegister2 = newRegs[1];
 
+        paramInitialLoadCheck(instr[3], arrayOffsetRegister2, currentFunction);
+        paramInitialLoadCheck(instr[1], valueRegister2, currentFunction);
+
         // String arrayOffsetRegister2 = getAvailableRegister("0");
         // generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
 
@@ -257,6 +298,10 @@ public class ColoringAllocator extends Allocator {
         String operandRegister2 = newRegs[1];
         String resultRegister = newRegs[2];
 
+        paramInitialLoadCheck(instr[1], operandRegister1, currentFunction);
+        paramInitialLoadCheck(instr[2], operandRegister2, currentFunction);
+        paramInitialLoadCheck(instr[3], resultRegister, currentFunction);
+
         if(lineElements[0].equals("mult")) {
             if(resultRegister.contains("$f")) {
                 mips.add("mul.s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
@@ -284,6 +329,9 @@ public class ColoringAllocator extends Allocator {
         String[] newRegs = checkSpills(originalRegs, currentFunction);
         String firstRegister = newRegs[0];
         String secondRegister = newRegs[1];
+
+        paramInitialLoadCheck(instr[1], firstRegister, currentFunction);
+        paramInitialLoadCheck(instr[2], secondRegister, currentFunction);
 
         lineElements[0] = lineElements[0].replace("breq", "beq");
         lineElements[0] = lineElements[0].replace("brneq", "bne");
@@ -324,7 +372,7 @@ public class ColoringAllocator extends Allocator {
                 currentFunction = line.substring(line.indexOf(" ")+1, line.indexOf("("));
                 maxAdditionalOffset.put(currentFunction, 0);
                 setupFunction(currentFunction);
-                getParamsFromRegisters(line, currentFunction);
+                currentParams = getParamsFromRegisters(line, currentFunction);
 
                 currentInstruction = getNextInstruction();
                 // setAllRegistersToInactive();
