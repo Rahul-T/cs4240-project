@@ -361,16 +361,16 @@ public abstract class Allocator {
             String element = lineElements[1].trim();
             if(isNumeric(element)) {
                 if(element.contains(".")) {
-                    generateLoad(lineElements[1], "$f0", mips, currentFunction);
+                    generateLoad(element, "$f0", mips, currentFunction);
                 } else {
-                    generateLoad(lineElements[1], "$v0", mips, currentFunction);
+                    generateLoad(element, "$v0", mips, currentFunction);
                 }
             } else {
                 String type = getVarType(element);
                 if(type.equals("float")) {
-                    generateLoad(lineElements[1], "$f0", mips, currentFunction);
+                    generateLoad(element, "$f0", mips, currentFunction);
                 } else {
-                    generateLoad(lineElements[1], "$v0", mips, currentFunction);
+                    generateLoad(element, "$v0", mips, currentFunction);
                 }
             }
         }

@@ -18,7 +18,11 @@ public class ColoringAllocator extends Allocator {
         if(isNumeric(element)) {
             return element;
         }
-        return instrToVarRegs.get(currentInstruction).get(element);
+        String register = instrToVarRegs.get(currentInstruction).get(element);
+        if(register == null) {
+            return "#" + element;
+        }
+        return register;
     }
 
     @Override
@@ -43,8 +47,7 @@ public class ColoringAllocator extends Allocator {
         return currentInstruction.getText().replaceAll(" ", "").split(",");
     }
 
-    @Override
-    public void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
+    public void naiveLoader(String element, String register, ArrayList<String> mips, String currentFunction) {
         if (isNumeric(element)) {
             if(element.contains(".")) {
                 mips.add("li.s " + register + ", " + element);
@@ -53,9 +56,46 @@ public class ColoringAllocator extends Allocator {
             }
         } else {
             if(register.contains("$f")) {
-                mips.add("l.s " + register + ", " + getAvailableRegister(element));
+                mips.add("l.s " + register + ", " + element);
             } else {
-                mips.add("move " + register + ", " + getAvailableRegister(element));
+                mips.add("lw " + register + ", " + element);
+            }
+        }
+    }
+
+    @Override
+    public void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
+        if (isNumeric(element)) {
+            if(element.contains(".")) {
+                mips.add("li.s " + register + ", " + element);
+            } else {
+                mips.add("li " + register + ", " + element);
+            }
+        } else if (!register.contains("#")){
+            String reg2 = getAvailableRegister(element);
+
+            
+            if(!reg2.contains("#")) {
+                if(register.contains("$f")) {
+                    mips.add("mov.s " + register + ", " + reg2);
+                } else {
+                    mips.add("move " + register + ", " + reg2);
+                }
+            } else {
+                // Load global var
+                if(register.contains("$f")) {
+                    mips.add("l.s " + register + ", " + reg2.substring(1));
+                } else {
+                    mips.add("lw " + register + ", " + reg2.substring(1));
+                }
+            }
+            
+        } else {
+            // Store global var
+            if(getVarType(element).equals("float")) {
+                mips.add("s.s " + getAvailableRegister(element) + ", " + register.substring(1));
+            } else {
+                mips.add("sw " + getAvailableRegister(element) + ", " + register.substring(1));
             }
         }
     }
@@ -69,39 +109,55 @@ public class ColoringAllocator extends Allocator {
 
     @Override
     public void arraystoreInstr(String[] lineElements, String currentFunction) {
-        // String arrayAddressRegister = "$t0";
-        // mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
+        // mips.add("FIX: " + currentInstruction.getText());
 
+        String[] instr = getInstrArray();
+
+        String arrayAddressRegister = "$t0";
+        mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
+
+        String arrayOffsetRegister = getAvailableRegister(instr[2]);
+        // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
         // String arrayOffsetRegister = getAvailableRegister("0");
         // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
-        // mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
-        // mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
 
+        mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
+        mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
+
+        String valueRegister = getAvailableRegister(instr[3]);
+        generateLoad(instr[3], valueRegister, mips, currentFunction);
         // String valueRegister = getAvailableRegister(lineElements[3]);
         // generateLoad(lineElements[3], valueRegister, mips, currentFunction);
 
-        // mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
+        mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
         
         // restoreRegisters(new String[] {valueRegister, arrayOffsetRegister});
     }
 
     @Override
     public void arrayloadInstr(String[] lineElements, String currentFunction) {
-        // String arrayAddressRegister2 = "$t0";
-        // mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
+        // mips.add("FIX: " + currentInstruction.getText());
 
+        String[] instr = getInstrArray();
+
+        String arrayAddressRegister2 = "$t0";
+        mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
+
+        String arrayOffsetRegister2 = getAvailableRegister(instr[3]);
         // String arrayOffsetRegister2 = getAvailableRegister("0");
         // generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
-        // mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
-        // mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
 
+        mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
+        mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
+
+        String valueRegister2 = getAvailableRegister(instr[1]);
         // String valueRegister2 = getAvailableRegister(lineElements[1]);
 
-        // if(valueRegister2.contains("$f")) {
-        //     mips.add("l.s " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
-        // } else {
-        //     mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
-        // }
+        if(valueRegister2.contains("$f")) {
+            mips.add("l.s " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+        } else {
+            mips.add("lw " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
+        }
         
         // mips.add(getStoreInstrType(valueRegister2) + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
         
@@ -174,6 +230,8 @@ public class ColoringAllocator extends Allocator {
                 maxAdditionalOffset.put(currentFunction, 0);
                 setupFunction(currentFunction);
                 getParamsFromRegisters(line, currentFunction);
+
+                currentInstruction = getNextInstruction();
                 // setAllRegistersToInactive();
             }
 
@@ -187,23 +245,23 @@ public class ColoringAllocator extends Allocator {
                 
                 switch (lineElements[0]) {
                     case "assign":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         assignInstr(lineElements, currentFunction);
                         break;
                     
                     case "array_store":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         arraystoreInstr(lineElements, currentFunction);
                         break;
                     
                     case "array_load":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         arrayloadInstr(lineElements, currentFunction);
                         break;
 
@@ -213,16 +271,16 @@ public class ColoringAllocator extends Allocator {
                     case "div":
                     case "and":
                     case "or":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         opInstr(lineElements, currentFunction);
                         break;
                     
                     case "goto":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         mips.add("j " + lineElements[1]);
                         break;
 
@@ -232,33 +290,33 @@ public class ColoringAllocator extends Allocator {
                     case "brgt":
                     case "brgeq":
                     case "brleq":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         branchInstr(lineElements, currentFunction);
                         break;
 
                     case "return":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         returnInstr(lineElements, currentFunction);
                         break;
 
                     case "callr":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         int totalsize = instrToVarRegs.get(currentInstruction).size();
                         maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize));
                         callrInstr(lineElements, currentFunction);
                         break;
 
                     case "call":
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         currentInstruction = getNextInstruction();
                         // System.out.println(instrToVarRegs.get(currentInstruction));
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         int totalsize2 = instrToVarRegs.get(currentInstruction).size();
                         callInstr(lineElements, currentFunction, totalsize2, maxAdditionalOffset);
                         break;
@@ -270,10 +328,10 @@ public class ColoringAllocator extends Allocator {
                     && line.contains(":")
                     && !line.contains("int-list:")
                     && !line.contains("float-list:")) {
-                        // System.out.println("Line: " + line);
+                        System.out.println("Line: " + line);
                         String rawLabel = line.substring(0, line.indexOf(":")).trim();
                         currentInstruction = getNextInstruction();
-                        // System.out.println(currentInstruction.getText());
+                        System.out.println(currentInstruction.getText());
                         if(!functionToVarsToType.keySet().contains(rawLabel)) {
                             mips.add(line);
                         }
