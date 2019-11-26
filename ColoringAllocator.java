@@ -61,7 +61,7 @@ public class ColoringAllocator extends Allocator {
         String[] newRegs = new String[registers.length];
         for(int i=0; i<registers.length; i++) {
             String register = registers[i];
-            if(register.contains("%") || isNumeric(register)) {
+            if(register.contains("%")) {
                 // if(isNumeric(register)) {
                 //     mips.add("NUMERIC: " + register);
                 // }
