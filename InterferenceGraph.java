@@ -30,6 +30,12 @@ public class InterferenceGraph {
         }
 
         HashMap<String, HashSet<LiveRange>> webs = this.generator.createLiveRanges(graphRoot);
+        // for (HashSet<LiveRange> set : webs.values()) {
+        //     for (LiveRange rng : set) {
+        //         System.out.println(rng.getVarName());
+        //         System.out.println("!\t" + rng.instructions);
+        //     }
+        // }
 
         int count = 0;
         for (HashSet<LiveRange> set : webs.values()) {
@@ -37,6 +43,8 @@ public class InterferenceGraph {
                 InterferenceGraphNode node = new InterferenceGraphNode(range.getVarName() + " " +Integer.toString(count++), range.instructions);
                 this.nodes.add(node);
                 this.visibleNodes.add(node);
+                // System.out.println(range.getVarName());
+                // System.out.println("\t" + range.instructions);
             }
         }
 
@@ -106,13 +114,13 @@ public class InterferenceGraph {
         while (!nodeStack.isEmpty()) {
             InterferenceGraphNode currentNode = nodeStack.pop();
             currentNode.updateAdjColors();
-            if (spillNodes.contains(currentNode)) {
-                currentNode.setColor("SPILL");
-            } else if (currentNode.isInt) {
+            boolean colored = false;
+            if (currentNode.isInt) {
                 for (i = 0; i < InterferenceGraph.intRegArr.length; i++) {
                     // System.out.println(currentNode.adjColors);
                     if (!currentNode.adjColors.contains(InterferenceGraph.intRegArr[i])) {
                         currentNode.setColor(InterferenceGraph.intRegArr[i]);
+                        colored = true;
                         break;
                     }
                 }
@@ -120,8 +128,13 @@ public class InterferenceGraph {
                 for (i = 0; i < InterferenceGraph.floatRegArr.length; i++) {
                     if (!currentNode.adjColors.contains(InterferenceGraph.floatRegArr[i])) {
                         currentNode.setColor(InterferenceGraph.floatRegArr[i]);
+                        colored = true;
+                        break;
                     }
                 }
+            }
+            if (!colored) {
+                currentNode.setColor("SPILL");
             }
         }
 
@@ -135,10 +148,13 @@ public class InterferenceGraph {
         LinkedHashMap<Instruction, HashMap<String, String>> map = new LinkedHashMap<>();
         HashMap<Integer, Instruction> tempOrdering = new HashMap<>();
 
+        Instruction tempInst;
+        HashSet<String> tempSet = new HashSet<>();
         int[] startEnd = generator.getFunctionMap().get(this.graphRoot.getBlockName());
 
         for (int i = startEnd[0]; i < startEnd[1]; i++) {
-            map.put(Instruction.absoluteMap.get(i), new HashMap<String, String>());
+            tempInst = Instruction.absoluteMap.get(i);
+            map.put(tempInst, new HashMap<String, String>());
         }
 
         // for (Instruction inst : map.keySet()) {
@@ -147,9 +163,15 @@ public class InterferenceGraph {
         
         for (InterferenceGraphNode node : this.nodes) {
             for (Instruction instr : node.lines) {
+                // System.out.println(String.format("%s | %s", instr.getText(), node.varname));
+                // if (instr.getText().contains("brgeq, i, j, exit0_sort")) System.out.println(instr.uses);
                 map.get(instr).put(node.varname, node.color);
             }
         }
+
+        // for (Instruction key : map.keySet()) {
+        //     System.out.println("!" + key + " : " + map.get(key));
+        // }
         return map;
     }
 

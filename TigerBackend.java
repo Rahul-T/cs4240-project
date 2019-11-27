@@ -16,10 +16,6 @@ public class TigerBackend {
         
         generator.generateBlocks();
 
-        // for (BasicBlock b : generator.getBlocks()) {
-        //     System.out.println(b);
-        // }
-
         generator.generateInOutSets();
 
         HashMap<String, BasicBlock> funcs = generator.getFunctionBlocks();
@@ -33,7 +29,7 @@ public class TigerBackend {
             HashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
             map.entrySet().forEach(entry->{
                 combinedMap.put(entry.getKey(), entry.getValue());
-                // System.out.println(entry.getKey() + " : " + entry.getValue());
+                System.out.println(entry.getKey() + " : " + entry.getValue());
             });
             // System.out.println("\n\n\n");
 
@@ -61,6 +57,6 @@ public class TigerBackend {
         //     System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
         // }
 
-        Allocator.generateMips(args, combinedMap);
+        // Allocator.generateMips(args, combinedMap);
     }
 }

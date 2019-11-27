@@ -194,6 +194,7 @@ public class CFGGenerator {
                 temp = temp || updateInOutSet(b);
             }
         } while (temp);
+
     }
 
     // calculates the in and out sets for a single block
@@ -307,28 +308,39 @@ public class CFGGenerator {
     public HashMap<String, HashSet<LiveRange>> createLiveRanges(BasicBlock rootNode) {
         // System.out.println(rootNode.getBlockName());
         Instruction lastUse;
-        HashSet<Instruction> incInstrs = new HashSet<>();
         HashMap<String, Integer> visits = new HashMap<>();
         HashMap<String, HashSet<LiveRange>> web = new HashMap<>();
 
         // System.out.println(rootNode.getBlockName());
         for (String var : rootNode.ints) {
-            web.put(var, new HashSet<LiveRange>());
+            if (!web.containsKey(var)) web.put(var, new HashSet<LiveRange>());
+            // System.out.println("\t" + var);
             
         }
 
         for (String var : rootNode.floats) {
-            web.put(var, new HashSet<LiveRange>());
+            if (!web.containsKey(var)) web.put(var, new HashSet<LiveRange>());
+            // System.out.println("\t" + var);
             
         }
 
+        
+
         for (String var : web.keySet()) {
-            incInstrs.clear();
             for (BasicBlock block : blocks) {
                 visits.put(block.getBlockName(), 0);
             }
             lastUse = null;
-            traverseCFG(rootNode, new LiveRange(var), lastUse, incInstrs, visits, web);
+            LiveRange firstRange = new LiveRange(var);
+            traverseCFG(rootNode, firstRange, lastUse, new HashSet<Instruction>(), 
+                visits, web);
+
+            // System.out.println("========WEB FOR " + var + " ++++++++++++++++++");
+            // for (LiveRange rng : web.get(var)) {
+            //     for (Instruction i : rng.instructions) {
+            //         System.out.println("\t" + i.getText());
+            //     }
+            // }
         }
 
         return web;
@@ -336,24 +348,38 @@ public class CFGGenerator {
 
 
     private void traverseCFG(BasicBlock root, LiveRange range, 
-        Instruction lastUse, HashSet<Instruction> incInstrs, 
+        Instruction lastUse, HashSet<Instruction> incInstrs,
         HashMap<String, Integer> visits, HashMap<String, HashSet<LiveRange>> web) {
 
         String var = range.getVarName();
-        
+        if (!web.get(var).contains(range)) {
+            // System.out.println("ADDING LOST RANGE! For var " + var);
+            // System.out.println(range.instructions);
+            web.get(var).add(range);
+        }
         // iterate through the block's instructions
         for (Instruction inst : root.getLines()) {
-            if (inst.inSet.contains(var)) range.instructions.add(inst);
+            if (inst.inSet.contains(var)) {
+                // if (var.equals("i")) System.out.println("Adding line \"" + inst.getText() + "\"" + " to live range for " + var );
+                // incInstrs.add(inst);
+                range.addInstruction(inst);
+            }
+            // if (inst.uses.contains(var)) {
+            //     lastUse = inst;
+            //     range.addInstructions(incInstrs);
+            //     incInstrs.clear();
+            // }
             if (inst.defs.contains(var)) {
                 range = new LiveRange(var);
-                range.instructions.add(inst);
-                web.get(var).add(range);
+                // incInstrs.add(inst);
+                range.addInstruction(inst);
+                // web.get(var).add(range);
             }
         }
 
         // recursively traverse
         if (root.getSuccessors().isEmpty() 
-        || visits.get(root.getBlockName()) > 1) {
+        || visits.get(root.getBlockName()) > 2) {
             return;
         }
 
