@@ -13,7 +13,7 @@ public class CFGGenerator {
     private HashMap<String, int[]> functionMap;
     private HashSet<BasicBlock> blocks;
     private HashSet<BasicBlock> loopBlocks;
-    private HashSet<Instruction> allInstructions; 
+    // private HashSet<Instruction> allInstructions; 
     private HashMap<String, BasicBlock> labelMap;
     private HashMap<String, HashSet<LiveRange>> webs;
     private String sourceFile;
@@ -32,7 +32,7 @@ public class CFGGenerator {
         this.functionMap = new HashMap<String, int[]>();
         this.blocks = new HashSet<BasicBlock>();
         this.loopBlocks = new HashSet<BasicBlock>();
-        this.allInstructions = new HashSet<Instruction>();
+        // this.allInstructions = new HashSet<Instruction>();
         this.labelMap = new HashMap<String, BasicBlock>();
         this.entryBlock = null;
         this.instructionMap = null;
@@ -56,7 +56,7 @@ public class CFGGenerator {
         nextLine = fileBuff.readLine();
         // process the file
         while (currentLine != null) {
-            currentLine = currentLine.trim();
+            currentLine = currentLine.trim().replace("# start_function", "#start_function").replace("# end_function", "#end_function");
             tokCurrentLine = currentLine.replace(",", ", ").trim().split("\\s+");
             // System.out.println(tokCurrentLine[0]);
             // catch labels
@@ -72,14 +72,21 @@ public class CFGGenerator {
                 // skip this line
             }
             else if (tokCurrentLine[0].equals("int-list:")) {
-                String intListLine = currentLine.replace("int-list:", "").replaceAll(arrayPattern, "").trim();
-                // System.out.println(intListLine);
-                currentBlock.ints = intListLine.split(",\\s*");
+                String intListLine = currentLine.replace("int-list:", "").trim();
+                String[] intStrings = intListLine.split(",\\s*");
+                currentBlock.ints = new HashSet<String>();
+                for (String var : intStrings) {
+                    if (!var.contains("[")) currentBlock.ints.add(var);
+                }
                 // System.out.println(String.format("current: %s | function: %s | current int: %s | current float: %s | func int: %s | func float: %s", currentBlock.getBlockName(), functionBlock.getBlockName(), currentBlock.ints, currentBlock.floats, functionBlock.ints, functionBlock.floats));
             }
             else if (tokCurrentLine[0].equals("float-list:")) {
-                String floatListLine = currentLine.replace("float-list:", "").replaceAll(arrayPattern, "").trim();
-                currentBlock.floats = (floatListLine.split(",\\s*"));
+                String floatListLine = currentLine.replace("float-list:", "").trim();
+                String[] floatStrings = floatListLine.split(",\\s*");
+                currentBlock.floats = new HashSet<String>();
+                for (String var : floatStrings) {
+                    if (!var.contains("[")) currentBlock.ints.add(var);
+                }
             }
             else if (tokCurrentLine.length == 1) {
                 label = tokCurrentLine[0].substring(0, tokCurrentLine[0].length()-1);
@@ -157,6 +164,9 @@ public class CFGGenerator {
 
             // otherwise, just add the line
             else {
+                if (currentBlock == null) {
+                    System.out.println("NULL BLOCK! " + currentLine);
+                }
                 currentBlock.addLine(currentLine);
             }
 
@@ -167,6 +177,8 @@ public class CFGGenerator {
 
         fileBuff.close();
 
+        this.entryBlock = this.functionBlocks.get("main_FUNCTION");
+
         for (BasicBlock block : this.blocks) {
             if (block.getPredecessors().size() == 1 && block.getSuccessors().size() == 1 
                 && ((BasicBlock)block.getSuccessors().toArray()[0]).getSuccessors().contains(block)) {
@@ -174,9 +186,13 @@ public class CFGGenerator {
                 this.loopBlocks.add(block);
                 this.loopBlocks.addAll(block.getSuccessors());
             }
-        }
 
-        this.entryBlock = this.functionBlocks.get("main_FUNCTION");
+            if (this.functionBlocks.values().contains(block) && !block.getBlockName().equals(this.entryBlock.getBlockName())) {
+                block.ints.addAll(this.entryBlock.ints);
+                block.floats.addAll(this.entryBlock.floats);
+            }
+        }
+        
     }
 
     public void generateInOutSets() {
@@ -223,7 +239,7 @@ public class CFGGenerator {
             HashSet<String> use = new HashSet<String>();
 
             currLine = lines.get(i);
-            tokenizedLine = currLine.getText().replace(",", "").split(" ");
+            tokenizedLine = currLine.getText().replace(",", " ").split("\\s+");
             currOp = tokenizedLine[0];
 
             if (i == lines.size() - 1)
@@ -287,6 +303,7 @@ public class CFGGenerator {
             currLine.defs = def;
             currLine.uses = use;
 
+            
             // if (printLn) System.out.println(String.format("LINE: %s | IN: %s | OUT: %s | DEF: %s | USE: %s", currLine.getText(), currLine.inSet, currLine.outSet, def, use));
         }
 
@@ -332,8 +349,8 @@ public class CFGGenerator {
             }
             lastUse = null;
             LiveRange firstRange = new LiveRange(var);
-            traverseCFG(rootNode, firstRange, lastUse, new HashSet<Instruction>(), 
-                visits, web);
+            web.get(var).add(firstRange);
+            traverseCFG(rootNode, firstRange, visits, web);
 
             // System.out.println("========WEB FOR " + var + " ++++++++++++++++++");
             // for (LiveRange rng : web.get(var)) {
@@ -348,7 +365,6 @@ public class CFGGenerator {
 
 
     private void traverseCFG(BasicBlock root, LiveRange range, 
-        Instruction lastUse, HashSet<Instruction> incInstrs,
         HashMap<String, Integer> visits, HashMap<String, HashSet<LiveRange>> web) {
 
         String var = range.getVarName();
@@ -359,21 +375,23 @@ public class CFGGenerator {
         }
         // iterate through the block's instructions
         for (Instruction inst : root.getLines()) {
+            // if (var.equals("r_st_1_0")) System.out.println(inst + " " + inst.defs + " var:" + var);
             if (inst.inSet.contains(var)) {
                 // if (var.equals("i")) System.out.println("Adding line \"" + inst.getText() + "\"" + " to live range for " + var );
                 // incInstrs.add(inst);
                 range.addInstruction(inst);
             }
-            // if (inst.uses.contains(var)) {
-            //     lastUse = inst;
-            //     range.addInstructions(incInstrs);
-            //     incInstrs.clear();
-            // }
+            if (inst.uses.contains(var)) {
+                // lastUse = inst;
+                range.addInstruction(inst);
+                // incInstrs.clear();
+            }
             if (inst.defs.contains(var)) {
+                // System.out.println("Adding " + var + " to live range at " + inst);
                 range = new LiveRange(var);
                 // incInstrs.add(inst);
                 range.addInstruction(inst);
-                // web.get(var).add(range);
+                web.get(var).add(range);
             }
         }
 
@@ -386,7 +404,7 @@ public class CFGGenerator {
         visits.put(root.getBlockName(), visits.get(root.getBlockName()) + 1);
 
         for (BasicBlock b : root.getSuccessors()) {
-            traverseCFG(b, range, lastUse, incInstrs, visits, web);
+            traverseCFG(b, range, visits, web);
         }
     }
 

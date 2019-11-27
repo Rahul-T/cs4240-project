@@ -1,7 +1,7 @@
 #start_function main
 void main():
 int-list: res
-float-list: X, err, r, pr, rprime, t, t2, t3
+float-list: X, err, r, pr, rprime, t, t2, t3, sqrt_root
     assign, res, 0
     assign, X, 25.0
     assign, rprime, 0.

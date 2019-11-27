@@ -9,7 +9,7 @@ public class InterferenceGraph {
     private HashSet<Instruction> loopInstrs;
     private HashMap<String, HashSet<LiveRange>> webs;
     
-    private static String[] intList, floatList;
+    private static HashSet<String> intList, floatList;
 
     private static final int LOOP_COST = 10;
 

@@ -12,8 +12,8 @@ public class BasicBlock {
     // in and out sets are public to minimize function calls and set passing.
     public HashSet<String> inSet;
     public HashSet<String> outSet;
-    public String[] floats;
-    public String[] ints;
+    public HashSet<String> floats;
+    public HashSet<String> ints;
 
     public BasicBlock(String blockName) {
         this.predecessors = new HashSet<BasicBlock>();

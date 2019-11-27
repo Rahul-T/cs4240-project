@@ -54,9 +54,32 @@ public class TigerBackend {
 
 
         // for (BasicBlock b : generator.getBlocks()) {
-        //     System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
+        //     // System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
+        //     System.out.println(String.format("BLOCK: %s INTS: %s FLOATS: %s", b.getBlockName(), b.ints, b.floats));
         // }
 
         // Allocator.generateMips(args, combinedMap);
+
+        // TEST ALL LINES HAVE VARS
+
+        // HashMap<String, String> tempMap = new HashMap<>();
+        // HashSet<String> tempSet = new HashSet<>();
+        // HashSet<String> missing = new HashSet<>();
+        // for (Instruction i : Instruction.absoluteMap.values()) {
+        //     tempMap = combinedMap.get(i);
+        //     tempSet.clear();
+        //     tempSet.addAll(i.uses);
+        //     tempSet.addAll(i.defs);
+        //     tempSet.addAll(i.inSet);
+
+
+        //     for (String var : tempSet) {
+        //         if (!tempMap.containsKey(var) && !i.getText().contains("array_store")) {
+        //             // System.out.println(String.format("Map for line %s does not contain %s. Map:", i.toString(), var, tempMap.get(var)));
+        //             missing.add(var);
+        //         }
+        //     }
+        // }
+        // System.out.println("Missing variables for " + sourceFile + ": " + missing);
     }
 }
