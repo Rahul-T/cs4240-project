@@ -381,12 +381,12 @@ public class CFGGenerator {
                 // incInstrs.add(inst);
                 range.addInstruction(inst);
             }
-            if (inst.uses.contains(var)) {
+            else if (inst.uses.contains(var)) {
                 // lastUse = inst;
                 range.addInstruction(inst);
                 // incInstrs.clear();
             }
-            if (inst.defs.contains(var)) {
+            else if (inst.defs.contains(var)) {
                 // System.out.println("Adding " + var + " to live range at " + inst);
                 range = new LiveRange(var);
                 // incInstrs.add(inst);
