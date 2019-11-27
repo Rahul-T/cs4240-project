@@ -230,8 +230,28 @@ public class ColoringAllocator extends Allocator {
         // String arrayOffsetRegister = getAvailableRegister("0");
         // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
 
+        if(isNumeric(arrayOffsetRegister)) {
+            if(arrayOffsetRegister.contains(".")) {
+                mips.add("li.s $f4, " + arrayOffsetRegister);
+                arrayOffsetRegister = "$f4";
+            } else {
+                mips.add("li $t2, " + arrayOffsetRegister);
+                arrayOffsetRegister = "$t2";
+            }
+        }
+
         mips.add("mulo " + "$t1" + ", " + arrayOffsetRegister + ", " + 4);
         mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + "$t1");
+
+        if(isNumeric(valueRegister)) {
+            if(valueRegister.contains(".")) {
+                // mips.add("li.s $f5, " + valueRegister);
+                valueRegister = "$f5";
+            } else {
+                // mips.add("li $t3, " + valueRegister);
+                valueRegister = "$t3";
+            }
+        }
 
         generateLoad(instr[3], valueRegister, mips, currentFunction);
         // String valueRegister = getAvailableRegister(lineElements[3]);
@@ -264,6 +284,17 @@ public class ColoringAllocator extends Allocator {
         paramInitialLoadCheck(instr[3], arrayOffsetRegister2, currentFunction);
         paramInitialLoadCheck(instr[1], valueRegister2, currentFunction);
 
+        if(isNumeric(arrayOffsetRegister2)) {
+            mips.add("LOAD");
+            if(arrayOffsetRegister2.contains(".")) {
+                // mips.add("li.s $f4, " + arrayOffsetRegister2);
+                arrayOffsetRegister2 = "$f4";
+            } else {
+                // mips.add("li $t2, " + arrayOffsetRegister2);
+                arrayOffsetRegister2 = "$t2";
+            }
+        }
+
         // String arrayOffsetRegister2 = getAvailableRegister("0");
         // generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
 
@@ -272,6 +303,15 @@ public class ColoringAllocator extends Allocator {
 
         
         // String valueRegister2 = getAvailableRegister(lineElements[1]);
+        if(isNumeric(valueRegister2)) {
+            if(valueRegister2.contains(".")) {
+                mips.add("li.s $f5, " + valueRegister2);
+                valueRegister2 = "$f5";
+            } else {
+                mips.add("li $t3, " + valueRegister2);
+                valueRegister2 = "$t3";
+            }
+        }
 
         if(valueRegister2.contains("$f")) {
             mips.add("l.s " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
