@@ -31,14 +31,14 @@ add, 0, 0, t9
 label8:
 and, t5, t9, t10
 and, t2, t10, t11
-breq t11, 0, label9
+breq, t11, 0, label9
 add, res, 1, t12
 assign, res, t12
 add, r, c, t13
 add, r, 7, t14
 sub, t13, c, t15
 add, c, 1, t16
-callr X, try, t16
+callr, X, try, t16
 add, r, c, t17
 add, r, 7, t18
 sub, t17, c, t19
