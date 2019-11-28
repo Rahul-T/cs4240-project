@@ -128,7 +128,8 @@ public class CFGGenerator {
             // catch branches and gotos
             else if (tokCurrentLine[0].contains("goto")) {
                 currentBlock.addLine(currentLine);
-                label = tokCurrentLine[1].substring(0, tokCurrentLine[1].length()-1);
+                label = tokCurrentLine[1];
+                // System.out.println(currentLine + " \"" + label + "\"");
                 if (!this.labelMap.containsKey(label)) this.labelMap.put(label, genBasicBlock(label));
                 targetBlock = this.labelMap.get(label);
 
@@ -142,6 +143,7 @@ public class CFGGenerator {
             } else if (branches.contains(tokCurrentLine[0].replace(",", ""))) {
                 currentBlock.addLine(currentLine);
                 label = tokCurrentLine[3];
+                // System.out.println(currentLine + " \"" + label + "\"");
                 if (!this.labelMap.containsKey(label)) this.labelMap.put(label, genBasicBlock(label));
                 targetBlock = this.labelMap.get(label);
 

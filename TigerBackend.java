@@ -29,7 +29,7 @@ public class TigerBackend {
             HashMap<Instruction, HashMap<String, String>> map = intGraph.generateRegisterMap();
             map.entrySet().forEach(entry->{
                 combinedMap.put(entry.getKey(), entry.getValue());
-                System.out.println(String.format("%-40s\t%s", entry.getKey(), entry.getValue()));
+                // System.out.println(String.format("%-40s\t%s", entry.getKey(), entry.getValue()));
             });
             // System.out.println("\n\n\n");
 
@@ -53,10 +53,16 @@ public class TigerBackend {
         // intGraph.printNodes();
 
 
-        for (BasicBlock b : generator.getBlocks()) {
-            System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
-            // System.out.println(String.format("BLOCK: %s INTS: %s FLOATS: %s", b.getBlockName(), b.ints, b.floats));
-        }
+        // for (BasicBlock b : generator.getBlocks()) {
+        //     System.out.println(String.format("BLOCK: %-10s  IN: %-20s | OUT: %-20s", b.getBlockName(), b.inSet, b.outSet));
+        //     for (BasicBlock pred : b.getPredecessors()) {
+        //         System.out.println("\tPRED: " + pred.getBlockName());
+        //     }
+        //     for (BasicBlock succ : b.getSuccessors()) {
+        //         System.out.println("\tSUCC: " + succ.getBlockName());
+        //     }
+        //     // System.out.println(String.format("BLOCK: %s INTS: %s FLOATS: %s", b.getBlockName(), b.ints, b.floats));
+        // }
 
         Allocator.generateMips(args, combinedMap);
 
