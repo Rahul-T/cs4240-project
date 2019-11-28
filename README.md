@@ -30,6 +30,11 @@ To build the Tiger compiler, run
 make compiler
 ```
 
+To build the Tiger compiler backend, run
+```
+make backend
+```
+
 To remove only compiled files, run
 ```
 make cleanjava
@@ -52,3 +57,8 @@ java TigerCompiler <file-name> [-no-print] [-no-ir-file] [-outfile=<filename>]
 ```
 
 To supress unnecessary output and only print errors, use the `-no-print` flag. The `-no-ir-file` flag will not create a `.ir` file for the compiled program. The '-outfile=' flag allows you to specify an output file for the IR code generation other than the default <filename>.ir.
+
+To run the backend that takes .ir files to mips assembly, run
+```
+java TigerBackend <filename>
+```

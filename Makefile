@@ -33,4 +33,7 @@ cleantiger:
 parser:
 	@java -jar $(ANTLR_JAR) $(ANTLR_FLAGS) $(GRAMMAR_FILE)
 
+backend:
+	$(JC) $(JFLAGS) TigerBackend.java 
+
 rebuild: clean parser compiler
