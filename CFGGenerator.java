@@ -310,6 +310,8 @@ public class CFGGenerator {
         // System.out.println(block.getBlockName() + ": " + lines);
         if (lines.size() > 0) {
             tempBlockIn = lines.get(0).inSet;
+        } else {
+            tempBlockIn.addAll(tempBlockOut);
         }
 
         
@@ -397,7 +399,7 @@ public class CFGGenerator {
 
         // recursively traverse
         if (root.getSuccessors().isEmpty() 
-        || visits.get(root.getBlockName()) > 2) {
+        || visits.get(root.getBlockName()) > 5) {
             return;
         }
 
