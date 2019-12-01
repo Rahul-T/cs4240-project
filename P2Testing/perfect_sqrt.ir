@@ -4,26 +4,26 @@ int-list: res
 float-list: X, err, r, pr, rprime, t, t2, t3, sqrt_root
     assign, res, 0
     assign, X, 25.0
-    assign, rprime, 0.
+    assign, rprime, 0.0
     assign, sqrt_root, X
-    assign, t, 0.
+    assign, t, 0.0
     assign, err, 0.000001
     assign, pr, sqrt_root
-    assign, t3, 0.
-    brlt, X, 0., return_label
+    assign, t3, 0.0
+    brlt, X, 0.0, return_label
 loop0_label:
     mult, sqrt_root, sqrt_root, rprime
     sub, rprime, X, t2
     assign, t, t2
-    brgeq, t, 0., loop1_label
-    sub, 0., t, t2
+    brgeq, t, 0.0, loop1_label
+    sub, 0.0, t, t2
     assign, t, t2
 loop1_label:
     brleq, t, err, exit_loop
     assign, pr, sqrt_root
     div, X, sqrt_root, t3
     add, t3, sqrt_root, t3
-    div, t3, 2., t3
+    div, t3, 2.0, t3
     assign, sqrt_root, t3
     add, res, 1, res
     breq, pr, sqrt_root, exit_loop
@@ -31,4 +31,5 @@ loop1_label:
 exit_loop:
     call, printi, sqrt_root
 return_label:
+return,,,
 #end_function main
