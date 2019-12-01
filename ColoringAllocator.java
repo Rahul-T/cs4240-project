@@ -373,14 +373,42 @@ public class ColoringAllocator extends Allocator {
         paramInitialLoadCheck(instr[1], firstRegister, currentFunction);
         paramInitialLoadCheck(instr[2], secondRegister, currentFunction);
 
-        lineElements[0] = lineElements[0].replace("breq", "beq");
-        lineElements[0] = lineElements[0].replace("brneq", "bne");
-        lineElements[0] = lineElements[0].replace("brlt", "blt");
-        lineElements[0] = lineElements[0].replace("brgt", "bgt");
-        lineElements[0] = lineElements[0].replace("brgeq", "bge");
-        lineElements[0] = lineElements[0].replace("brleq", "ble");
-
-        mips.add(lineElements[0] + " " + firstRegister + ", " + secondRegister + ", " + lineElements[3]);
+        if(firstRegister.contains("$f") || secondRegister.contains("$f")) {
+            switch(lineElements[0].replaceAll(" ", "")) {
+                case "breq":
+                    mips.add("c.eq.s " + firstRegister + ", " + secondRegister);
+                    mips.add("bc1t " + lineElements[3]);
+                    break;
+                case "brneq":
+                    mips.add("c.eq.s " + firstRegister + ", " + secondRegister);
+                    mips.add("bc1f " + lineElements[3]);
+                    break;
+                case "brlt":
+                    mips.add("c.lt.s " + firstRegister + ", " + secondRegister);
+                    mips.add("bc1t " + lineElements[3]);
+                    break;
+                case "brgt":
+                    mips.add("c.le.s " + firstRegister + ", " + secondRegister);
+                    mips.add("bc1f " + lineElements[3]);
+                    break;
+                case "brgeq":
+                    mips.add("c.lt.s " + firstRegister + ", " + secondRegister);
+                    mips.add("bc1f " + lineElements[3]);
+                    break;
+                case "brleq":
+                    mips.add("c.le.s " + firstRegister + ", " + secondRegister);
+                    mips.add("bc1t " + lineElements[3]);
+                    break;
+            }
+        } else {
+            lineElements[0] = lineElements[0].replace("breq", "beq");
+            lineElements[0] = lineElements[0].replace("brneq", "bne");
+            lineElements[0] = lineElements[0].replace("brlt", "blt");
+            lineElements[0] = lineElements[0].replace("brgt", "bgt");
+            lineElements[0] = lineElements[0].replace("brgeq", "bge");
+            lineElements[0] = lineElements[0].replace("brleq", "ble");
+            mips.add(lineElements[0] + " " + firstRegister + ", " + secondRegister + ", " + lineElements[3]);
+        }
 
         restoreSpills(originalRegs, currentFunction);
     }
