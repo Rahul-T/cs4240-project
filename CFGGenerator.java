@@ -85,7 +85,7 @@ public class CFGGenerator {
                 String[] floatStrings = floatListLine.split(",\\s*");
                 currentBlock.floats = new HashSet<String>();
                 for (String var : floatStrings) {
-                    if (!var.contains("[")) currentBlock.ints.add(var);
+                    if (!var.contains("[")) currentBlock.floats.add(var);
                 }
             }
             else if (tokCurrentLine.length == 1) {
