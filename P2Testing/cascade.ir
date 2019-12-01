@@ -1,0 +1,52 @@
+#start_function main
+void main():
+int-list: 0i, acc, a, b, c, d, e, f, g, h, i, j, k, l
+float-list:
+    assign, a, 1
+    assign, b, 1
+    assign, c, 1
+    assign, d, 1
+    assign, e, 1
+    assign, f, 1
+    assign, g, 1
+    assign, h, 1
+    assign, i, 1
+    assign, j, 1
+    assign, k, 1
+    assign, l, 1
+    assign, 0i, 0
+    assign, acc, 0
+
+main:
+loop_label0:
+    brgt, 0i, 30, loop_label1
+    add, a, 1, a
+    add, b, 1, b
+    add, c, 1, c
+    add, d, 1, d
+    add, e, 1, e
+    add, f, 1, f
+    add, g, 1, g
+    add, h, 1, h
+    add, i, 1, i
+    add, j, 1, j
+    add, k, 1, k
+    add, l, 1, l
+    add, 0i, 1, 0i
+    goto, loop_label0, ,
+loop_label1:
+    add, acc, a, acc
+    add, acc, b, acc
+    add, acc, c, acc
+    add, acc, d, acc
+    add, acc, e, acc
+    add, acc, f, acc
+    add, acc, g, acc
+    add, acc, h, acc
+    add, acc, i, acc
+    add, acc, j, acc
+    add, acc, k, acc
+    add, acc, l, acc
+    call, printi, acc
+    return, , ,
+#end_function main
