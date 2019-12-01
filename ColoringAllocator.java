@@ -342,6 +342,27 @@ public class ColoringAllocator extends Allocator {
         paramInitialLoadCheck(instr[2], operandRegister2, currentFunction);
         paramInitialLoadCheck(instr[3], resultRegister, currentFunction);
 
+        if (isNumeric(operandRegister1)) {
+            if(operandRegister1.contains(".")) {
+                generateLoad(instr[1], "$f4", mips, currentFunction);
+                operandRegister1 = "$f4";
+            } else {
+                generateLoad(instr[1], "$t0", mips, currentFunction);
+                operandRegister1 = "$t0";
+            }
+            
+        }
+        if(isNumeric(operandRegister2)) {
+            if(operandRegister2.contains(".")) {
+                generateLoad(instr[2], "$f5", mips, currentFunction);
+                operandRegister2 = "$f5";
+            } else {
+                generateLoad(instr[2], "$t1", mips, currentFunction);
+                operandRegister2 = "$t1";
+            }
+            
+        }
+
         if(lineElements[0].equals("mult")) {
             if(resultRegister.contains("$f")) {
                 mips.add("mul.s " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
@@ -369,11 +390,33 @@ public class ColoringAllocator extends Allocator {
         String[] newRegs = checkSpills(originalRegs, currentFunction);
         String firstRegister = newRegs[0];
         String secondRegister = newRegs[1];
+        
 
         paramInitialLoadCheck(instr[1], firstRegister, currentFunction);
         paramInitialLoadCheck(instr[2], secondRegister, currentFunction);
 
         if(firstRegister.contains("$f") || secondRegister.contains("$f")) {
+            if(isNumeric(firstRegister)) {
+                if(firstRegister.contains(".")) {
+                    generateLoad(instr[1], "$f4", mips, currentFunction);
+                    firstRegister = "$f4";
+                } else {
+                    generateLoad(instr[1], "$t0", mips, currentFunction);
+                    firstRegister = "$t0";
+                }
+                
+            }
+            if(isNumeric(secondRegister)) {
+                if(secondRegister.contains(".")) {
+                    generateLoad(instr[2], "$f5", mips, currentFunction);
+                    secondRegister = "$f5";
+                } else {
+                    generateLoad(instr[2], "$t1", mips, currentFunction);
+                    secondRegister = "$t1";
+                }
+                
+            }
+
             switch(lineElements[0].replaceAll(" ", "")) {
                 case "breq":
                     mips.add("c.eq.s " + firstRegister + ", " + secondRegister);

@@ -310,7 +310,13 @@ public abstract class Allocator {
                 if(paramNameType[0].contains("[")) {
                     continue;
                 }
-                mips.add("sw $a" + i + ", " + argOffset + "($sp)");
+                if(paramNameType[0].trim().equals("float")) {
+                    int j = i+11;
+                    mips.add("sw $f" + j + ", " + argOffset + "($sp)");
+                } else {
+                    mips.add("sw $a" + i + ", " + argOffset + "($sp)");
+                }
+                
             }
         }
         // mips.add(allParams.toString());
@@ -385,12 +391,18 @@ public abstract class Allocator {
 
     public void callInstr(String[] lineElements, String currentFunction, int totalsize2, HashMap<String, Integer> maxAdditionalOffset) {
         int argCounter2 = -1;
+        int floatArgCounter2 = 11;
         for(int i = 2; i < lineElements.length; i++) {
             argCounter2++;
+            floatArgCounter2++;
             if(globalVars.containsKey(lineElements[i].trim())) {
                 continue;
             }
-            generateLoad(lineElements[i].trim(), "$a" + argCounter2, mips, currentFunction);
+            if(getVarType(lineElements[i].trim()).equals("float")) {
+                generateLoad(lineElements[i].trim(), "$f" + floatArgCounter2, mips, currentFunction);
+            } else {
+                generateLoad(lineElements[i].trim(), "$a" + argCounter2, mips, currentFunction);
+            }
         }
         if(lineElements[1].contains("printi")) {
             mips.add("li $v0, 1");
@@ -405,12 +417,19 @@ public abstract class Allocator {
 
     public void callrInstr(String[] lineElements, String currentFunction) {
         int argCounter = -1;
+        int floatArgCounter = 11;
         for(int i = 3; i < lineElements.length; i++) {
             argCounter++;
+            floatArgCounter++;
             if(globalVars.containsKey(lineElements[i].trim())) {
                 continue;
             }
-            generateLoad(lineElements[i].trim(), "$a" + argCounter, mips, currentFunction);
+            if(getVarType(lineElements[i].trim()).equals("float")) {
+                generateLoad(lineElements[i].trim(), "$f" + floatArgCounter, mips, currentFunction);
+            } else {
+                generateLoad(lineElements[i].trim(), "$a" + argCounter, mips, currentFunction);
+            }
+            
         }
         
         registersToAndFromStack(currentFunction, "sw ");
