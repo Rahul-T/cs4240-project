@@ -26,7 +26,7 @@ public class NaiveAllocator extends Allocator {
     }
 
     @Override
-    public String getAvailableRegister(String element) {
+    public String getAvailableRegister(String element, String currentFunction) {
         element = element.trim();
         if(isNumeric(element)) {
             if(element.contains(".")) {
@@ -35,7 +35,7 @@ public class NaiveAllocator extends Allocator {
                 return getIntRegister();
             }
         } else {
-            String type = getVarType(element);
+            String type = getVarType(element, currentFunction);
             if(type.contains("int")) {
                 return getIntRegister();
             } else if(type.contains("float")) {
@@ -121,7 +121,7 @@ public class NaiveAllocator extends Allocator {
 
     @Override
     public void regularAssignInstr(String[] lineElements, String currentFunction) {
-        String register = getAvailableRegister(lineElements[2]);
+        String register = getAvailableRegister(lineElements[2], currentFunction);
         generateLoad(lineElements[2], register, mips, currentFunction);
         mips.add(getStoreInstrType(register) + register + ", " + getStackLocation(lineElements[1], currentFunction));
         restoreRegisters(new String[] {register});
@@ -132,12 +132,12 @@ public class NaiveAllocator extends Allocator {
         String arrayAddressRegister = "$t0";
         mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
 
-        String arrayOffsetRegister = getAvailableRegister("0");
+        String arrayOffsetRegister = getAvailableRegister("0", currentFunction);
         generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
         mips.add("mulo " + arrayOffsetRegister + ", " + arrayOffsetRegister + ", " + 4);
         mips.add("add " + arrayAddressRegister + ", " + arrayAddressRegister + ", " + arrayOffsetRegister);
 
-        String valueRegister = getAvailableRegister(lineElements[3]);
+        String valueRegister = getAvailableRegister(lineElements[3], currentFunction);
         generateLoad(lineElements[3], valueRegister, mips, currentFunction);
 
         mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
@@ -150,12 +150,12 @@ public class NaiveAllocator extends Allocator {
         String arrayAddressRegister2 = "$t0";
         mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
 
-        String arrayOffsetRegister2 = getAvailableRegister("0");
+        String arrayOffsetRegister2 = getAvailableRegister("0", currentFunction);
         generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
         mips.add("mulo " + arrayOffsetRegister2 + ", " + arrayOffsetRegister2 + ", " + 4);
         mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + arrayOffsetRegister2);
 
-        String valueRegister2 = getAvailableRegister(lineElements[1]);
+        String valueRegister2 = getAvailableRegister(lineElements[1], currentFunction);
 
         if(valueRegister2.contains("$f")) {
             mips.add("l.s " + valueRegister2 + ", (" + arrayAddressRegister2 + ")");
@@ -170,17 +170,17 @@ public class NaiveAllocator extends Allocator {
 
     @Override
     public void opInstr(String[] lineElements, String currentFunction) {
-        String operandRegister1 = getAvailableRegister(lineElements[1]);
+        String operandRegister1 = getAvailableRegister(lineElements[1], currentFunction);
         generateLoad(lineElements[1], operandRegister1, mips, currentFunction);
 
-        String operandRegister2 = getAvailableRegister(lineElements[2]);
+        String operandRegister2 = getAvailableRegister(lineElements[2], currentFunction);
         generateLoad(lineElements[2], operandRegister2, mips, currentFunction);
         
         String resultRegister = "";
         if(operandRegister1.contains("$f") || operandRegister2.contains("$f")) {
-            resultRegister = getAvailableRegister("0.0");
+            resultRegister = getAvailableRegister("0.0", currentFunction);
         } else {
-            resultRegister = getAvailableRegister("0");
+            resultRegister = getAvailableRegister("0", currentFunction);
         }
 
         if(lineElements[0].equals("mult")) {
@@ -205,9 +205,9 @@ public class NaiveAllocator extends Allocator {
 
     @Override
     public void branchInstr(String[] lineElements, String currentFunction) {
-        String firstRegister = getAvailableRegister(lineElements[1]);
+        String firstRegister = getAvailableRegister(lineElements[1], currentFunction);
         generateLoad(lineElements[1], firstRegister, mips, currentFunction);
-        String secondRegister = getAvailableRegister(lineElements[2]);
+        String secondRegister = getAvailableRegister(lineElements[2], currentFunction);
         generateLoad(lineElements[2], secondRegister, mips, currentFunction);
 
         if(firstRegister.contains("$f") || secondRegister.contains("$f")) {

@@ -13,7 +13,7 @@ public class ColoringAllocator extends Allocator {
     // Register Section
 
     @Override
-    public String getAvailableRegister(String element) {
+    public String getAvailableRegister(String element, String currentFunction) {
         // Todo : Fix for spills
 
         if(isNumeric(element)) {
@@ -80,7 +80,7 @@ public class ColoringAllocator extends Allocator {
                 //     mips.add("NUMERIC: " + register);
                 // }
                 String newReg = "";
-                if(isStringInt(register) || getVarType(register.substring(1)).equals("int")) {
+                if(isStringInt(register) || getVarType(register.substring(1), currentFunction).equals("int")) {
                     int regNum = 7 - i;
                     newReg = "$t" + regNum;
                 } else {
@@ -106,7 +106,7 @@ public class ColoringAllocator extends Allocator {
             if(register.contains("%")) {
                 String elem = register.substring(1);
                 String newReg = "";
-                if(getVarType(elem).equals("int")) {
+                if(getVarType(elem, currentFunction).equals("int")) {
                     int regNum = 7 - i;
                     newReg = "$t" + regNum;
                 } else {
@@ -120,8 +120,9 @@ public class ColoringAllocator extends Allocator {
 
     public void paramInitialLoadCheck(String element, String register, String currentFunction) {
         if(currentParams.contains(element)) {
-            // mips.add("LOAD PARAM HERE INTO REGISTER " + register);
-            if(getVarType(element).equals("int")) {
+            // mips.add("LOAD PARAM HERE INTO REGISTER " + element + " " + register);
+            // mips.add("Type: " + getVarType(element, currentFunction));
+            if(getVarType(element, currentFunction).equals("int")) {
                 mips.add("lw " + register + ", " + getStackLocation(element, currentFunction));
             } else {
                 mips.add("l.s " + register + ", " + getStackLocation(element, currentFunction));
@@ -161,7 +162,7 @@ public class ColoringAllocator extends Allocator {
                 mips.add("li " + register + ", " + element);
             }
         } else if (!register.contains("#")){
-            String r2 = getAvailableRegister(element);
+            String r2 = getAvailableRegister(element, currentFunction);
 
             String[] originalRegs = new String[] {r2};
 
@@ -188,7 +189,7 @@ public class ColoringAllocator extends Allocator {
             
         } else {
             // Store global var
-            String r = getAvailableRegister(element);
+            String r = getAvailableRegister(element, currentFunction);
 
             String[] originalRegs = new String[] {r};
 
@@ -197,7 +198,7 @@ public class ColoringAllocator extends Allocator {
 
             paramInitialLoadCheck(element, reg, currentFunction);
 
-            if(getVarType(element).equals("float")) {
+            if(getVarType(element, currentFunction).equals("float")) {
                 mips.add("s.s " + reg + ", " + register.substring(1));
             } else {
                 mips.add("sw " + reg + ", " + register.substring(1));
@@ -208,7 +209,7 @@ public class ColoringAllocator extends Allocator {
     @Override
     public void regularAssignInstr(String[] lineElements, String currentFunction) {
         String[] instr = getInstrArray();
-        String reg = getAvailableRegister(instr[1]);
+        String reg = getAvailableRegister(instr[1], currentFunction);
 
         String[] originalRegs = new String[] {reg};
 
@@ -220,7 +221,7 @@ public class ColoringAllocator extends Allocator {
         restoreSpills(originalRegs, currentFunction); 
         if(globalVars.containsKey(instr[1])) {
             // mips.add("GLOBALASSIGN: " + instr[1]);
-            if(getVarType(instr[1]).equals("int")) {
+            if(getVarType(instr[1], currentFunction).equals("int")) {
                 mips.add("sw " + register + ", " + instr[1]);
             } else {
                 mips.add("s.s " + register + ", " + instr[1]);
@@ -237,8 +238,8 @@ public class ColoringAllocator extends Allocator {
         String arrayAddressRegister = "$t0";
         mips.add("la " + arrayAddressRegister + ", " + lineElements[1]);
 
-        String arrayOffReg = getAvailableRegister(instr[2]);
-        String valueReg = getAvailableRegister(instr[3]);
+        String arrayOffReg = getAvailableRegister(instr[2], currentFunction);
+        String valueReg = getAvailableRegister(instr[3], currentFunction);
 
         String[] originalRegs = new String[] {arrayOffReg, valueReg};
 
@@ -290,8 +291,8 @@ public class ColoringAllocator extends Allocator {
         String arrayAddressRegister2 = "$t0";
         mips.add("la " + arrayAddressRegister2 + ", " + lineElements[2]);
 
-        String arrayOffReg2 = getAvailableRegister(instr[3]);
-        String valueReg2 = getAvailableRegister(instr[1]);
+        String arrayOffReg2 = getAvailableRegister(instr[3], currentFunction);
+        String valueReg2 = getAvailableRegister(instr[1], currentFunction);
 
         String[] originalRegs = new String[] {arrayOffReg2, valueReg2};
 
@@ -339,7 +340,7 @@ public class ColoringAllocator extends Allocator {
 
         if(globalVars.containsKey(instr[1])) {
             // mips.add("GLOBALARRAYLOAD " + instr[1]);
-            if(getVarType(instr[1]).equals("int")) {
+            if(getVarType(instr[1], currentFunction).equals("int")) {
                 mips.add("sw " + valueRegister2 + ", " + instr[1]);
             } else {
                 mips.add("s.s " + valueRegister2 + ", " + instr[1]);
@@ -350,9 +351,9 @@ public class ColoringAllocator extends Allocator {
     @Override
     public void opInstr(String[] lineElements, String currentFunction) {
         String[] instr = getInstrArray();
-        String opReg1 = getAvailableRegister(instr[1]);
-        String opReg2 = getAvailableRegister(instr[2]);
-        String resReg = getAvailableRegister(instr[3]);
+        String opReg1 = getAvailableRegister(instr[1], currentFunction);
+        String opReg2 = getAvailableRegister(instr[2], currentFunction);
+        String resReg = getAvailableRegister(instr[3], currentFunction);
         String[] originalRegs = new String[] {opReg1, opReg2, resReg};
 
         String[] newRegs = checkSpills(originalRegs, currentFunction);
@@ -402,7 +403,7 @@ public class ColoringAllocator extends Allocator {
 
         if(globalVars.containsKey(instr[3])) {
             // mips.add("GLOBALOP " + instr[3] + " " + resultRegister);
-            if(getVarType(instr[3]).equals("int")) {
+            if(getVarType(instr[3], currentFunction).equals("int")) {
                 mips.add("sw " + resultRegister + ", " + instr[3]);
             } else {
                 mips.add("s.s " + resultRegister + ", " + instr[3]);
@@ -413,8 +414,8 @@ public class ColoringAllocator extends Allocator {
     @Override
     public void branchInstr(String[] lineElements, String currentFunction) {
         String[] instr = getInstrArray();
-        String firstReg= getAvailableRegister(instr[1]);
-        String secondReg = getAvailableRegister(instr[2]);
+        String firstReg= getAvailableRegister(instr[1], currentFunction);
+        String secondReg = getAvailableRegister(instr[2], currentFunction);
 
         String[] originalRegs = new String[] {firstReg, secondReg};
 
@@ -519,7 +520,7 @@ public class ColoringAllocator extends Allocator {
 
                 for(String var: instrToVarRegs.get(currentInstruction).keySet()) {
                     if(globalVars.containsKey(var)) {
-                        if(getVarType(var).equals("float")) {
+                        if(getVarType(var, currentFunction).equals("float")) {
                             mips.add("l.s " + instrToVarRegs.get(currentInstruction).get(var) + ", " + var);
                         } else {
                             mips.add("lw " + instrToVarRegs.get(currentInstruction).get(var) + ", " + var);
@@ -605,7 +606,7 @@ public class ColoringAllocator extends Allocator {
                         maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize));
                         callrInstr(lineElements, currentFunction);
 
-                        String reg = getAvailableRegister(lineElements[1].trim());
+                        String reg = getAvailableRegister(lineElements[1].trim(), currentFunction);
 
                         String[] originalRegs = new String[] {reg};
 

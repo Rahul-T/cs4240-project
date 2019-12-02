@@ -23,7 +23,7 @@ public abstract class Allocator {
         instrToVarRegs = combinedMap;
     }
 
-    public abstract String getAvailableRegister(String element);
+    public abstract String getAvailableRegister(String element, String currentFunction);
 
     public abstract void restoreRegisters(String[] registers);
 
@@ -237,7 +237,7 @@ public abstract class Allocator {
             globalVars.remove(duplicate);
         }
 
-//         printTables();
+        printTables();
 
         mips.add(".data");
         for(String globalVar: globalVars.keySet()) {
@@ -263,12 +263,14 @@ public abstract class Allocator {
         return true;
     }
 
-    public String getVarType(String var) {
-        for(String function: functionToVarsToType.keySet()) {
-            if(functionToVarsToType.get(function).containsKey(var)) {
-                String type = functionToVarsToType.get(function).get(var);
-                return type;
-            }
+    public String getVarType(String var, String currentFunction) {
+        if(functionToVarsToType.get(currentFunction).containsKey(var)) {
+            String type = functionToVarsToType.get(currentFunction).get(var);
+            return type;
+        }
+        if(functionToVarsToType.get("main").containsKey(var)) {
+            String type = functionToVarsToType.get("main").get(var);
+            return type;
         }
 
         if(var.contains(".")) {
@@ -380,7 +382,7 @@ public abstract class Allocator {
                     generateLoad(element, "$v0", mips, currentFunction);
                 }
             } else {
-                String type = getVarType(element);
+                String type = getVarType(element, currentFunction);
                 if(type.equals("float")) {
                     generateLoad(element, "$f0", mips, currentFunction);
                 } else {
@@ -402,7 +404,7 @@ public abstract class Allocator {
             if(globalVars.containsKey(lineElements[i].trim())) {
                 continue;
             }
-            if(getVarType(lineElements[i].trim()).equals("float") || lineElements[i].trim().contains(".")) {
+            if(getVarType(lineElements[i].trim(), currentFunction).equals("float") || lineElements[i].trim().contains(".")) {
                 generateLoad(lineElements[i].trim(), "$f" + floatArgCounter2, mips, currentFunction);
             } else {
                 generateLoad(lineElements[i].trim(), "$a" + argCounter2, mips, currentFunction);
@@ -435,7 +437,7 @@ public abstract class Allocator {
             if(globalVars.containsKey(lineElements[i].trim())) {
                 continue;
             }
-            if(getVarType(lineElements[i].trim()).equals("float") || lineElements[i].trim().contains(".")) {
+            if(getVarType(lineElements[i].trim(), currentFunction).equals("float") || lineElements[i].trim().contains(".")) {
                 generateLoad(lineElements[i].trim(), "$f" + floatArgCounter, mips, currentFunction);
             } else {
                 generateLoad(lineElements[i].trim(), "$a" + argCounter, mips, currentFunction);
@@ -446,7 +448,7 @@ public abstract class Allocator {
         registersToAndFromStack(currentFunction, "s");
 
         mips.add("jal " + lineElements[2]);
-        String type = getVarType(lineElements[1].trim());
+        String type = getVarType(lineElements[1].trim(), currentFunction);
         if(type.equals("int")) {
             mips.add("sw " + "$v0" + ", " + getStackLocation(lineElements[1], currentFunction));
         } else {
