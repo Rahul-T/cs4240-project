@@ -1,0 +1,46 @@
+#start_function test
+void test(int a, float b, int c, float d):
+int-list: a, c, e, g, intsum
+float-list: b, d, f, h, floatsum
+test:
+    add, a, c, intsum
+    call, printi, intsum
+    add, b, d, floatsum
+    call, printi, floatsum
+    return, , ,
+#end_function test
+
+#start_function test2
+void test2(int a, int b, int c, int d):
+int-list: a, b, c, d, intsum
+float-list:
+test2:
+    add, a, b, intsum
+    add, intsum, c, intsum
+    add, intsum, d, intsum
+    call, printi, intsum
+    return, , ,
+#end_function test2
+
+#start_function test3
+void test3(float a, float b, float c, float d):
+int-list:
+float-list: a, b, c, d, floatsum
+test3:
+    add, a, b, floatsum
+    add, floatsum, c, floatsum
+    add, floatsum, d, floatsum
+    call, printf, floatsum
+    return, , ,
+#end_function test3
+
+#start_function main
+void main():
+int-list: global_int, success, fail, x
+float-list: global_float
+main:
+    call, test, 1, 1.0, 2, 2.0
+    call, test2, 1, 2, 3, 4
+    call, test3, 1.0, 2.0, 3.0, 4.0
+    return, , ,
+#end_function main
