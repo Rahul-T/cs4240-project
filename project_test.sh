@@ -1,15 +1,14 @@
 make cleanjava
 make backend
 
-java TigerBackend cascade.ir >> ../junk.txt
-java TigerBackend factorial.ir >> ../junk.txt
-java TigerBackend float_cascade.ir >> ../junk.txt
-java TigerBackend float_global_param.ir >> ../junk.txt
-# java TigerBackend nqueens.ir >> ../junk.txt
-java TigerBackend perfect_sqrt.ir >> ../junk.txt
-java TigerBackend sort.ir >> ../junk.txt
-java TigerBackend spill.ir >> ../junk.txt
-java TigerBackend test1.ir >> ../junk.txt
+java TigerBackend cascade.ir >> /dev/null
+java TigerBackend factorial.ir >> /dev/null
+java TigerBackend float_cascade.ir >> /dev/null
+java TigerBackend float_global_param.ir >> /dev/null
+java TigerBackend perfect_sqrt.ir >> /dev/null
+java TigerBackend sort.ir >> /dev/null
+java TigerBackend spill.ir >> /dev/null
+java TigerBackend test1.ir >> /dev/null
 
 echo cascade
 ${SPIMPATH}spim -keepstats -f P2Output/cascade_naive.s 
@@ -26,10 +25,6 @@ ${SPIMPATH}spim -keepstats -f P2Output/float_cascade_colored.s
 echo float_global_param
 ${SPIMPATH}spim -keepstats -f P2Output/float_global_param_naive.s 
 ${SPIMPATH}spim -keepstats -f P2Output/float_global_param_colored.s
-
-# echo nqueens
-# ${SPIMPATH}spim -keepstats -f P2Output/nqueens_naive.s 
-# ${SPIMPATH}spim -keepstats -f P2Output/nqueens_colored.s 
 
 echo perfect_sqrt
 ${SPIMPATH}spim -keepstats -f P2Output/perfect_sqrt_naive.s 
