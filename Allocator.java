@@ -237,7 +237,7 @@ public abstract class Allocator {
             globalVars.remove(duplicate);
         }
 
-        printTables();
+        // printTables();
 
         mips.add(".data");
         for(String globalVar: globalVars.keySet()) {
@@ -468,7 +468,7 @@ public abstract class Allocator {
             String naivefileName = fileName.replace(".ir", "_naive.s");
             naiveAllocator.createFile("P2Output/" + naivefileName);
 
-            Allocator coloringAllocator = new ColoringAllocator("P2Testing/" + fileName, true, instrToVarRegs);
+            Allocator coloringAllocator = new ColoringAllocator("P2Testing/" + fileName, false, instrToVarRegs);
             coloringAllocator.buildDataSection();
             coloringAllocator.buildTextSection();
             String coloringFileName = fileName.replace(".ir", "_colored.s");
