@@ -40,7 +40,8 @@ public class ColoringAllocator extends Allocator {
     public void registersToAndFromStack(String currentFunction, String instr) {
         int baseOffset = Integer.valueOf(functionToVarsToOffset.get(currentFunction).get("#total#"));
         int offset = 4;
-        for(String reg: instrToVarRegs.get(currentInstruction).values()) {
+        for(String var: instrToVarRegs.get(currentInstruction).keySet()) {
+            String reg = instrToVarRegs.get(currentInstruction).get(var);
             int totalOffset = baseOffset + offset;
             String modifier = "";
             if(reg.contains("$f")) {
@@ -48,7 +49,14 @@ public class ColoringAllocator extends Allocator {
             } else {
                 modifier = "w ";
             }
-            mips.add(instr + modifier + reg + ", " + totalOffset + "($sp)");
+            
+            // mips.add(instr + modifier + reg + ", " + totalOffset + "($sp)");
+            if(globalVars.containsKey(var) && instr.contains("l")) {
+                // mips.add("LOADING GLOBAL " + var);
+                mips.add(instr + modifier + reg + ", " + var);
+            } else {
+                mips.add(instr + modifier + reg + ", " + totalOffset + "($sp)");
+            }
             offset += 4;
         }
     }
@@ -145,7 +153,7 @@ public class ColoringAllocator extends Allocator {
     }
 
     @Override
-    public void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {
+    public void generateLoad(String element, String register, ArrayList<String> mips, String currentFunction) {        
         if (isNumeric(element)) {
             if(element.contains(".")) {
                 mips.add("li.s " + register + ", " + element);
@@ -163,6 +171,7 @@ public class ColoringAllocator extends Allocator {
             paramInitialLoadCheck(element, reg2, currentFunction);
             
             if(!reg2.contains("#")) {
+                
                 if(register.contains("$f")) {
                     mips.add("mov.s " + register + ", " + reg2);
                 } else {
@@ -205,10 +214,18 @@ public class ColoringAllocator extends Allocator {
 
         String[] newRegs = checkSpills(originalRegs, currentFunction);
         String register = newRegs[0];
-
+        // mips.add("ASSIGN HERE: " + instr[2]);
         generateLoad(instr[2], register, mips, currentFunction);
 
         restoreSpills(originalRegs, currentFunction); 
+        if(globalVars.containsKey(instr[1])) {
+            // mips.add("GLOBALASSIGN: " + instr[1]);
+            if(getVarType(instr[1]).equals("int")) {
+                mips.add("sw " + register + ", " + instr[1]);
+            } else {
+                mips.add("s.s " + register + ", " + instr[1]);
+            } 
+        }
     }
 
     @Override
@@ -232,9 +249,7 @@ public class ColoringAllocator extends Allocator {
         paramInitialLoadCheck(instr[2], arrayOffsetRegister, currentFunction);
         paramInitialLoadCheck(instr[3], valueRegister, currentFunction);
 
-        // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
-        // String arrayOffsetRegister = getAvailableRegister("0");
-        // generateLoad(lineElements[2], arrayOffsetRegister, mips, currentFunction);
+        // mips.add("STORE: " + instr[3]);
 
         if(isNumeric(arrayOffsetRegister)) {
             if(arrayOffsetRegister.contains(".")) {
@@ -260,12 +275,9 @@ public class ColoringAllocator extends Allocator {
         }
 
         generateLoad(instr[3], valueRegister, mips, currentFunction);
-        // String valueRegister = getAvailableRegister(lineElements[3]);
-        // generateLoad(lineElements[3], valueRegister, mips, currentFunction);
 
         mips.add(getStoreInstrType(valueRegister) + valueRegister + ", (" + arrayAddressRegister + ")");
         
-        // restoreRegisters(new String[] {valueRegister, arrayOffsetRegister});
         restoreSpills(originalRegs, currentFunction); 
     }
 
@@ -291,7 +303,7 @@ public class ColoringAllocator extends Allocator {
         paramInitialLoadCheck(instr[1], valueRegister2, currentFunction);
 
         if(isNumeric(arrayOffsetRegister2)) {
-            mips.add("LOAD");
+            // mips.add("LOAD");
             if(arrayOffsetRegister2.contains(".")) {
                 // mips.add("li.s $f4, " + arrayOffsetRegister2);
                 arrayOffsetRegister2 = "$f4";
@@ -301,14 +313,9 @@ public class ColoringAllocator extends Allocator {
             }
         }
 
-        // String arrayOffsetRegister2 = getAvailableRegister("0");
-        // generateLoad(lineElements[3], arrayOffsetRegister2, mips, currentFunction);
-
         mips.add("mulo " + "$t1" + ", " + arrayOffsetRegister2 + ", " + 4);
         mips.add("add " + arrayAddressRegister2 + ", " + arrayAddressRegister2 + ", " + "$t1");
 
-        
-        // String valueRegister2 = getAvailableRegister(lineElements[1]);
         if(isNumeric(valueRegister2)) {
             if(valueRegister2.contains(".")) {
                 mips.add("li.s $f5, " + valueRegister2);
@@ -329,6 +336,15 @@ public class ColoringAllocator extends Allocator {
         // mips.add(getStoreInstrType(valueRegister2) + valueRegister2 + ", " + getStackLocation(lineElements[1], currentFunction));
         
         // restoreRegisters(new String[] {valueRegister2, arrayOffsetRegister2});
+
+        if(globalVars.containsKey(instr[1])) {
+            // mips.add("GLOBALARRAYLOAD " + instr[1]);
+            if(getVarType(instr[1]).equals("int")) {
+                mips.add("sw " + valueRegister2 + ", " + instr[1]);
+            } else {
+                mips.add("s.s " + valueRegister2 + ", " + instr[1]);
+            } 
+        }
     }
 
     @Override
@@ -382,7 +398,16 @@ public class ColoringAllocator extends Allocator {
                 mips.add(lineElements[0] + " " + resultRegister + ", " + operandRegister1 + ", " + operandRegister2);
             }
         }
-        restoreSpills(originalRegs, currentFunction);        
+        restoreSpills(originalRegs, currentFunction); 
+
+        if(globalVars.containsKey(instr[3])) {
+            // mips.add("GLOBALOP " + instr[3] + " " + resultRegister);
+            if(getVarType(instr[3]).equals("int")) {
+                mips.add("sw " + resultRegister + ", " + instr[3]);
+            } else {
+                mips.add("s.s " + resultRegister + ", " + instr[3]);
+            } 
+        }
     }
 
     @Override
@@ -490,8 +515,17 @@ public class ColoringAllocator extends Allocator {
                 maxAdditionalOffset.put(currentFunction, 0);
                 setupFunction(currentFunction);
                 currentParams = getParamsFromRegisters(line, currentFunction);
-
                 currentInstruction = getNextInstruction();
+
+                for(String var: instrToVarRegs.get(currentInstruction).keySet()) {
+                    if(globalVars.containsKey(var)) {
+                        if(getVarType(var).equals("float")) {
+                            mips.add("l.s " + instrToVarRegs.get(currentInstruction).get(var) + ", " + var);
+                        } else {
+                            mips.add("lw " + instrToVarRegs.get(currentInstruction).get(var) + ", " + var);
+                        }
+                    }
+                }
                 // setAllRegistersToInactive();
             }
 

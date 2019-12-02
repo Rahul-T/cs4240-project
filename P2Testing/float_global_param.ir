@@ -1,7 +1,7 @@
 #start_function test
 void test(int a, float b):
-int-list: a
-float-list: b
+int-list: a, c
+float-list: b, d
 test:
     add, b, global_float, global_float
     add, a, global_int, global_int
@@ -10,10 +10,11 @@ test:
 
 #start_function main
 void main():
-int-list: global_int, success, fail
+int-list: global_int, success, fail, x
 float-list: global_float
 main:
     assign, global_int, 1
+    assign, global_float, 1.0
     assign, success, 1
     assign, fail, 0
     call, test, 5, 6.0

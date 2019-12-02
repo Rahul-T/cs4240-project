@@ -283,7 +283,7 @@ public abstract class Allocator {
             String offset = functionToVarsToOffset.get(currentFunction).get(var);
             
             // Global variable
-            if(offset == null) {
+            if(offset == null || globalVars.containsKey(var)) {
                 return var;
             }
 
@@ -310,11 +310,12 @@ public abstract class Allocator {
                 String actualParam = paramNameType[1].trim();
                 allParams.add(actualParam);
                 String argOffset = functionToVarsToOffset.get(currentFunction).get(actualParam);
+
                 if(paramNameType[0].contains("[")) {
                     continue;
                 }
                 if(paramNameType[0].trim().equals("float")) {
-                    int j = i+11;
+                    int j = i+12;
                     mips.add("s.s $f" + j + ", " + argOffset + "($sp)");
                 } else {
                     mips.add("sw $a" + i + ", " + argOffset + "($sp)");
@@ -408,9 +409,16 @@ public abstract class Allocator {
             }
         }
         if(lineElements[1].contains("printi")) {
+            if(globalVars.containsKey(lineElements[2].trim())) {
+                mips.add("lw $a0, " + lineElements[2].trim());
+            }
             mips.add("li $v0, 1");
             mips.add("syscall");
-        } else {
+        } else if(lineElements[1].contains("printf")) {
+            mips.add("li $v0, 2");
+            mips.add("syscall");
+        }
+        else {
             registersToAndFromStack(currentFunction, "s");
             mips.add("jal " + lineElements[1]);
             registersToAndFromStack(currentFunction, "l");

@@ -76,7 +76,13 @@ public class NaiveAllocator extends Allocator {
         }
         for(String reg: fRegistersActive) {
             int totalOffset = baseOffset + offset;
-            mips.add(instr + reg + ", " + totalOffset + "($sp)");
+            String modifier = "";
+            if(reg.contains("$f")) {
+                modifier = ".s ";
+            } else {
+                modifier = "w ";
+            }
+            mips.add(instr + modifier + reg + ", " + totalOffset + "($sp)");
             offset += 4;
         }
     }
