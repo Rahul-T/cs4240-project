@@ -170,6 +170,7 @@ public class CFGGenerator {
                 if (currentBlock == null) {
                     System.out.println("NULL BLOCK! " + currentLine);
                 }
+                // System.out.println(currentLine);
                 currentBlock.addLine(currentLine);
             }
 

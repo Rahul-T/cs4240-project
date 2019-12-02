@@ -1,0 +1,53 @@
+#start_function inc_float
+float inc_float(float n):
+int-list:
+float-list: n
+inc_float:
+    add, n, 1.0, n
+    return, n, ,
+#end_function inc_float
+
+#start_function sum_floats
+void sum_floats(float a, float b, float c, float d):
+int-list:
+float-list: a, b, c, d, temp
+
+sum_floats:
+    assign, temp, 0.0
+    add, a, b, temp
+    add, temp, c, temp
+    add, temp, d, acc
+    return, , ,
+
+#end_function sum_floats
+
+#start_function main
+void main():
+int-list: inc_res, acc_res
+float-list: acc, f1, f2, f3, f4, f5
+assign, acc, 0.0
+assign, f1, 1.0
+assign, f2, 1.0
+assign, f3, 1.0
+assign, f4, 1.0
+assign, f5, 1.0
+assign, inc_res, 0
+assign, acc_res, 0
+main:
+    callr, f1, inc_float, f1
+    call, sum_floats, f2, f3, f4, f5
+blah: 
+    brleq, acc, 0.0, conv_inc_start
+    sub, acc, 1.0, acc
+    add, acc_res, 1, acc_res
+    goto, blah
+conv_inc_start:
+    brleq, f1, 0.0, conv_inc_end
+    sub, f1, 1.0, f1
+    add, inc_res, 1, inc_res
+    goto, conv_inc_start
+conv_inc_end:
+    call, printi, acc_res
+    call, printi, inc_res
+return, , ,
+#end_function main
