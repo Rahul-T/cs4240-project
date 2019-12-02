@@ -270,8 +270,11 @@ public abstract class Allocator {
                 return type;
             }
         }
-        System.out.println("NOTFOUND: " + var);
-        return "";
+
+        if(var.contains(".")) {
+            return "float";
+        }
+        return "int";
     }
 
     public String getStackLocation(String var, String currentFunction) {
@@ -312,7 +315,7 @@ public abstract class Allocator {
                 }
                 if(paramNameType[0].trim().equals("float")) {
                     int j = i+11;
-                    mips.add("sw $f" + j + ", " + argOffset + "($sp)");
+                    mips.add("s.s $f" + j + ", " + argOffset + "($sp)");
                 } else {
                     mips.add("sw $a" + i + ", " + argOffset + "($sp)");
                 }
@@ -398,7 +401,7 @@ public abstract class Allocator {
             if(globalVars.containsKey(lineElements[i].trim())) {
                 continue;
             }
-            if(getVarType(lineElements[i].trim()).equals("float")) {
+            if(getVarType(lineElements[i].trim()).equals("float") || lineElements[i].trim().contains(".")) {
                 generateLoad(lineElements[i].trim(), "$f" + floatArgCounter2, mips, currentFunction);
             } else {
                 generateLoad(lineElements[i].trim(), "$a" + argCounter2, mips, currentFunction);
@@ -424,7 +427,7 @@ public abstract class Allocator {
             if(globalVars.containsKey(lineElements[i].trim())) {
                 continue;
             }
-            if(getVarType(lineElements[i].trim()).equals("float")) {
+            if(getVarType(lineElements[i].trim()).equals("float") || lineElements[i].trim().contains(".")) {
                 generateLoad(lineElements[i].trim(), "$f" + floatArgCounter, mips, currentFunction);
             } else {
                 generateLoad(lineElements[i].trim(), "$a" + argCounter, mips, currentFunction);
