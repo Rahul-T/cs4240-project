@@ -1,0 +1,33 @@
+#start_function test
+void test(int a, float b):
+int-list: a
+float-list: b
+test:
+    add, b, global_float, global_float
+    add, a, global_int, global_int
+    return, , , 
+#end_function test
+
+#start_function main
+void main():
+int-list: global_int, success, fail
+float-list: global_float
+main:
+    assign, global_int, 1
+    assign, success, 1
+    assign, fail, 0
+    call, test, 5, 6.0
+    brneq, global_float, 7.0, label1
+    call, printi, success
+    goto, label2,
+label1:
+    call, printi, fail
+label2:
+    brneq, global_int, 6, label3
+    call, printi, success
+    goto, ret,
+label3:
+    call, printi, fail
+ret:
+    return, , ,
+#end_function main
