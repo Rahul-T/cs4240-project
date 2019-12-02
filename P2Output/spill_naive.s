@@ -53,6 +53,10 @@ loop_label0:
 lw $s0, 56($sp)
 li $s1,  20
 bgt $s0, $s1,  loop_label1
+lw $s0, 52($sp)
+lw $s1, 52($sp)
+mul $s2, $s0, $s1
+sw $s2, 52($sp)
 lw $s0, 56($sp)
 li $s1,  1
 add $s2, $s0, $s1

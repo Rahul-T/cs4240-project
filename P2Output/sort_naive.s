@@ -114,7 +114,7 @@ lw $s0, 60($sp)
 lw $s1, 64($sp)
 lw $s2, 68($sp)
 end_sort:
-li $v0,  1
+li $v0, 1
 lw $ra, 16($sp)
 addi $sp, $sp, 68
 jr $ra
@@ -186,7 +186,7 @@ mulo $s0, $s0, 4
 add $t0, $t0, $s0
 li $s1,  1
 sw $s1, ($t0)
-li $a0,  0
+li $a0, 0
 lw $a1, 20($sp)
 sw $s0, 32($sp)
 sw $s1, 36($sp)

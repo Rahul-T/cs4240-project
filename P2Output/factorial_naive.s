@@ -69,7 +69,7 @@ main:
 sub $sp, $sp, 36
 sw $ra, 16($sp)
 li $s0,  1
-sw $s0, 32($sp)
+sw $s0, r_st_1_0
 li $s0,  5
 sw $s0, 20($sp)
 lw $a0, 20($sp)
@@ -78,8 +78,8 @@ jal  fact_st_1_0
 sw $v0, 24($sp)
 lw $s0, 36($sp)
 lw $s0, 24($sp)
-sw $s0, 32($sp)
-lw $s0, 32($sp)
+sw $s0, r_st_1_0
+lw $s0, r_st_1_0
 sw $s0, 28($sp)
 lw $a0, 28($sp)
 li $v0, 1
