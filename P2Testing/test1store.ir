@@ -1,0 +1,38 @@
+#start_function test
+void test():
+int-list:
+float-list:
+    array_store, Y, index, value
+    return, , ,
+#end_function test
+
+#start_function main
+void main():
+int-list: $i, X[100], Y[100], $t0, $t1, $t2, $sum, $t3, index, value, c, d
+float-list:
+    assign, index, 99
+    assign, value, 9
+    assign, c, 98
+    assign, d, 9
+    assign, Y, 100, 10
+    assign, X, 100, 10
+    assign, $sum, 0,
+    assign, $i, 0,
+main:
+    call, test
+    array_store, X, 99, 9
+    array_store, X, c, d
+    assign, $i, 0,
+loop_label0:
+    brgt, $i, 99, loop_label1
+    array_load, $t0, X, $i
+    array_load, $t1, Y, $i
+    mult, $t0, $t1, $t2
+    add, $sum, $t2, $t3
+    assign, $sum, $t3,
+    add, $i, 1, $i
+    goto, loop_label0, ,
+loop_label1:
+    call, printi, $sum
+    return, , ,
+#end_function main

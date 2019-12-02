@@ -369,7 +369,7 @@ public abstract class Allocator {
         mips.add(getStoreInstrType(storedValueRegister) + storedValueRegister + ", " + "(" + arrayAddressRegister + ")");
 
         mips.add("addi " + loopCounterRegister + ", 1");
-        mips.add("ble " + loopCounterRegister + ", " + lineElements[2] + ", " + lineElements[1] + "_init_start");
+        mips.add("blt " + loopCounterRegister + ", " + lineElements[2] + ", " + lineElements[1] + "_init_start");
     }
 
     public void returnInstr(String[] lineElements, String currentFunction) {
