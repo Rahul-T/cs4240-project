@@ -408,9 +408,9 @@ public abstract class Allocator {
             mips.add("li $v0, 1");
             mips.add("syscall");
         } else {
-            registersToAndFromStack(currentFunction, "sw ");
+            registersToAndFromStack(currentFunction, "s");
             mips.add("jal " + lineElements[1]);
-            registersToAndFromStack(currentFunction, "lw ");
+            registersToAndFromStack(currentFunction, "l");
             maxAdditionalOffset.put(currentFunction, Math.max(maxAdditionalOffset.get(currentFunction), totalsize2));
         }
     }
@@ -432,7 +432,7 @@ public abstract class Allocator {
             
         }
         
-        registersToAndFromStack(currentFunction, "sw ");
+        registersToAndFromStack(currentFunction, "s");
 
         mips.add("jal " + lineElements[2]);
         String type = getVarType(lineElements[1].trim());
@@ -442,7 +442,7 @@ public abstract class Allocator {
             mips.add("s.s " + "$f0" + ", " + getStackLocation(lineElements[1], currentFunction));
         }
         
-        registersToAndFromStack(currentFunction, "lw ");
+        registersToAndFromStack(currentFunction, "l");
     }
 
     public static void generateMips(String[] args, LinkedHashMap<Instruction, HashMap<String, String>> instrToVarRegs) throws IOException, InterruptedException {

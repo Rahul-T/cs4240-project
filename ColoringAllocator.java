@@ -42,7 +42,13 @@ public class ColoringAllocator extends Allocator {
         int offset = 4;
         for(String reg: instrToVarRegs.get(currentInstruction).values()) {
             int totalOffset = baseOffset + offset;
-            mips.add(instr + reg + ", " + totalOffset + "($sp)");
+            String modifier = "";
+            if(reg.contains("$f")) {
+                modifier = ".s ";
+            } else {
+                modifier = "w ";
+            }
+            mips.add(instr + modifier + reg + ", " + totalOffset + "($sp)");
             offset += 4;
         }
     }
