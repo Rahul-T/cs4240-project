@@ -1,3 +1,5 @@
+SPIMPATH=spim-keepstats-master/spim/
+
 make cleanjava
 make backend
 
