@@ -13,7 +13,7 @@ public class TigerBackend {
 
 
         CFGGenerator generator = new CFGGenerator("P2Testing/" + sourceFile);
-        
+
         generator.generateBlocks();
 
         generator.generateInOutSets();

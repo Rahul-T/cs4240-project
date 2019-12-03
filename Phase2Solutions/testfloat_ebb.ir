@@ -1,0 +1,12 @@
+#start_function main
+void main():
+int-list:
+float-list:$f1,$f2,$f3,$t0,
+   assign,~$f6,1.0,
+   assign,~$f7,8.0,
+   assign,~$f8,0.0,
+main:
+   add,~$f6,~$f7,~$f8
+   assign,~$f7,~$f8,
+   return,,,
+#end_function main

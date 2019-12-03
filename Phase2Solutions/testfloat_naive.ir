@@ -1,0 +1,19 @@
+#start_function main
+void main():
+int-list:
+float-list:$f1,$f2,$f3,$t0,
+   assign,~$f6,1.0,
+   varstore,~$f6,$f1
+   assign,~$f6,8.0,
+   varstore,~$f6,$f2. 
+   assign,~$f6,0.0,
+   varstore,~$f6,$f3
+main:
+   varload,~$f6,$f1
+   varload,~$f7,$f2
+   add,~$f6,~$f7,~$f8
+   varstore,~$f8,$t0
+   varload,~$f7,$t0
+   varstore,~$f7,$f3
+   return,,,
+#end_function main
